@@ -1,0 +1,12 @@
+{
+  "name": "ai-tactics",
+  "short_name": "ai-tactics",
+  "description": "将棋風タクティクスTCG",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#3b82f6",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }
+  ]
+}

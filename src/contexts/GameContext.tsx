@@ -137,16 +137,31 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     if (!s || mode.type !== 'unit_selected') return;
     const unit = mode.unit;
 
-    const newBoard = removeUnit(s.board, unit.position);
+    const isSamePos = pos.row === unit.position.row && pos.col === unit.position.col;
+    const newBoard = isSamePos ? s.board : removeUnit(s.board, unit.position);
     const moved: Unit = { ...unit, position: pos };
-    const newBoard2 = placeUnit(newBoard, moved, pos);
+    const newBoard2 = isSamePos ? s.board : placeUnit(newBoard, moved, pos);
 
-    updateSession({
-      ...s,
-      board: newBoard2,
-      log: [...s.log, `${unit.card.name} が移動`],
-    });
-    setMode({ type: 'unit_moved', unit: moved });
+    const logEntry = isSamePos ? `${unit.card.name} が行動（移動なし）` : `${unit.card.name} が移動`;
+    updateSession({ ...s, board: newBoard2, log: [...s.log, logEntry] });
+
+    // 移動後に攻撃もスキルも使えなければ行動済みにして即 idle に戻す
+    const attacks = getLegalAttacks(moved, newBoard2);
+    const skill = moved.card.skill;
+    const skillResolver = skill ? SKILL_RESOLVERS[skill.effectType] : null;
+    const tempSession = { ...s, board: newBoard2 };
+    const canSkill = skillResolver ? skillResolver.canActivate(tempSession, moved) : false;
+
+    if (attacks.length === 0 && !canSkill) {
+      // 行動済みフラグを立てて idle へ
+      const finalBoard = newBoard2.map((r) => [...r]);
+      const u = finalBoard[moved.position.row]?.[moved.position.col];
+      if (u) finalBoard[moved.position.row][moved.position.col] = { ...u, hasActedThisTurn: true };
+      updateSession({ ...s, board: finalBoard, log: [...s.log, logEntry] });
+      setMode({ type: 'idle' });
+    } else {
+      setMode({ type: 'unit_moved', unit: moved });
+    }
     setHighlightedCells([]);
   }, [mode, updateSession]);
 
