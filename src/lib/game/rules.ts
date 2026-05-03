@@ -1,8 +1,8 @@
 import { Unit, BoardState, Position, Card, GameSession, AttackTarget, DirectionVector } from '@/lib/types/game';
 import { v4 as uuidv4 } from 'uuid';
 
-export const BOARD_ROWS = 6;
-export const BOARD_COLS = 6;
+export const BOARD_ROWS = 4;
+export const BOARD_COLS = 4;
 
 // ─── ユーティリティ ───────────────────────────────────────────────────────
 
@@ -150,7 +150,9 @@ export function getLegalAttacks(unit: Unit, board: BoardState): AttackTarget[] {
 // ─── 召喚 ─────────────────────────────────────────────────────────────────
 
 export function getSummonZone(owner: 'player' | 'ai'): number[] {
-  return owner === 'player' ? [4, 5] : [0, 1];
+  return owner === 'player'
+    ? [BOARD_ROWS - 2, BOARD_ROWS - 1]
+    : [0, 1];
 }
 
 export function getLegalSummonPositions(board: BoardState, owner: 'player' | 'ai'): Position[] {

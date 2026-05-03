@@ -11,7 +11,7 @@ import {
   createEmptyBoard, getLegalMoves, getLegalAttacks,
   getLegalSummonPositions, createUnit, placeUnit, removeUnit, resolveAttack,
 } from '@/lib/game/rules';
-import { buildStandardDeck, shuffleDeck } from '@/lib/game/decks';
+import { buildStandardDeck, shuffleDeck, INITIAL_HAND_SIZE, BASE_HP } from '@/lib/game/decks';
 import { applyCounterAttack, SKILL_RESOLVERS } from '@/lib/game/skills';
 import { executeAITurn } from '@/lib/game/ai';
 import { auth } from '@/lib/firebase/config';
@@ -87,8 +87,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const playerDeck = shuffleDeck(buildStandardDeck());
     const aiDeck = shuffleDeck(buildStandardDeck());
 
-    const playerHand = playerDeck.slice(0, 5);
-    const aiHand = aiDeck.slice(0, 5);
+    const playerHand = playerDeck.slice(0, INITIAL_HAND_SIZE);
+    const aiHand = aiDeck.slice(0, INITIAL_HAND_SIZE);
 
     const newSession: GameSession = {
       sessionId: uuidv4(),
@@ -99,15 +99,15 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       phase: 'main',
       board: createEmptyBoard(),
       player: {
-        baseHp: 20,
-        deck: playerDeck.slice(5),
+        baseHp: BASE_HP,
+        deck: playerDeck.slice(INITIAL_HAND_SIZE),
         hand: playerHand,
         hasSummonedThisTurn: false,
         hasActedThisTurn: false,
       },
       ai: {
-        baseHp: 20,
-        deck: aiDeck.slice(5),
+        baseHp: BASE_HP,
+        deck: aiDeck.slice(INITIAL_HAND_SIZE),
         hand: aiHand,
         hasSummonedThisTurn: false,
         hasActedThisTurn: false,

@@ -1,12 +1,14 @@
 'use client';
 
+import { BASE_HP } from '@/lib/game/decks';
+
 interface Props {
   owner: 'player' | 'ai';
   hp: number;
   maxHp?: number;
 }
 
-export default function BaseHpBar({ owner, hp, maxHp = 20 }: Props) {
+export default function BaseHpBar({ owner, hp, maxHp = BASE_HP }: Props) {
   const isPlayer = owner === 'player';
   const percent = Math.max(0, (hp / maxHp) * 100);
 
@@ -22,44 +24,43 @@ export default function BaseHpBar({ owner, hp, maxHp = 20 }: Props) {
         {isPlayer ? '自陣' : 'AI陣地'}
       </span>
 
-      {/* HP ハート表示（最大5個） */}
-      <div className="flex gap-0.5">
-        {Array.from({ length: 5 }).map((_, i) => {
-          const threshold = (i + 1) * (maxHp / 5);
-          const filled = hp >= threshold;
-          const partial = hp > threshold - maxHp / 5 && hp < threshold;
-          return (
-            <span
-              key={i}
-              className={[
-                'text-sm transition-all duration-300',
-                filled ? (isPlayer ? 'text-[#3b82f6]' : 'text-[#ef4444]') : 'text-gray-600',
-              ].join(' ')}
-            >
-              {filled ? '❤️' : partial ? '🩶' : '🖤'}
-            </span>
-          );
-        })}
+      {/* HP ハート（最大 maxHp 個） */}
+      <div className="flex gap-1">
+        {Array.from({ length: maxHp }).map((_, i) => (
+          <span
+            key={i}
+            className={[
+              'text-lg leading-none transition-all duration-300',
+              i < hp
+                ? (isPlayer ? 'text-[#3b82f6]' : 'text-[#ef4444]')
+                : 'text-gray-700',
+              hp === 1 && i === 0 ? 'animate-pulse' : '',
+            ].join(' ')}
+          >
+            {i < hp ? '❤️' : '🖤'}
+          </span>
+        ))}
       </div>
 
-      {/* 数値バー */}
+      {/* HP数値 */}
+      <span className={[
+        'text-base font-bold ml-auto',
+        isPlayer ? 'text-[#60a5fa]' : 'text-[#f87171]',
+      ].join(' ')}>
+        {hp}
+      </span>
+
+      {/* HPバー */}
       <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
         <div
           className={[
             'h-full rounded-full transition-all duration-500',
             isPlayer ? 'bg-[#3b82f6]' : 'bg-[#ef4444]',
-            percent <= 25 ? 'animate-pulse' : '',
+            percent <= 33 ? 'animate-pulse' : '',
           ].join(' ')}
           style={{ width: `${percent}%` }}
         />
       </div>
-
-      <span className={[
-        'text-sm font-bold w-8 text-right',
-        isPlayer ? 'text-[#60a5fa]' : 'text-[#f87171]',
-      ].join(' ')}>
-        {hp}
-      </span>
     </div>
   );
 }

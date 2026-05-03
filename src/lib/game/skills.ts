@@ -1,5 +1,5 @@
 import { GameSession, Unit, Position, SkillEffectType, AttackTarget } from '@/lib/types/game';
-import { getLegalAttacks, resolveAttack, placeUnit, isInBounds, getUnit } from '@/lib/game/rules';
+import { getLegalAttacks, resolveAttack, placeUnit, isInBounds, getUnit, BOARD_ROWS, BOARD_COLS } from '@/lib/game/rules';
 
 // ─── スキル抽象化インターフェース ─────────────────────────────────────────
 //
@@ -119,8 +119,8 @@ const buffResolver: SkillResolver = {
   },
   getValidTargets(state, source) {
     const positions: Position[] = [];
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
+    for (let r = 0; r < BOARD_ROWS; r++) {
+      for (let c = 0; c < BOARD_COLS; c++) {
         const unit = state.board[r][c];
         if (unit && unit.owner === source.owner && unit.instanceId !== source.instanceId) {
           positions.push({ row: r, col: c });

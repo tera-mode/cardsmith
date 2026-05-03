@@ -1,20 +1,23 @@
 import { Card } from '@/lib/types/game';
 import { CARD_MAP } from '@/lib/game/cards';
 
-// 標準デッキ定義（合計20枚、コスト152）
-// MVP ではプレイヤー・AIともにこのデッキを使う（ミラーマッチ）
+// デバッグ用標準デッキ（10枚・各1枚）
+// プレイヤー・AIともにこのデッキを使う（ミラーマッチ）
 const STANDARD_DECK_RECIPE: Array<{ cardId: string; count: number }> = [
-  { cardId: 'militia', count: 2 },
-  { cardId: 'light_infantry', count: 2 },
-  { cardId: 'assault_soldier', count: 2 },
-  { cardId: 'scout', count: 2 },
-  { cardId: 'spear_soldier', count: 2 },
-  { cardId: 'heavy_infantry', count: 2 },
-  { cardId: 'combat_soldier', count: 2 },
-  { cardId: 'archer', count: 2 },
-  { cardId: 'guard', count: 2 },
-  { cardId: 'healer', count: 2 },
+  { cardId: 'militia', count: 1 },
+  { cardId: 'light_infantry', count: 1 },
+  { cardId: 'assault_soldier', count: 1 },
+  { cardId: 'scout', count: 1 },
+  { cardId: 'spear_soldier', count: 1 },
+  { cardId: 'heavy_infantry', count: 1 },
+  { cardId: 'combat_soldier', count: 1 },
+  { cardId: 'archer', count: 1 },
+  { cardId: 'guard', count: 1 },
+  { cardId: 'healer', count: 1 },
 ];
+
+export const INITIAL_HAND_SIZE = 3;
+export const BASE_HP = 3;
 
 export function buildStandardDeck(): Card[] {
   const deck: Card[] = [];

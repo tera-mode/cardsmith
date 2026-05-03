@@ -3,6 +3,7 @@
 import { BoardState, Position, Unit, InteractionMode, AttackTarget } from '@/lib/types/game';
 import BoardCell from './BoardCell';
 import { useGame } from '@/contexts/GameContext';
+import { BOARD_ROWS, BOARD_COLS } from '@/lib/game/rules';
 
 interface Props {
   board: BoardState;
@@ -69,9 +70,9 @@ export default function Board({ board, mode, highlightedCells }: Props) {
       data-testid="board"
       className="grid gap-px bg-[#0a1628]"
       style={{
-        gridTemplateColumns: 'repeat(6, 1fr)',
+        gridTemplateColumns: `repeat(${BOARD_COLS}, 1fr)`,
         width: 'min(calc(100vw - 1.5rem), 460px)',
-        aspectRatio: '1 / 1',
+        aspectRatio: `${BOARD_COLS} / ${BOARD_ROWS}`,
       }}
     >
       {board.map((row, r) =>

@@ -7,6 +7,8 @@ import {
   placeUnit,
   removeUnit,
   resolveAttack,
+  BOARD_ROWS,
+  BOARD_COLS,
 } from '@/lib/game/rules';
 import { applyCounterAttack, SKILL_RESOLVERS } from '@/lib/game/skills';
 
@@ -72,8 +74,8 @@ export async function executeAITurn(
   // 3. ユニット行動（70%確率で試みる）
   if (Math.random() < 0.7) {
     const aiUnits: Unit[] = [];
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
+    for (let r = 0; r < BOARD_ROWS; r++) {
+      for (let c = 0; c < BOARD_COLS; c++) {
         const unit = state.board[r][c];
         if (unit && unit.owner === 'ai' && !unit.hasActedThisTurn) {
           aiUnits.push(unit);
