@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "gemini-image": {
+      "command": "npx",
+      "args": ["-y", "@google/gemini-image-mcp@latest"]
+    }
+  }
+}

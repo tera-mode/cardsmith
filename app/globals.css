@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-board: #0f3460;
+  --color-player: #3b82f6;
+  --color-ai: #ef4444;
+  --color-highlight: #f59e0b;
+  --color-text: #f5f5f4;
+  --color-text-muted: #94a3b8;
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--color-text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden; /* スマホでの過度なスクロール防止 */
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--color-text);
+  font-family: 'Noto Sans JP', 'Hiragino Sans', Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent; /* スマホのタップハイライト無効化 */
+  touch-action: manipulation; /* ダブルタップズーム無効化 */
+}
+
+/* スマホ縦持ちレイアウトの基準 */
+.game-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh; /* Dynamic viewport height (iOS Safari 対応) */
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* セーフエリア */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 手札の横スクロール */
+.hand-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.hand-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* タップ可能エリアの最小サイズ（48×48px）*/
+.tap-target {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
