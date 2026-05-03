@@ -37,7 +37,7 @@ async function saveSession(session: GameSession) {
           playerBaseHp: session.player.baseHp,
           aiBaseHp: session.ai.baseHp,
         },
-        log: session.log.slice(-50), // 最大50行だけ保存
+        log: session.log.slice(-50),
         playerDeckId: 'standard',
       }),
     });
@@ -55,11 +55,23 @@ interface GameContextType {
   initGame: (userId: string) => void;
   selectCard: (index: number) => void;
   summonToCell: (pos: Position) => void;
+  // ユニット選択 → アクション選択メニューへ
   selectUnit: (unit: Unit) => void;
+  // 「移動する」ボタン → 移動ハイライト表示
+  startMove: (unit: Unit) => void;
+  // 移動先タップ or 「その場に留まる」
   moveUnit: (pos: Position) => void;
+  // 「戻る」（移動選択をキャンセルしてアクションメニューへ戻る）
+  cancelMove: () => void;
+  // 攻撃
   attackTarget: (target: AttackTarget) => void;
+  // スキル使用
   useSkill: (target?: Position) => void;
+  // 「行動終了」（移動後に攻撃もスキルも使わずに行動を終了）
+  endUnitAction: (unit: Unit) => void;
+  // ターン終了
   endTurn: () => void;
+  // キャンセル（unit_selected → idle）
   cancel: () => void;
   getSkillTargets: () => Position[];
 }
@@ -103,14 +115,14 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         deck: playerDeck.slice(INITIAL_HAND_SIZE),
         hand: playerHand,
         hasSummonedThisTurn: false,
-        hasActedThisTurn: false,
+        hasMovedThisTurn: false,
       },
       ai: {
         baseHp: BASE_HP,
         deck: aiDeck.slice(INITIAL_HAND_SIZE),
         hand: aiHand,
         hasSummonedThisTurn: false,
-        hasActedThisTurn: false,
+        hasMovedThisTurn: false,
       },
       log: ['ゲーム開始！プレイヤー先攻'],
     };
@@ -150,58 +162,80 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     setHighlightedCells([]);
   }, [mode, updateSession]);
 
-  // ─── ユニット選択 → 移動ハイライト ──────────────────────────────────────
+  // ─── Step 1: ユニットタップ → アクション選択メニュー ────────────────────
 
   const selectUnit = useCallback((unit: Unit) => {
     const s = sessionRef.current;
     if (!s || s.currentTurn !== 'player' || unit.owner !== 'player') return;
     if (unit.hasActedThisTurn) return;
-
-    const moves = getLegalMoves(unit, s.board);
-    // 「移動しない」は UI ボタンで提供するため moves のみハイライト
+    // アクションメニューを表示（ボードハイライトなし）
     setMode({ type: 'unit_selected', unit });
+    setHighlightedCells([]);
+  }, []);
+
+  // ─── Step 2a: 「移動する」ボタン → 移動ハイライト表示 ───────────────────
+
+  const startMove = useCallback((unit: Unit) => {
+    const s = sessionRef.current;
+    if (!s || s.player.hasMovedThisTurn) return;
+    const moves = getLegalMoves(unit, s.board);
+    setMode({ type: 'unit_moving', unit });
     setHighlightedCells(moves);
   }, []);
 
+  // unit_moving 中に「戻る」→ unit_selected（アクション選択メニュー）へ
+  const cancelMove = useCallback(() => {
+    const s = sessionRef.current;
+    if (!s || mode.type !== 'unit_moving') return;
+    setMode({ type: 'unit_selected', unit: mode.unit });
+    setHighlightedCells([]);
+  }, [mode]);
+
+  // ─── Step 2b: 移動先タップ or 「その場に留まる」 ────────────────────────
+
   const moveUnit = useCallback((pos: Position) => {
     const s = sessionRef.current;
-    if (!s || mode.type !== 'unit_selected') return;
+    if (!s || mode.type !== 'unit_moving') return;
     const unit = mode.unit;
 
     const isSamePos = pos.row === unit.position.row && pos.col === unit.position.col;
-    const newBoard = isSamePos ? s.board : removeUnit(s.board, unit.position);
+    let newBoard = isSamePos ? s.board : removeUnit(s.board, unit.position);
     const moved: Unit = { ...unit, position: pos };
-    const newBoard2 = isSamePos ? s.board : placeUnit(newBoard, moved, pos);
+    newBoard = isSamePos ? s.board : placeUnit(newBoard, moved, pos);
 
-    const logEntry = isSamePos ? `${unit.card.name} が行動（移動なし）` : `${unit.card.name} が移動`;
+    const logEntry = isSamePos ? `${unit.card.name} が待機` : `${unit.card.name} が移動`;
 
-    // 移動後に攻撃もスキルも使えなければ行動済みにして idle へ（updateSession は1回だけ）
-    const attacks = getLegalAttacks(moved, newBoard2);
-    const skill = moved.card.skill;
-    const skillResolver = skill ? SKILL_RESOLVERS[skill.effectType] : null;
-    const tempSession = { ...s, board: newBoard2 };
-    const canSkill = skillResolver ? skillResolver.canActivate(tempSession, moved) : false;
-
-    if (attacks.length === 0 && !canSkill) {
-      const finalBoard = newBoard2.map((r) => [...r]);
-      const u = finalBoard[moved.position.row]?.[moved.position.col];
-      if (u) finalBoard[moved.position.row][moved.position.col] = { ...u, hasActedThisTurn: true };
-      updateSession({ ...s, board: finalBoard, log: [...s.log, logEntry] });
-      setMode({ type: 'idle' });
-    } else {
-      updateSession({ ...s, board: newBoard2, log: [...s.log, logEntry] });
-      setMode({ type: 'unit_moved', unit: moved });
-    }
+    updateSession({
+      ...s,
+      board: newBoard,
+      player: { ...s.player, hasMovedThisTurn: true },
+      log: [...s.log, logEntry],
+    });
+    // 移動後は unit_post_move へ（ボードハイライトなし、攻撃/スキル/行動終了メニュー）
+    setMode({ type: 'unit_post_move', unit: moved });
     setHighlightedCells([]);
   }, [mode, updateSession]);
 
-  // ─── 攻撃 ────────────────────────────────────────────────────────────────
+  // ─── Step 3a: 「行動終了」ボタン（移動のみで攻撃しない） ─────────────────
+
+  const endUnitAction = useCallback((unit: Unit) => {
+    const s = sessionRef.current;
+    if (!s) return;
+    const finalBoard = s.board.map((r) => [...r]);
+    const u = finalBoard[unit.position.row]?.[unit.position.col];
+    if (u) finalBoard[unit.position.row][unit.position.col] = { ...u, hasActedThisTurn: true };
+    updateSession({ ...s, board: finalBoard, log: [...s.log, `${unit.card.name} が行動終了`] });
+    setMode({ type: 'idle' });
+    setHighlightedCells([]);
+  }, [updateSession]);
+
+  // ─── Step 3b: 攻撃（unit_selected または unit_post_move から） ───────────
 
   const attackTarget = useCallback((target: AttackTarget) => {
     const s = sessionRef.current;
-    if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_moved')) return;
+    if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move')) return;
 
-    const attacker = mode.type === 'unit_selected' ? mode.unit : mode.unit;
+    const attacker = mode.unit;
     const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(s, attacker, target);
 
     let nextState: GameSession = {
@@ -255,7 +289,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   const getSkillTargets = useCallback((): Position[] => {
     const s = sessionRef.current;
-    if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_moved')) return [];
+    if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move')) return [];
     const unit = mode.unit;
     const skill = unit.card.skill;
     if (!skill) return [];
@@ -266,7 +300,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   const useSkill = useCallback((target?: Position) => {
     const s = sessionRef.current;
-    if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_moved')) return;
+    if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move')) return;
     const unit = mode.unit;
     const skill = unit.card.skill;
     if (!skill) return;
@@ -283,7 +317,19 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       finalBoard[pos.row][pos.col] = { ...updatedUnit, hasActedThisTurn: true };
     }
 
-    updateSession({ ...afterSkill, board: finalBoard });
+    // 勝敗チェック（スキルでHPが0になる場合を考慮）
+    const winner = checkWinner(afterSkill.player.baseHp, afterSkill.ai.baseHp);
+    const finished = winner !== null;
+    const result: GameSession = {
+      ...afterSkill,
+      board: finalBoard,
+      phase: finished ? 'finished' : afterSkill.phase,
+      winner: winner ?? undefined,
+      finishedAt: finished ? Date.now() : undefined,
+    };
+
+    updateSession(result);
+    if (finished) saveSession(result);
     setMode({ type: 'idle' });
     setHighlightedCells([]);
   }, [mode, updateSession]);
@@ -294,7 +340,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const s = sessionRef.current;
     if (!s || s.currentTurn !== 'player' || s.phase === 'finished') return;
 
-    // ユニットのhasActedThisTurnリセット・AIターンへ
+    // 全ユニットのフラグリセット・AIターンへ
     const resetBoard = s.board.map((row) =>
       row.map((cell) => (cell ? { ...cell, hasActedThisTurn: false, hasSummonedThisTurn: false } : null))
     );
@@ -312,8 +358,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       board: resetBoard,
       currentTurn: 'ai',
       turnCount: s.turnCount + 1,
-      player: { ...s.player, hasSummonedThisTurn: false, hasActedThisTurn: false },
-      ai: { ...s.ai, deck: aiDeck, hand: aiHand, hasSummonedThisTurn: false, hasActedThisTurn: false },
+      player: { ...s.player, hasSummonedThisTurn: false, hasMovedThisTurn: false },
+      ai: { ...s.ai, deck: aiDeck, hand: aiHand, hasSummonedThisTurn: false, hasMovedThisTurn: false },
       log: [...s.log, `─── ターン${s.turnCount + 1} (AIのターン) ───`],
     };
 
@@ -342,11 +388,11 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const finished = winner !== null;
     const finishedAt = finished ? Date.now() : undefined;
 
-    const finalSession = {
+    const finalSession: GameSession = {
       ...afterAI,
       board: nextBoard,
       currentTurn: 'player' as const,
-      player: { ...afterAI.player, deck: playerDeck, hand: playerHand, hasSummonedThisTurn: false, hasActedThisTurn: false },
+      player: { ...afterAI.player, deck: playerDeck, hand: playerHand, hasSummonedThisTurn: false, hasMovedThisTurn: false },
       phase: finished ? ('finished' as const) : ('main' as const),
       winner: winner ?? undefined,
       finishedAt,
@@ -354,7 +400,6 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     updateSession(finalSession);
-
     if (finished) saveSession(finalSession);
   }, [updateSession]);
 
@@ -367,8 +412,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     <GameContext.Provider value={{
       session, mode, highlightedCells,
       initGame, selectCard, summonToCell,
-      selectUnit, moveUnit, attackTarget,
-      useSkill, endTurn, cancel, getSkillTargets,
+      selectUnit, startMove, cancelMove, moveUnit,
+      attackTarget, useSkill, endUnitAction,
+      endTurn, cancel, getSkillTargets,
     }}>
       {children}
     </GameContext.Provider>

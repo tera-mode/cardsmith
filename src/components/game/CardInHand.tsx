@@ -2,6 +2,17 @@
 
 import { Card } from '@/lib/types/game';
 
+// カードのサブテキスト（移動方法の補足）
+const CARD_HINT: Record<string, string> = {
+  scout: '2マスジャンプ',
+  archer: '射程2・貫通',
+  healer: '回復・無限',
+  cavalry: '2マス・強化',
+  cannon: '射程4・大貫通',
+  defender: '8方向・反撃',
+  guard: '4方向移動',
+};
+
 const CARD_EMOJI: Record<string, string> = {
   militia: '🪖',
   light_infantry: '⚔️',
@@ -56,6 +67,13 @@ export default function CardInHand({ card, index, isSelected, disabled, onClick 
       <div className="text-[10px] text-center text-white font-medium mt-1 px-1 leading-tight">
         {card.name}
       </div>
+
+      {/* サブヒント（特殊移動など） */}
+      {CARD_HINT[card.id] && (
+        <div className="text-[8px] text-center text-[#94a3b8] px-1 leading-tight">
+          {CARD_HINT[card.id]}
+        </div>
+      )}
 
       {/* ATK / HP */}
       <div className="flex gap-2 text-[10px] mt-auto mb-1">

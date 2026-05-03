@@ -1,6 +1,6 @@
 'use client';
 
-import { BoardState, Position, Unit, InteractionMode, AttackTarget } from '@/lib/types/game';
+import { BoardState, Position, Unit, InteractionMode } from '@/lib/types/game';
 import BoardCell from './BoardCell';
 import { useGame } from '@/contexts/GameContext';
 import { BOARD_ROWS, BOARD_COLS } from '@/lib/game/rules';
@@ -12,55 +12,54 @@ interface Props {
 }
 
 export default function Board({ board, mode, highlightedCells }: Props) {
-  const { selectUnit, moveUnit, attackTarget, summonToCell } = useGame();
+  const { selectUnit, moveUnit, summonToCell } = useGame();
 
   const isHighlighted = (row: number, col: number) =>
     highlightedCells.some((p) => p.row === row && p.col === col);
 
   const isSelectedUnit = (unit: Unit | null): boolean => {
     if (!unit) return false;
-    if (mode.type === 'unit_selected' || mode.type === 'unit_moved') {
+    if (
+      mode.type === 'unit_selected' ||
+      mode.type === 'unit_moving' ||
+      mode.type === 'unit_post_move'
+    ) {
       return mode.unit.instanceId === unit.instanceId;
     }
     return false;
   };
 
   const handleCellClick = (pos: Position) => {
-    const unit = board[pos.row][pos.col];
+    const unit = board[pos.row]?.[pos.col];
 
+    // 召喚モード：ハイライトされたマスにタップ → 召喚
     if (mode.type === 'card_selected') {
-      if (isHighlighted(pos.row, pos.col)) {
-        summonToCell(pos);
-      }
+      if (isHighlighted(pos.row, pos.col)) summonToCell(pos);
       return;
     }
 
+    // 移動モード：ハイライトされたマスにタップ → 移動
+    if (mode.type === 'unit_moving') {
+      if (isHighlighted(pos.row, pos.col)) moveUnit(pos);
+      return;
+    }
+
+    // unit_selected（アクション選択メニュー表示中）：
+    // オーバーレイ背後なのでボードタップは基本的に cancel に流れるが、
+    // 別のプレイヤーユニットを選び直す場合のみ処理
     if (mode.type === 'unit_selected') {
-      if (isHighlighted(pos.row, pos.col)) {
-        if (unit && unit.owner !== mode.unit.owner) {
-          // 敵ユニットをタップ → 攻撃
-          attackTarget({ type: 'unit', unit });
-        } else {
-          // 空きマスをタップ → 移動
-          moveUnit(pos);
-        }
-        return;
-      }
-      if (unit && unit.owner === 'player') {
+      if (unit && unit.owner === 'player' && !unit.hasActedThisTurn &&
+          unit.instanceId !== mode.unit.instanceId) {
         selectUnit(unit);
-        return;
-      }
-    }
-
-    if (mode.type === 'unit_moved') {
-      if (isHighlighted(pos.row, pos.col) && unit && unit.owner !== mode.unit.owner) {
-        attackTarget({ type: 'unit', unit });
       }
       return;
     }
 
-    // idle: プレイヤーユニットを選択
-    if (unit && unit.owner === 'player') {
+    // unit_post_move：移動後のメニュー表示中はボードへの操作を受け付けない
+    if (mode.type === 'unit_post_move') return;
+
+    // idle：プレイヤーのユニットを選択
+    if (unit && unit.owner === 'player' && !unit.hasActedThisTurn) {
       selectUnit(unit);
     }
   };

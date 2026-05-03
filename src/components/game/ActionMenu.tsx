@@ -10,11 +10,10 @@ interface Props {
   session: GameSession;
 }
 
-// unit_selected 中は盤面操作を優先するため、
-// 「移動しない」ボタンだけを小さなフローティングとして表示する
+// unit_moving 中に表示するフローティングボタン
 export function SkipMoveButton({ mode }: { mode: InteractionMode }) {
-  const { moveUnit, cancel } = useGame();
-  if (mode.type !== 'unit_selected') return null;
+  const { moveUnit, cancelMove } = useGame();
+  if (mode.type !== 'unit_moving') return null;
   const unit = mode.unit;
 
   return (
@@ -26,33 +25,40 @@ export function SkipMoveButton({ mode }: { mode: InteractionMode }) {
         その場に留まる
       </button>
       <button
-        onClick={cancel}
+        onClick={cancelMove}
         className="pointer-events-auto px-4 py-2 bg-[#0f1a2e]/90 text-gray-400 text-sm rounded-full border border-gray-600/40 backdrop-blur-sm shadow-lg"
       >
-        キャンセル
+        ← 戻る
       </button>
     </div>
   );
 }
 
-// unit_moved 後の攻撃・スキル選択メニュー（オーバーレイ付き）
-export default function ActionMenu({ mode, session }: Props) {
-  const { attackTarget, useSkill, cancel } = useGame();
+// ─── メインのアクションメニュー ───────────────────────────────────────────
+// unit_selected: ユニット選択直後（移動 / 攻撃 / スキル / キャンセル）
+// unit_post_move: 移動完了後（攻撃 / スキル / 行動終了）
 
-  if (mode.type !== 'unit_moved') return null;
+export default function ActionMenu({ mode, session }: Props) {
+  const { attackTarget, useSkill, startMove, endUnitAction, cancel } = useGame();
+
+  const isUnitSelected = mode.type === 'unit_selected';
+  const isPostMove = mode.type === 'unit_post_move';
+  if (!isUnitSelected && !isPostMove) return null;
 
   const unit: Unit = mode.unit;
   const attacks = getLegalAttacks(unit, session.board);
   const skill = unit.card.skill;
   const skillResolver = skill ? SKILL_RESOLVERS[skill.effectType] : null;
   const canUseSkill = skillResolver ? skillResolver.canActivate(session, unit) : false;
-
-  const hasActions = attacks.length > 0 || canUseSkill;
+  const canMove = isUnitSelected && !session.player.hasMovedThisTurn;
+  const hasAttackOptions = attacks.length > 0 || canUseSkill;
 
   return (
     <div data-testid="action-menu" className="fixed inset-x-0 bottom-0 z-20 safe-bottom">
-      {/* 背景オーバーレイ（タップでキャンセル） */}
-      <div className="fixed inset-0 bg-black/40 -z-10" onClick={cancel} />
+      {/* 背景オーバーレイ（unit_selected のみ：クリックでキャンセル可） */}
+      {isUnitSelected && (
+        <div className="fixed inset-0 bg-black/40 -z-10" onClick={cancel} />
+      )}
 
       <div className="bg-[#16213e] border-t border-[#1e3a5f] px-3 py-3 rounded-t-2xl max-w-[480px] mx-auto">
         {/* ユニット情報 */}
@@ -60,6 +66,9 @@ export default function ActionMenu({ mode, session }: Props) {
           <span className="text-sm font-bold text-white">{unit.card.name}</span>
           <span className="text-xs text-[#60a5fa]">ATK {unit.card.atk + unit.buffs.atkBonus}</span>
           <span className="text-xs text-green-400">HP {unit.currentHp}/{unit.maxHp}</span>
+          {isPostMove && (
+            <span className="text-xs text-yellow-400 ml-1">🚶 移動済</span>
+          )}
           {skill && (
             <span className="text-xs text-purple-400 ml-auto">
               ★ {skill.name}
@@ -68,12 +77,24 @@ export default function ActionMenu({ mode, session }: Props) {
           )}
         </div>
 
-        {!hasActions && (
-          <p className="text-xs text-gray-500 mb-3 text-center">行動できる対象がありません</p>
-        )}
+        <div className="flex flex-col gap-2">
+          {/* 【移動する】 unit_selected のみ */}
+          {isUnitSelected && (
+            <button
+              onClick={() => canMove && startMove(unit)}
+              disabled={!canMove}
+              className={[
+                'tap-target w-full text-sm rounded-xl border font-medium',
+                canMove
+                  ? 'bg-[#1e3a5f] hover:bg-[#254d7a] text-[#60a5fa] border-[#3b82f6]/40 active:scale-95'
+                  : 'bg-[#0f1a2e] text-gray-600 border-gray-700 cursor-not-allowed',
+              ].join(' ')}
+            >
+              🚶 移動する{!canMove ? '（このターン移動済）' : ''}
+            </button>
+          )}
 
-        <div className="flex gap-2 flex-wrap">
-          {/* 攻撃ボタン */}
+          {/* 攻撃ボタン（各ターゲット） */}
           {attacks.map((target, i) => {
             const label = target.type === 'base'
               ? '🏰 ベース攻撃'
@@ -82,7 +103,7 @@ export default function ActionMenu({ mode, session }: Props) {
               <button
                 key={i}
                 onClick={() => attackTarget(target)}
-                className="tap-target flex-1 min-w-[120px] bg-[#7f1d1d] hover:bg-[#991b1b] text-white text-sm rounded-xl border border-[#ef4444]/30"
+                className="tap-target w-full bg-[#7f1d1d] hover:bg-[#991b1b] text-white text-sm rounded-xl border border-[#ef4444]/30 font-medium active:scale-95"
               >
                 {label}
               </button>
@@ -98,19 +119,37 @@ export default function ActionMenu({ mode, session }: Props) {
                 const targets = skillResolver.getValidTargets(session, unit);
                 useSkill(targets.length > 0 ? targets[0] : undefined);
               }}
-              className="tap-target flex-1 min-w-[120px] bg-[#4c1d95] hover:bg-[#5b21b6] text-white text-sm rounded-xl border border-purple-500/30"
+              className="tap-target w-full bg-[#4c1d95] hover:bg-[#5b21b6] text-white text-sm rounded-xl border border-purple-500/30 font-medium active:scale-95"
             >
-              ★ {skill.name}
+              ★ {skill.name}を使用
             </button>
           )}
 
-          {/* 何もしない / キャンセル */}
-          <button
-            onClick={cancel}
-            className="tap-target flex-1 min-w-[80px] bg-[#0f1a2e] text-gray-400 text-sm rounded-xl border border-gray-600"
-          >
-            {hasActions ? '✕' : '閉じる'}
-          </button>
+          {!hasAttackOptions && (
+            <p className="text-xs text-gray-500 text-center py-1">
+              {isPostMove ? '攻撃できる対象がありません' : '攻撃対象なし（移動して近づこう）'}
+            </p>
+          )}
+
+          {/* 【行動終了】 unit_post_move のみ */}
+          {isPostMove && (
+            <button
+              onClick={() => endUnitAction(unit)}
+              className="tap-target w-full bg-[#1a3a1a] hover:bg-[#1f4a1f] text-green-400 text-sm rounded-xl border border-green-700/40 font-medium active:scale-95"
+            >
+              ✅ 行動終了
+            </button>
+          )}
+
+          {/* 【キャンセル】 unit_selected のみ */}
+          {isUnitSelected && (
+            <button
+              onClick={cancel}
+              className="tap-target w-full bg-[#0f1a2e] text-gray-400 text-sm rounded-xl border border-gray-600 active:scale-95"
+            >
+              ✕ キャンセル
+            </button>
+          )}
         </div>
       </div>
     </div>

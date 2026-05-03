@@ -21,7 +21,7 @@ const penetrateResolver: SkillResolver = {
   canActivate(state, source) {
     const uses = source.skillUsesRemaining;
     if (uses !== 'infinite' && uses <= 0) return false;
-    const frontRow = source.owner === 'player' ? 0 : 5;
+    const frontRow = source.owner === 'player' ? 0 : BOARD_ROWS - 1;
     return source.position.row === frontRow;
   },
   getValidTargets(_state, _source) {
@@ -64,7 +64,7 @@ const bigPenetrateResolver: SkillResolver = {
   canActivate(state, source) {
     const uses = source.skillUsesRemaining;
     if (uses !== 'infinite' && uses <= 0) return false;
-    const frontRow = source.owner === 'player' ? 0 : 5;
+    const frontRow = source.owner === 'player' ? 0 : BOARD_ROWS - 1;
     return source.position.row === frontRow;
   },
   getValidTargets() {

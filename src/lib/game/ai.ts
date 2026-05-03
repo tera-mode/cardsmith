@@ -1,4 +1,4 @@
-import { GameSession, Unit, Position, Card } from '@/lib/types/game';
+import { GameSession, Unit, Position } from '@/lib/types/game';
 import {
   getLegalMoves,
   getLegalAttacks,
@@ -19,18 +19,13 @@ export interface WeightedAction {
   weight: number;
 }
 
-function pickWeighted<T extends WeightedAction>(actions: T[]): T {
-  // MVP: weightを無視してランダム選択
-  return actions[Math.floor(Math.random() * actions.length)];
-}
-
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
 // ─── AIターン実行 ─────────────────────────────────────────────────────────
 
-const DELAY_MS = 700;
+const DELAY_MS = 600;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -42,11 +37,8 @@ export async function executeAITurn(
 ): Promise<GameSession> {
   let state = { ...session };
 
-  // 1. ドロー（GameContextのdrawCard相当の処理をここでは行わない。
-  //    ドローはGameContextで行い、この関数は召喚・行動のみ担当）
-
-  // 2. 召喚（50%確率で試みる）
-  if (Math.random() < 0.5 && !state.ai.hasSummonedThisTurn && state.ai.hand.length > 0) {
+  // 1. 召喚（80%確率 — 積極的に展開）
+  if (Math.random() < 0.8 && !state.ai.hasSummonedThisTurn && state.ai.hand.length > 0) {
     const summonPositions = getLegalSummonPositions(state.board, 'ai');
     if (summonPositions.length > 0) {
       const card = pickRandom(state.ai.hand);
@@ -59,11 +51,7 @@ export async function executeAITurn(
       state = {
         ...state,
         board: newBoard,
-        ai: {
-          ...state.ai,
-          hand: newHand,
-          hasSummonedThisTurn: true,
-        },
+        ai: { ...state.ai, hand: newHand, hasSummonedThisTurn: true },
         log: [...state.log, `AI: ${card.name} を召喚`],
       };
       onUpdate(state);
@@ -71,8 +59,8 @@ export async function executeAITurn(
     }
   }
 
-  // 3. ユニット行動（70%確率で試みる）
-  if (Math.random() < 0.7) {
+  // 2. 全ユニット行動（95%確率 — ほぼ毎ターン動く）
+  if (Math.random() < 0.95) {
     const aiUnits: Unit[] = [];
     for (let r = 0; r < BOARD_ROWS; r++) {
       for (let c = 0; c < BOARD_COLS; c++) {
@@ -86,13 +74,21 @@ export async function executeAITurn(
     if (aiUnits.length > 0) {
       const unit = pickRandom(aiUnits);
 
-      // 移動
+      // ─ 移動：前進を優先、後退は禁止
       const moves = getLegalMoves(unit, state.board);
-      const allMoveOptions: Position[] = [unit.position, ...moves]; // 「移動しない」含む
-      const chosenPos = pickRandom(allMoveOptions);
+      // 前進方向（AI視点でdyが正 = 下方向 = プレイヤー陣地へ）のみ優先
+      const frontRow = BOARD_ROWS - 1;
+      const forwardMoves = moves.filter((p) => p.row > unit.position.row);
+      const lateralMoves = moves.filter((p) => p.row === unit.position.row);
+      // 前進できなければ横移動、それもできなければ留まる
+      const priorityMoves = forwardMoves.length > 0 ? forwardMoves
+        : lateralMoves.length > 0 ? lateralMoves
+        : [];
+
       let movedUnit = unit;
 
-      if (chosenPos !== unit.position) {
+      if (priorityMoves.length > 0) {
+        const chosenPos = pickRandom(priorityMoves);
         const newBoard = removeUnit(state.board, unit.position);
         movedUnit = { ...unit, position: chosenPos };
         const newBoard2 = placeUnit(newBoard, movedUnit, chosenPos);
@@ -105,51 +101,67 @@ export async function executeAITurn(
         await delay(DELAY_MS);
       }
 
-      // 攻撃 or スキル or 何もしない（各33%）
-      const roll = Math.random();
-      if (roll < 0.5) {
-        // 攻撃
-        const attacks = getLegalAttacks(movedUnit, state.board);
-        if (attacks.length > 0) {
-          const target = pickRandom(attacks);
-          const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(state, movedUnit, target);
+      // ─ 攻撃（70%確率）またはスキル（20%確率）
+      const attacks = getLegalAttacks(movedUnit, state.board);
 
-          // 反撃チェック
-          let nextState: GameSession = {
-            ...state,
-            board,
-            player: { ...state.player, baseHp: playerBaseHp },
-            ai: { ...state.ai, baseHp: aiBaseHp },
-            log: [...state.log, ...log],
+      // 最前線でのベース攻撃を最優先
+      const baseAttack = attacks.find((a) => a.type === 'base');
+      const unitAttacks = attacks.filter((a) => a.type === 'unit');
+      const isAtFront = movedUnit.position.row === frontRow;
+
+      if (baseAttack && isAtFront) {
+        // 最前線: 必ずベース攻撃
+        const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(state, movedUnit, baseAttack);
+        let nextState: GameSession = {
+          ...state,
+          board,
+          player: { ...state.player, baseHp: playerBaseHp },
+          ai: { ...state.ai, baseHp: aiBaseHp },
+          log: [...state.log, ...log],
+        };
+        const finalBoard = nextState.board.map((r) => [...r]);
+        const updatedUnit = finalBoard[movedUnit.position.row]?.[movedUnit.position.col];
+        if (updatedUnit) {
+          finalBoard[movedUnit.position.row][movedUnit.position.col] = {
+            ...updatedUnit, hasActedThisTurn: true,
           };
-
-          if (target.type === 'unit') {
-            const defender = target.unit;
-            if (defender.card.skill?.effectType === 'counter') {
-              const currentDefender = board[defender.position.row][defender.position.col];
-              if (currentDefender) {
-                const { state: afterCounter } = applyCounterAttack(nextState, currentDefender, movedUnit);
-                nextState = afterCounter;
-              }
+        }
+        state = { ...nextState, board: finalBoard };
+        onUpdate(state);
+        await delay(DELAY_MS);
+      } else if (unitAttacks.length > 0 && Math.random() < 0.7) {
+        // 敵ユニット攻撃
+        const target = pickRandom(unitAttacks);
+        const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(state, movedUnit, target);
+        let nextState: GameSession = {
+          ...state,
+          board,
+          player: { ...state.player, baseHp: playerBaseHp },
+          ai: { ...state.ai, baseHp: aiBaseHp },
+          log: [...state.log, ...log],
+        };
+        if (target.type === 'unit') {
+          const defender = target.unit;
+          if (defender.card.skill?.effectType === 'counter') {
+            const currentDefender = board[defender.position.row]?.[defender.position.col];
+            if (currentDefender) {
+              const { state: afterCounter } = applyCounterAttack(nextState, currentDefender, movedUnit);
+              nextState = afterCounter;
             }
           }
-
-          // 行動済みフラグ
-          const finalBoard = nextState.board.map((r) => [...r]);
-          const updatedUnit = finalBoard[movedUnit.position.row]?.[movedUnit.position.col];
-          if (updatedUnit) {
-            finalBoard[movedUnit.position.row][movedUnit.position.col] = {
-              ...updatedUnit,
-              hasActedThisTurn: true,
-            };
-          }
-
-          state = { ...nextState, board: finalBoard };
-          onUpdate(state);
-          await delay(DELAY_MS);
         }
-      } else if (roll < 0.7) {
-        // スキル（発動できる場合のみ）
+        const finalBoard = nextState.board.map((r) => [...r]);
+        const updatedUnit = finalBoard[movedUnit.position.row]?.[movedUnit.position.col];
+        if (updatedUnit) {
+          finalBoard[movedUnit.position.row][movedUnit.position.col] = {
+            ...updatedUnit, hasActedThisTurn: true,
+          };
+        }
+        state = { ...nextState, board: finalBoard };
+        onUpdate(state);
+        await delay(DELAY_MS);
+      } else if (Math.random() < 0.4) {
+        // スキル使用
         const skill = movedUnit.card.skill;
         if (skill) {
           const resolver = SKILL_RESOLVERS[skill.effectType];
@@ -163,11 +175,8 @@ export async function executeAITurn(
           }
         }
       }
-      // 何もしない場合: そのまま
     }
   }
 
-  // 4. ターン終了
-  // hasActedThisTurnリセット・フェーズ切替はGameContextで行う
   return state;
 }

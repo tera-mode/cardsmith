@@ -150,9 +150,11 @@ export function getLegalAttacks(unit: Unit, board: BoardState): AttackTarget[] {
 // ─── 召喚 ─────────────────────────────────────────────────────────────────
 
 export function getSummonZone(owner: 'player' | 'ai'): number[] {
+  // 4×4以下: 1行ゾーン、6×6以上: 2行ゾーン
+  const zoneRows = BOARD_ROWS <= 4 ? 1 : 2;
   return owner === 'player'
-    ? [BOARD_ROWS - 2, BOARD_ROWS - 1]
-    : [0, 1];
+    ? Array.from({ length: zoneRows }, (_, i) => BOARD_ROWS - zoneRows + i)
+    : Array.from({ length: zoneRows }, (_, i) => i);
 }
 
 export function getLegalSummonPositions(board: BoardState, owner: 'player' | 'ai'): Position[] {

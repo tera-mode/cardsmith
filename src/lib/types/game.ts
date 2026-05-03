@@ -75,7 +75,7 @@ export interface PlayerState {
   deck: Card[];
   hand: Card[];
   hasSummonedThisTurn: boolean;
-  hasActedThisTurn: boolean;
+  hasMovedThisTurn: boolean; // このターンにいずれかのユニットが移動済み
 }
 
 export type GamePhase = 'draw' | 'main' | 'end_turn' | 'finished';
@@ -97,11 +97,15 @@ export interface GameSession {
 
 // ─── UI操作用の型 ─────────────────────────────────────────────────────────
 
+// unit_selected: ユニットタップ → アクション選択メニュー（ボードハイライトなし）
+// unit_moving:   「移動する」選択 → 移動先ハイライト表示中
+// unit_post_move: 移動完了 → 攻撃/スキル/行動終了メニュー
 export type InteractionMode =
   | { type: 'idle' }
   | { type: 'card_selected'; cardIndex: number }
   | { type: 'unit_selected'; unit: Unit }
-  | { type: 'unit_moved'; unit: Unit }; // 移動後・攻撃/スキル選択中
+  | { type: 'unit_moving'; unit: Unit }
+  | { type: 'unit_post_move'; unit: Unit };
 
 export type AttackTarget =
   | { type: 'unit'; unit: Unit }

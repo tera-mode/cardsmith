@@ -9,7 +9,9 @@ import Board from '@/components/game/Board';
 import Hand from '@/components/game/Hand';
 import BaseHpBar from '@/components/game/BaseHpBar';
 import TurnIndicator from '@/components/game/TurnIndicator';
+import TurnStepBar from '@/components/game/TurnStepBar';
 import ActionMenu, { SkipMoveButton } from '@/components/game/ActionMenu';
+import HintPanel from '@/components/game/HintPanel';
 import GameLog from '@/components/game/GameLog';
 
 function GameScreen() {
@@ -50,7 +52,6 @@ function GameScreen() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-[#1a1a2e]">
-      {/* デスクトップでは中央寄せ・最大幅480px */}
       <div className="flex flex-col h-full w-full max-w-[480px] mx-auto">
 
         {/* AI 陣地HP */}
@@ -58,7 +59,7 @@ function GameScreen() {
           <BaseHpBar owner="ai" hp={session.ai.baseHp} />
         </div>
 
-        {/* 盤面（残りスペースを使って正方形を維持） */}
+        {/* 盤面 */}
         <div className="flex justify-center items-center flex-shrink-0">
           <Board board={session.board} mode={mode} highlightedCells={highlightedCells} />
         </div>
@@ -73,8 +74,16 @@ function GameScreen() {
           <TurnIndicator currentTurn={session.currentTurn} turnCount={session.turnCount} />
         </div>
 
+        {/* ターンステップバー（召喚/移動/攻撃の進捗） */}
+        <div className="flex-shrink-0">
+          <TurnStepBar session={session} mode={mode} />
+        </div>
+
+        {/* ヒントパネル */}
+        <HintPanel session={session} mode={mode} />
+
         {/* ゲームログ（高さ固定） */}
-        <div className="border-t border-[#1e3a5f]/40 h-20 overflow-hidden flex-shrink-0">
+        <div className="border-t border-[#1e3a5f]/40 h-16 overflow-hidden flex-shrink-0">
           <GameLog log={session.log} />
         </div>
 
@@ -108,11 +117,11 @@ function GameScreen() {
         </div>
       </div>
 
-      {/* ユニット選択中：移動しないボタン（オーバーレイなし） */}
+      {/* 移動先選択中：フローティングボタン（その場に留まる / 戻る） */}
       <SkipMoveButton mode={mode} />
 
-      {/* 移動後：攻撃・スキル選択メニュー（オーバーレイあり） */}
-      {mode.type === 'unit_moved' && (
+      {/* アクション選択メニュー（unit_selected と unit_post_move で表示） */}
+      {(mode.type === 'unit_selected' || mode.type === 'unit_post_move') && (
         <ActionMenu mode={mode} session={session} />
       )}
     </div>
