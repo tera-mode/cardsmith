@@ -35,3 +35,4 @@ docs/playtest_reports/
 docs/screenshots/
 public/images/cards/raw/
 public/images/backgrounds/raw/
+.playwright-mcp/
