@@ -1,0 +1,155 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e55]:
+      - generic [ref=e57]:
+        - generic [ref=e58]: AI陣地
+        - generic [ref=e59]:
+          - generic [ref=e60]: ❤️
+          - generic [ref=e61]: ❤️
+          - generic [ref=e62]: ❤️
+          - generic [ref=e63]: ❤️
+          - generic [ref=e64]: ❤️
+        - generic [ref=e67]: "20"
+      - generic [ref=e69]:
+        - generic [ref=e224] [cursor=pointer]:
+          - generic [ref=e227]: ✨
+          - generic [ref=e228]:
+            - generic [ref=e229]: "0"
+            - generic [ref=e230]: /
+            - generic [ref=e231]: "2"
+          - generic [ref=e232]: ∞
+        - generic [ref=e233] [cursor=pointer]:
+          - generic [ref=e236]: ⚔️
+          - generic [ref=e237]:
+            - generic [ref=e238]: "3"
+            - generic [ref=e239]: /
+            - generic [ref=e240]: "3"
+        - generic [ref=e259] [cursor=pointer]:
+          - generic [ref=e262]: ⚔️
+          - generic [ref=e263]:
+            - generic [ref=e264]: "1"
+            - generic [ref=e265]: /
+            - generic [ref=e266]: "2"
+        - generic [ref=e395] [cursor=pointer]:
+          - generic [ref=e398]: ✨
+          - generic [ref=e399]:
+            - generic [ref=e400]: "0"
+            - generic [ref=e401]: /
+            - generic [ref=e402]: "2"
+          - generic [ref=e403]: ∞
+        - generic [ref=e280] [cursor=pointer]:
+          - generic [ref=e283]: 🏹
+          - generic [ref=e284]:
+            - generic [ref=e285]: "2"
+            - generic [ref=e286]: /
+            - generic [ref=e287]: "1"
+          - generic [ref=e288]: "3"
+        - generic [ref=e387] [cursor=pointer]:
+          - generic [ref=e390]: 🛡️
+          - generic [ref=e391]:
+            - generic [ref=e392]: "1"
+            - generic [ref=e393]: /
+            - generic [ref=e394]: "3"
+      - generic [ref=e119]:
+        - generic [ref=e120]: 自陣
+        - generic [ref=e121]:
+          - generic [ref=e122]: ❤️
+          - generic [ref=e123]: ❤️
+          - generic [ref=e124]: ❤️
+          - generic [ref=e125]: ❤️
+          - generic [ref=e126]: ❤️
+        - generic [ref=e129]: "20"
+      - generic [ref=e131]:
+        - generic [ref=e132]: ターン 6
+        - generic [ref=e133]: ▶ あなたのターン
+      - generic [ref=e135]:
+        - paragraph [ref=e136]: "AI: 戦闘兵 を召喚"
+        - paragraph [ref=e149]: ─── ターン3 (プレイヤーのターン) ───
+        - paragraph [ref=e191]: 弓兵 が移動
+        - paragraph [ref=e200]: ─── ターン3 (AIのターン) ───
+        - paragraph [ref=e201]: "AI: 治癒兵 を召喚"
+        - paragraph [ref=e202]: "AI: 戦闘兵 が移動"
+        - paragraph [ref=e223]: ─── ターン4 (プレイヤーのターン) ───
+        - paragraph [ref=e241]: 弓兵 が行動（移動なし）
+        - paragraph [ref=e242]: ─── ターン4 (AIのターン) ───
+        - paragraph [ref=e243]: "AI: 軽歩兵 を召喚"
+        - paragraph [ref=e245]: ─── ターン5 (プレイヤーのターン) ───
+        - paragraph [ref=e258]: 弓兵 が移動
+        - paragraph [ref=e267]: ─── ターン5 (AIのターン) ───
+        - paragraph [ref=e268]: "AI: 治癒兵 を召喚"
+        - paragraph [ref=e269]: ─── ターン6 (プレイヤーのターン) ───
+        - paragraph [ref=e289]: 衛兵 を召喚
+        - paragraph [ref=e299]: 衛兵 が移動
+        - paragraph [ref=e300]: ─── ターン6 (AIのターン) ───
+        - paragraph [ref=e301]: "AI: 治癒兵 が移動"
+        - paragraph [ref=e329]: ─── ターン7 (プレイヤーのターン) ───
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: 手札
+          - generic [ref=e17]: 8枚
+        - generic [ref=e18]:
+          - button "7 🛡️ 重装兵 ⚔1 ❤4" [ref=e331] [cursor=pointer]:
+            - generic [ref=e332]: "7"
+            - generic [ref=e333]: 🛡️
+            - generic [ref=e334]: 重装兵
+            - generic [ref=e335]:
+              - generic [ref=e336]: ⚔1
+              - generic [ref=e337]: ❤4
+          - button "8 ⚔️ 戦闘兵 ⚔3 ❤3" [ref=e338] [cursor=pointer]:
+            - generic [ref=e339]: "8"
+            - generic [ref=e340]: ⚔️
+            - generic [ref=e341]: 戦闘兵
+            - generic [ref=e342]:
+              - generic [ref=e343]: ⚔3
+              - generic [ref=e344]: ❤3
+          - button "5 🗡️ 急襲兵 ⚔2 ❤1" [ref=e345] [cursor=pointer]:
+            - generic [ref=e346]: "5"
+            - generic [ref=e347]: 🗡️
+            - generic [ref=e348]: 急襲兵
+            - generic [ref=e349]:
+              - generic [ref=e350]: ⚔2
+              - generic [ref=e351]: ❤1
+          - button "13 ✨ 治癒兵 ⚔0 ❤2 ★" [ref=e352] [cursor=pointer]:
+            - generic [ref=e353]: "13"
+            - generic [ref=e354]: ✨
+            - generic [ref=e355]: 治癒兵
+            - generic [ref=e356]:
+              - generic [ref=e357]: ⚔0
+              - generic [ref=e358]: ❤2
+            - generic [ref=e359]: ★
+          - button "11 🏹 弓兵 ⚔2 ❤1 ★" [ref=e360] [cursor=pointer]:
+            - generic [ref=e361]: "11"
+            - generic [ref=e362]: 🏹
+            - generic [ref=e363]: 弓兵
+            - generic [ref=e364]:
+              - generic [ref=e365]: ⚔2
+              - generic [ref=e366]: ❤1
+            - generic [ref=e367]: ★
+          - button "5 🏃 偵察兵 ⚔1 ❤1" [ref=e368] [cursor=pointer]:
+            - generic [ref=e369]: "5"
+            - generic [ref=e370]: 🏃
+            - generic [ref=e371]: 偵察兵
+            - generic [ref=e372]:
+              - generic [ref=e373]: ⚔1
+              - generic [ref=e374]: ❤1
+          - button "5 ⚔️ 軽歩兵 ⚔1 ❤2" [ref=e375] [cursor=pointer]:
+            - generic [ref=e376]: "5"
+            - generic [ref=e377]: ⚔️
+            - generic [ref=e378]: 軽歩兵
+            - generic [ref=e379]:
+              - generic [ref=e380]: ⚔1
+              - generic [ref=e381]: ❤2
+          - button "8 ⚔️ 戦闘兵 ⚔3 ❤3" [ref=e404] [cursor=pointer]:
+            - generic [ref=e405]: "8"
+            - generic [ref=e406]: ⚔️
+            - generic [ref=e407]: 戦闘兵
+            - generic [ref=e408]:
+              - generic [ref=e409]: ⚔3
+              - generic [ref=e410]: ❤3
+      - button "ターン終了" [ref=e254]
+    - generic:
+      - button "その場に留まる" [ref=e415]
+      - button "キャンセル" [ref=e416]
+  - button "Open Next.js Dev Tools" [ref=e9] [cursor=pointer]:
+    - img [ref=e10]
+  - alert [ref=e13]

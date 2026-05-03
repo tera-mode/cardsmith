@@ -1,0 +1,113 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e55]:
+      - generic [ref=e57]:
+        - generic [ref=e58]: AI陣地
+        - generic [ref=e59]:
+          - generic [ref=e60]: ❤️
+          - generic [ref=e61]: ❤️
+          - generic [ref=e62]: ❤️
+          - generic [ref=e63]: ❤️
+          - generic [ref=e64]: ❤️
+        - generic [ref=e67]: "20"
+      - generic [ref=e69]:
+        - generic [ref=e224] [cursor=pointer]:
+          - generic [ref=e227]: ✨
+          - generic [ref=e228]:
+            - generic [ref=e229]: "0"
+            - generic [ref=e230]: /
+            - generic [ref=e231]: "2"
+          - generic [ref=e232]: ∞
+        - generic [ref=e233] [cursor=pointer]:
+          - generic [ref=e236]: ⚔️
+          - generic [ref=e237]:
+            - generic [ref=e238]: "3"
+            - generic [ref=e239]: /
+            - generic [ref=e240]: "3"
+        - generic [ref=e214] [cursor=pointer]:
+          - generic [ref=e217]: 🏹
+          - generic [ref=e218]:
+            - generic [ref=e219]: "2"
+            - generic [ref=e220]: /
+            - generic [ref=e221]: "1"
+          - generic [ref=e222]: "3"
+      - generic [ref=e119]:
+        - generic [ref=e120]: 自陣
+        - generic [ref=e121]:
+          - generic [ref=e122]: ❤️
+          - generic [ref=e123]: ❤️
+          - generic [ref=e124]: ❤️
+          - generic [ref=e125]: ❤️
+          - generic [ref=e126]: ❤️
+        - generic [ref=e129]: "20"
+      - generic [ref=e131]:
+        - generic [ref=e132]: ターン 3
+        - generic [ref=e133]: ▶ あなたのターン
+      - generic [ref=e135]:
+        - paragraph [ref=e136]: ゲーム開始！プレイヤー先攻
+        - paragraph [ref=e149]: 弓兵 を召喚
+        - paragraph [ref=e191]: 弓兵 が移動
+        - paragraph [ref=e200]: ─── ターン2 (AIのターン) ───
+        - paragraph [ref=e201]: "AI: 戦闘兵 を召喚"
+        - paragraph [ref=e202]: ─── ターン3 (プレイヤーのターン) ───
+        - paragraph [ref=e223]: 弓兵 が移動
+        - paragraph [ref=e241]: ─── ターン3 (AIのターン) ───
+        - paragraph [ref=e242]: "AI: 治癒兵 を召喚"
+        - paragraph [ref=e243]: "AI: 戦闘兵 が移動"
+        - paragraph [ref=e245]: ─── ターン4 (プレイヤーのターン) ───
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: 手札
+          - generic [ref=e17]: 6枚
+        - generic [ref=e18]:
+          - button "12 🛡️ 衛兵 ⚔1 ❤3" [ref=e151] [cursor=pointer]:
+            - generic [ref=e152]: "12"
+            - generic [ref=e153]: 🛡️
+            - generic [ref=e154]: 衛兵
+            - generic [ref=e155]:
+              - generic [ref=e156]: ⚔1
+              - generic [ref=e157]: ❤3
+          - button "7 🛡️ 重装兵 ⚔1 ❤4" [ref=e158] [cursor=pointer]:
+            - generic [ref=e159]: "7"
+            - generic [ref=e160]: 🛡️
+            - generic [ref=e161]: 重装兵
+            - generic [ref=e162]:
+              - generic [ref=e163]: ⚔1
+              - generic [ref=e164]: ❤4
+          - button "8 ⚔️ 戦闘兵 ⚔3 ❤3" [ref=e165] [cursor=pointer]:
+            - generic [ref=e166]: "8"
+            - generic [ref=e167]: ⚔️
+            - generic [ref=e168]: 戦闘兵
+            - generic [ref=e169]:
+              - generic [ref=e170]: ⚔3
+              - generic [ref=e171]: ❤3
+          - button "5 🗡️ 急襲兵 ⚔2 ❤1" [ref=e172] [cursor=pointer]:
+            - generic [ref=e173]: "5"
+            - generic [ref=e174]: 🗡️
+            - generic [ref=e175]: 急襲兵
+            - generic [ref=e176]:
+              - generic [ref=e177]: ⚔2
+              - generic [ref=e178]: ❤1
+          - button "13 ✨ 治癒兵 ⚔0 ❤2 ★" [ref=e203] [cursor=pointer]:
+            - generic [ref=e204]: "13"
+            - generic [ref=e205]: ✨
+            - generic [ref=e206]: 治癒兵
+            - generic [ref=e207]:
+              - generic [ref=e208]: ⚔0
+              - generic [ref=e209]: ❤2
+            - generic [ref=e210]: ★
+          - button "11 🏹 弓兵 ⚔2 ❤1 ★" [ref=e246] [cursor=pointer]:
+            - generic [ref=e247]: "11"
+            - generic [ref=e248]: 🏹
+            - generic [ref=e249]: 弓兵
+            - generic [ref=e250]:
+              - generic [ref=e251]: ⚔2
+              - generic [ref=e252]: ❤1
+            - generic [ref=e253]: ★
+      - button "ターン終了" [ref=e254]
+    - generic:
+      - button "その場に留まる" [ref=e256]
+      - button "キャンセル" [ref=e257]
+  - button "Open Next.js Dev Tools" [ref=e9] [cursor=pointer]:
+    - img [ref=e10]
+  - alert [ref=e13]

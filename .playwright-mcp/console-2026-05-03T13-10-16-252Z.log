@@ -1,0 +1,484 @@
+[     115ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     120ms] [LOG] [Fast Refresh] done in 114ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     167ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     184ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  117317ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  117382ms] [LOG] [Fast Refresh] done in 49ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  117552ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  117608ms] [LOG] [Fast Refresh] done in 159ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  362303ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  362346ms] [LOG] [Fast Refresh] done in 26ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  387672ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  387739ms] [LOG] [Fast Refresh] done in 36ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  400329ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  400378ms] [LOG] [Fast Refresh] done in 28ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  408531ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  408579ms] [LOG] [Fast Refresh] done in 40ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  430136ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  430174ms] [ERROR] ./src/contexts/GameContext.tsx:332:9
+the name `cancel` is defined multiple times
+  330 |   }, []);
+  331 |
+> 332 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  333 |     setMode({ type: 'idle' });
+  334 |     setHighlightedCells([]);
+  335 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  430309ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  430487ms] [ERROR] ./src/contexts/GameContext.tsx:332:9
+the name `cancel` is defined multiple times
+  330 |   }, []);
+  331 |
+> 332 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  333 |     setMode({ type: 'idle' });
+  334 |     setHighlightedCells([]);
+  335 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  430541ms] [ERROR] ./src/contexts/GameContext.tsx:332:9
+the name `cancel` is defined multiple times
+  330 |   }, []);
+  331 |
+> 332 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  333 |     setMode({ type: 'idle' });
+  334 |     setHighlightedCells([]);
+  335 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  430655ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  430707ms] [ERROR] ./src/contexts/GameContext.tsx:332:9
+the name `cancel` is defined multiple times
+  330 |   }, []);
+  331 |
+> 332 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  333 |     setMode({ type: 'idle' });
+  334 |     setHighlightedCells([]);
+  335 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272
+[  430791ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/play?_rsc=1dizv:0
+[  430811ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/play:0
+[  430860ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0bruynb._.js:15305
+[  430896ms] Error: ./src/contexts/GameContext.tsx:332:9
+the name `cancel` is defined multiple times
+  330 |   }, []);
+  331 |
+> 332 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  333 |     setMode({ type: 'idle' });
+  334 |     setHighlightedCells([]);
+  335 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./src/contexts/GameContext.tsx:332:9)
+    at Object.getCompilationErrors (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://E:\dev\ai-tactics\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://E:\dev\ai-tactics\node_modules\next\dist\server\base-server.js:1745:26)
+[  430897ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  430899ms] [ERROR] ./src/contexts/GameContext.tsx:332:9
+the name `cancel` is defined multiple times
+  330 |   }, []);
+  331 |
+> 332 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  333 |     setMode({ type: 'idle' });
+  334 |     setHighlightedCells([]);
+  335 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  430956ms] [ERROR] ./src/contexts/GameContext.tsx:332:9
+the name `cancel` is defined multiple times
+  330 |   }, []);
+  331 |
+> 332 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  333 |     setMode({ type: 'idle' });
+  334 |     setHighlightedCells([]);
+  335 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  431001ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  440388ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  440411ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/play:0
+[  440433ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0bruynb._.js:15305
+[  440442ms] Error: ./src/contexts/GameContext.tsx:336:9
+the name `cancel` is defined multiple times
+  334 |   }, []);
+  335 |
+> 336 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  337 |     setMode({ type: 'idle' });
+  338 |     setHighlightedCells([]);
+  339 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./src/contexts/GameContext.tsx:336:9)
+    at Object.getCompilationErrors (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://E:\dev\ai-tactics\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://E:\dev\ai-tactics\node_modules\next\dist\server\base-server.js:1745:26)
+[  440444ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  440444ms] [ERROR] ./src/contexts/GameContext.tsx:336:9
+the name `cancel` is defined multiple times
+  334 |   }, []);
+  335 |
+> 336 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  337 |     setMode({ type: 'idle' });
+  338 |     setHighlightedCells([]);
+  339 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  440445ms] [ERROR] ./src/contexts/GameContext.tsx:336:9
+the name `cancel` is defined multiple times
+  334 |   }, []);
+  335 |
+> 336 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  337 |     setMode({ type: 'idle' });
+  338 |     setHighlightedCells([]);
+  339 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  440486ms] [ERROR] ./src/contexts/GameContext.tsx:336:9
+the name `cancel` is defined multiple times
+  334 |   }, []);
+  335 |
+> 336 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  337 |     setMode({ type: 'idle' });
+  338 |     setHighlightedCells([]);
+  339 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  440547ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  449263ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  449283ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/play:0
+[  449298ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_react-dom_0bruynb._.js:15305
+[  449303ms] Error: ./src/contexts/GameContext.tsx:366:9
+the name `cancel` is defined multiple times
+  364 |   }, []);
+  365 |
+> 366 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  367 |     setMode({ type: 'idle' });
+  368 |     setHighlightedCells([]);
+  369 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./src/contexts/GameContext.tsx:366:9)
+    at Object.getCompilationErrors (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1186:59)
+    at DevBundlerService.getCompilationError (file://E:\dev\ai-tactics\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://E:\dev\ai-tactics\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://E:\dev\ai-tactics\node_modules\next\dist\server\base-server.js:1745:26)
+[  449304ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  449305ms] [ERROR] ./src/contexts/GameContext.tsx:366:9
+the name `cancel` is defined multiple times
+  364 |   }, []);
+  365 |
+> 366 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  367 |     setMode({ type: 'idle' });
+  368 |     setHighlightedCells([]);
+  369 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  449352ms] [ERROR] ./src/contexts/GameContext.tsx:366:9
+the name `cancel` is defined multiple times
+  364 |   }, []);
+  365 |
+> 366 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  367 |     setMode({ type: 'idle' });
+  368 |     setHighlightedCells([]);
+  369 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  460389ms] [ERROR] ./src/contexts/GameContext.tsx:366:9
+the name `cancel` is defined multiple times
+  364 |   }, []);
+  365 |
+> 366 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  367 |     setMode({ type: 'idle' });
+  368 |     setHighlightedCells([]);
+  369 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  460412ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  460578ms] [ERROR] ./src/contexts/GameContext.tsx:366:9
+the name `cancel` is defined multiple times
+  364 |   }, []);
+  365 |
+> 366 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  367 |     setMode({ type: 'idle' });
+  368 |     setHighlightedCells([]);
+  369 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  460632ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  460828ms] [ERROR] ./src/contexts/GameContext.tsx:366:9
+the name `cancel` is defined multiple times
+  364 |   }, []);
+  365 |
+> 366 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  367 |     setMode({ type: 'idle' });
+  368 |     setHighlightedCells([]);
+  369 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  460884ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  462536ms] [ERROR] ./src/contexts/GameContext.tsx:366:9
+the name `cancel` is defined multiple times
+  364 |   }, []);
+  365 |
+> 366 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  367 |     setMode({ type: 'idle' });
+  368 |     setHighlightedCells([]);
+  369 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  462603ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  462692ms] [ERROR] ./src/contexts/GameContext.tsx:366:9
+the name `cancel` is defined multiple times
+  364 |   }, []);
+  365 |
+> 366 |   const cancel = useCallback(() => {
+      |         ^^^^^^
+  367 |     setMode({ type: 'idle' });
+  368 |     setHighlightedCells([]);
+  369 |   }, []);
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/contexts/GameContext.tsx [Client Component Browser]
+    ./app/play/page.tsx [Client Component Browser]
+    ./app/play/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/contexts/GameContext.tsx [Client Component SSR]
+    ./app/play/page.tsx [Client Component SSR]
+    ./app/play/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1945
+[  462745ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  471089ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  471296ms] [LOG] [Fast Refresh] done in 20ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_0u_w_5s._.js:1226
+[  471352ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  471369ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431

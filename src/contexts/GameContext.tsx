@@ -14,6 +14,37 @@ import {
 import { buildStandardDeck, shuffleDeck } from '@/lib/game/decks';
 import { applyCounterAttack, SKILL_RESOLVERS } from '@/lib/game/skills';
 import { executeAITurn } from '@/lib/game/ai';
+import { auth } from '@/lib/firebase/config';
+
+// ─── Firestoreへのセッション保存 ─────────────────────────────────────────
+
+async function saveSession(session: GameSession) {
+  try {
+    const user = auth?.currentUser;
+    if (!user) return;
+    const token = await user.getIdToken();
+    await fetch('/api/session', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: session.sessionId,
+        userId: session.userId,
+        startedAt: session.startedAt,
+        finishedAt: session.finishedAt ?? Date.now(),
+        winner: session.winner ?? 'draw',
+        turnCount: session.turnCount,
+        finalState: {
+          playerBaseHp: session.player.baseHp,
+          aiBaseHp: session.ai.baseHp,
+        },
+        log: session.log.slice(-50), // 最大50行だけ保存
+        playerDeckId: 'standard',
+      }),
+    });
+  } catch {
+    // 保存失敗してもゲームは続行
+  }
+}
 
 // ─── コンテキスト型 ───────────────────────────────────────────────────────
 
@@ -143,9 +174,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const newBoard2 = isSamePos ? s.board : placeUnit(newBoard, moved, pos);
 
     const logEntry = isSamePos ? `${unit.card.name} が行動（移動なし）` : `${unit.card.name} が移動`;
-    updateSession({ ...s, board: newBoard2, log: [...s.log, logEntry] });
 
-    // 移動後に攻撃もスキルも使えなければ行動済みにして即 idle に戻す
+    // 移動後に攻撃もスキルも使えなければ行動済みにして idle へ（updateSession は1回だけ）
     const attacks = getLegalAttacks(moved, newBoard2);
     const skill = moved.card.skill;
     const skillResolver = skill ? SKILL_RESOLVERS[skill.effectType] : null;
@@ -153,13 +183,13 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const canSkill = skillResolver ? skillResolver.canActivate(tempSession, moved) : false;
 
     if (attacks.length === 0 && !canSkill) {
-      // 行動済みフラグを立てて idle へ
       const finalBoard = newBoard2.map((r) => [...r]);
       const u = finalBoard[moved.position.row]?.[moved.position.col];
       if (u) finalBoard[moved.position.row][moved.position.col] = { ...u, hasActedThisTurn: true };
       updateSession({ ...s, board: finalBoard, log: [...s.log, logEntry] });
       setMode({ type: 'idle' });
     } else {
+      updateSession({ ...s, board: newBoard2, log: [...s.log, logEntry] });
       setMode({ type: 'unit_moved', unit: moved });
     }
     setHighlightedCells([]);
@@ -205,14 +235,18 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     // 勝敗チェック
     const winner = checkWinner(nextState.player.baseHp, nextState.ai.baseHp);
     const finished = winner !== null;
+    const finishedAt = finished ? Date.now() : undefined;
 
-    updateSession({
+    const result: GameSession = {
       ...nextState,
       board: finalBoard,
       phase: finished ? 'finished' : nextState.phase,
       winner: winner ?? undefined,
-      finishedAt: finished ? Date.now() : undefined,
-    });
+      finishedAt,
+    };
+
+    updateSession(result);
+    if (finished) saveSession(result);
     setMode({ type: 'idle' });
     setHighlightedCells([]);
   }, [mode, updateSession]);
@@ -306,17 +340,22 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     // 勝敗チェック
     const winner = checkWinner(afterAI.player.baseHp, afterAI.ai.baseHp);
     const finished = winner !== null;
+    const finishedAt = finished ? Date.now() : undefined;
 
-    updateSession({
+    const finalSession = {
       ...afterAI,
       board: nextBoard,
-      currentTurn: 'player',
+      currentTurn: 'player' as const,
       player: { ...afterAI.player, deck: playerDeck, hand: playerHand, hasSummonedThisTurn: false, hasActedThisTurn: false },
-      phase: finished ? 'finished' : 'main',
+      phase: finished ? ('finished' as const) : ('main' as const),
       winner: winner ?? undefined,
-      finishedAt: finished ? Date.now() : undefined,
+      finishedAt,
       log: [...afterAI.log, `─── ターン${afterAI.turnCount + 1} (プレイヤーのターン) ───`],
-    });
+    };
+
+    updateSession(finalSession);
+
+    if (finished) saveSession(finalSession);
   }, [updateSession]);
 
   const cancel = useCallback(() => {

@@ -70,7 +70,7 @@ export default function Board({ board, mode, highlightedCells }: Props) {
       className="grid gap-px bg-[#0a1628]"
       style={{
         gridTemplateColumns: 'repeat(6, 1fr)',
-        width: 'min(calc(100vw - 2rem), 400px)',
+        width: 'min(calc(100vw - 1.5rem), 460px)',
         aspectRatio: '1 / 1',
       }}
     >

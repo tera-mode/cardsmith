@@ -1,0 +1,13 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "⚔️ ai-tactics" [level=1] [ref=e5]
+      - paragraph [ref=e6]: 将棋風タクティクスTCG
+    - generic [ref=e7]:
+      - paragraph [ref=e8]: • 6×6盤面でのターン制カード対戦
+      - paragraph [ref=e9]: • 13種類のユニットカードで戦略を組み立てろ
+      - paragraph [ref=e10]: • ランダムAIと1対1の対決
+    - generic [ref=e11]:
+      - button "ゲストでプレイ" [ref=e12]
+      - button "ログイン / 新規登録" [ref=e13]
+    - paragraph [ref=e14]: © 合同会社LAIV
