@@ -54,7 +54,7 @@ export default function HintPanel({ session, mode }: Props) {
         );
         if (hasUnacted) hint = '🎮 盤面のユニットをタップして行動させよう！';
       }
-      if (session.turnCount === 1 && !hint) {
+      if (session.turnCount === 1 && !hint && !session.player.hasSummonedThisTurn) {
         hint = '📥 まず手札のカードをタップして召喚しよう！';
       }
       break;

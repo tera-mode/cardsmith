@@ -396,7 +396,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       phase: finished ? ('finished' as const) : ('main' as const),
       winner: winner ?? undefined,
       finishedAt,
-      log: [...afterAI.log, `─── ターン${afterAI.turnCount + 1} (プレイヤーのターン) ───`],
+      log: [...afterAI.log, `─── ターン${afterAI.turnCount} (プレイヤーのターン) ───`],
     };
 
     updateSession(finalSession);
