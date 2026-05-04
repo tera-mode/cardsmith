@@ -1,6 +1,7 @@
 'use client';
 
 import { Card } from '@/lib/types/game';
+import { useLongPress } from '@/hooks/useLongPress';
 
 // カードのサブテキスト（移動方法の補足）
 const CARD_HINT: Record<string, string> = {
@@ -35,15 +36,24 @@ interface Props {
   isSelected: boolean;
   disabled: boolean;
   onClick: (index: number) => void;
+  onLongPress?: (card: Card) => void;
 }
 
-export default function CardInHand({ card, index, isSelected, disabled, onClick }: Props) {
+export default function CardInHand({ card, index, isSelected, disabled, onClick, onLongPress }: Props) {
   const emoji = CARD_EMOJI[card.id] ?? '⚔️';
+  const { start, cancel, didFire } = useLongPress(() => {
+    if (onLongPress) onLongPress(card);
+  }, 450);
 
   return (
     <button
       data-testid={`card-${card.id}-${index}`}
-      onClick={() => !disabled && onClick(index)}
+      onClick={() => { if (didFire.current) { didFire.current = false; return; } if (!disabled) onClick(index); }}
+      onMouseDown={start}
+      onMouseUp={cancel}
+      onTouchStart={(e) => { e.preventDefault(); start(); }}
+      onTouchEnd={cancel}
+      onTouchCancel={cancel}
       disabled={disabled}
       className={[
         'relative flex-shrink-0 flex flex-col items-center rounded-lg border-2',

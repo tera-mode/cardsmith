@@ -9,9 +9,10 @@ interface Props {
   mode: InteractionMode;
   hasSummonedThisTurn: boolean;
   isPlayerTurn: boolean;
+  onCardLongPress?: (card: Card) => void;
 }
 
-export default function Hand({ hand, mode, hasSummonedThisTurn, isPlayerTurn }: Props) {
+export default function Hand({ hand, mode, hasSummonedThisTurn, isPlayerTurn, onCardLongPress }: Props) {
   const { selectCard } = useGame();
 
   const selectedIndex = mode.type === 'card_selected' ? mode.cardIndex : -1;
@@ -44,6 +45,7 @@ export default function Hand({ hand, mode, hasSummonedThisTurn, isPlayerTurn }: 
               isSelected={selectedIndex === i}
               disabled={!canSummon}
               onClick={selectCard}
+              onLongPress={onCardLongPress}
             />
           ))
         )}

@@ -38,7 +38,6 @@ export default function BoardCell({ row, col, unit, isHighlighted, isSelected, o
       onClick={handleClick}
       onMouseDown={start}
       onMouseUp={cancel}
-      onMouseLeave={cancel}
       onTouchStart={(e) => { e.preventDefault(); start(); }}
       onTouchEnd={cancel}
       onTouchCancel={cancel}

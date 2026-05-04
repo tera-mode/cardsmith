@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGame } from '@/contexts/GameContext';
 import { GameProvider } from '@/contexts/GameContext';
-import { Unit } from '@/lib/types/game';
+import { Unit, Card } from '@/lib/types/game';
 import Board from '@/components/game/Board';
 import Hand from '@/components/game/Hand';
 import BaseHpBar from '@/components/game/BaseHpBar';
@@ -21,6 +21,22 @@ function GameScreen() {
   const { session, mode, highlightedCells, initGame, endTurn } = useGame();
   const router = useRouter();
   const [detailUnit, setDetailUnit] = useState<Unit | null>(null);
+
+  const openCardPreview = (card: Card) => {
+    setDetailUnit({
+      instanceId: 'preview',
+      cardId: card.id,
+      card,
+      owner: 'player',
+      position: { row: -1, col: -1 },
+      currentHp: card.hp,
+      maxHp: card.hp,
+      skillUsesRemaining: card.skill ? card.skill.uses : 0,
+      hasActedThisTurn: false,
+      hasSummonedThisTurn: false,
+      buffs: { atkBonus: 0 },
+    });
+  };
 
   useEffect(() => {
     if (!loading && !user) router.push('/');
@@ -116,6 +132,7 @@ function GameScreen() {
             mode={mode}
             hasSummonedThisTurn={session.player.hasSummonedThisTurn}
             isPlayerTurn={isPlayerTurn}
+            onCardLongPress={openCardPreview}
           />
         </div>
 
