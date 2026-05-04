@@ -93,16 +93,29 @@ match /users/{userId}/sessions/{sessionId} {
 2. 既存画像がある場合は**絶対に再生成しない**
 3. **はじめてデザイン生成するカードやUIアセットは、必ずサンプルを作成しユーザーの承認を得てから進めること**
 
-#### 画像生成ツール使い分け
+#### 画像生成ツール
 
-| 用途 | ツール | 理由 |
-|------|--------|------|
-| カードイラスト（初回） | **Gemini** `generate_image` | アニメ風スタイル指定の再現性が高い |
-| カードイラスト（差分・バリエーション） | **Gemini** `edit_image` | 初回画像を下敷きにしてスタイル統一 |
-| ボード背景画像 | **Gemini** `generate_image` | 1024×1024 PNG で出力できる |
-| UIアセット（アイコン・ボタン等） | **Gemini** `generate_image` | 小サイズに後変換 |
+**Python スクリプト方式**（MCP は使わない）
 
-**⛔ `edit_image` でのスタイル変換は絶対に試みないこと。** 元画像のスタイルが強く残り変わらない。
+```bash
+# 全画像生成（既存はスキップ）
+python tools/gen_images.py
+
+# カードのみ
+python tools/gen_images.py cards
+
+# 背景のみ
+python tools/gen_images.py backgrounds
+
+# 特定カードのみ（例: militia）
+python tools/gen_images.py militia
+```
+
+- `google-genai` ライブラリで `gemini-2.5-flash-preview-05-20` モデルを呼び出す
+- API キーは `.env.local` の `GEMINI_API_KEY` から読み込む
+- **既存画像は自動スキップ**（スクリプト内でチェック済み）
+
+> **注意:** `@google/gemini-image-mcp` は npm に存在しない偽パッケージ。MCP 経由での画像生成は不可。
 
 #### スタイル方針
 
