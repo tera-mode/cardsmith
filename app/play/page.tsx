@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGame } from '@/contexts/GameContext';
 import { GameProvider } from '@/contexts/GameContext';
+import { Unit } from '@/lib/types/game';
 import Board from '@/components/game/Board';
 import Hand from '@/components/game/Hand';
 import BaseHpBar from '@/components/game/BaseHpBar';
@@ -13,11 +14,13 @@ import TurnStepBar from '@/components/game/TurnStepBar';
 import ActionMenu, { SkipMoveButton } from '@/components/game/ActionMenu';
 import HintPanel from '@/components/game/HintPanel';
 import GameLog from '@/components/game/GameLog';
+import CardDetailModal from '@/components/game/CardDetailModal';
 
 function GameScreen() {
   const { user, loading } = useAuth();
   const { session, mode, highlightedCells, initGame, endTurn } = useGame();
   const router = useRouter();
+  const [detailUnit, setDetailUnit] = useState<Unit | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.push('/');
@@ -51,8 +54,19 @@ function GameScreen() {
   const isFinished = session.phase === 'finished';
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[#1a1a2e]">
-      <div className="flex flex-col h-full w-full max-w-[480px] mx-auto">
+    <div
+      className="fixed inset-0 flex flex-col"
+      style={{
+        backgroundImage: "url('/images/backgrounds/board.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundColor: '#1a1a2e',
+      }}
+    >
+      {/* 背景オーバーレイ */}
+      <div className="absolute inset-0 bg-[#1a1a2e]/85 pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col h-full w-full max-w-[480px] mx-auto">
 
         {/* AI 陣地HP */}
         <div className="px-3 pt-2 pb-1 flex-shrink-0">
@@ -61,7 +75,12 @@ function GameScreen() {
 
         {/* 盤面 */}
         <div className="flex justify-center items-center flex-shrink-0">
-          <Board board={session.board} mode={mode} highlightedCells={highlightedCells} />
+          <Board
+            board={session.board}
+            mode={mode}
+            highlightedCells={highlightedCells}
+            onUnitLongPress={setDetailUnit}
+          />
         </div>
 
         {/* プレイヤー陣地HP */}
@@ -74,7 +93,7 @@ function GameScreen() {
           <TurnIndicator currentTurn={session.currentTurn} turnCount={session.turnCount} />
         </div>
 
-        {/* ターンステップバー（召喚/移動/攻撃の進捗） */}
+        {/* ターンステップバー */}
         <div className="flex-shrink-0">
           <TurnStepBar session={session} mode={mode} />
         </div>
@@ -82,7 +101,7 @@ function GameScreen() {
         {/* ヒントパネル */}
         <HintPanel session={session} mode={mode} />
 
-        {/* ゲームログ（高さ固定） */}
+        {/* ゲームログ */}
         <div className="border-t border-[#1e3a5f]/40 h-16 overflow-hidden flex-shrink-0">
           <GameLog log={session.log} />
         </div>
@@ -117,12 +136,17 @@ function GameScreen() {
         </div>
       </div>
 
-      {/* 移動先選択中：フローティングボタン（その場に留まる / 戻る） */}
+      {/* 移動先選択中：フローティングボタン */}
       <SkipMoveButton mode={mode} />
 
-      {/* アクション選択メニュー（unit_selected と unit_post_move で表示） */}
+      {/* アクション選択メニュー */}
       {(mode.type === 'unit_selected' || mode.type === 'unit_post_move') && (
         <ActionMenu mode={mode} session={session} />
+      )}
+
+      {/* カード詳細モーダル（長押し） */}
+      {detailUnit && (
+        <CardDetailModal unit={detailUnit} onClose={() => setDetailUnit(null)} />
       )}
     </div>
   );

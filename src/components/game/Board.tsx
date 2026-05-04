@@ -9,9 +9,10 @@ interface Props {
   board: BoardState;
   mode: InteractionMode;
   highlightedCells: Position[];
+  onUnitLongPress?: (unit: Unit) => void;
 }
 
-export default function Board({ board, mode, highlightedCells }: Props) {
+export default function Board({ board, mode, highlightedCells, onUnitLongPress }: Props) {
   const { selectUnit, moveUnit, summonToCell } = useGame();
 
   const isHighlighted = (row: number, col: number) =>
@@ -84,6 +85,7 @@ export default function Board({ board, mode, highlightedCells }: Props) {
             isHighlighted={isHighlighted(r, c)}
             isSelected={isSelectedUnit(unit)}
             onClick={handleCellClick}
+            onLongPress={onUnitLongPress}
           />
         ))
       )}
