@@ -10,23 +10,23 @@ interface Props {
   session: GameSession;
 }
 
-// unit_moving 中に表示するフローティングボタン
+// unit_moving 中に表示するインラインボタン（レイアウト内に配置）
 export function SkipMoveButton({ mode }: { mode: InteractionMode }) {
   const { moveUnit, cancelMove } = useGame();
   if (mode.type !== 'unit_moving') return null;
   const unit = mode.unit;
 
   return (
-    <div className="fixed bottom-[76px] inset-x-0 flex justify-center gap-2 z-10 pointer-events-none">
+    <div className="flex justify-center gap-2 px-3 py-1.5 flex-shrink-0">
       <button
         onClick={() => moveUnit(unit.position)}
-        className="pointer-events-auto px-4 py-2 bg-[#0f3460]/90 text-white text-sm rounded-full border border-[#3b82f6]/40 backdrop-blur-sm shadow-lg"
+        className="tap-target flex-1 bg-[#0f3460] text-white text-sm rounded-xl border border-[#3b82f6]/40 shadow-lg active:scale-95"
       >
         その場に留まる
       </button>
       <button
         onClick={cancelMove}
-        className="pointer-events-auto px-4 py-2 bg-[#0f1a2e]/90 text-gray-400 text-sm rounded-full border border-gray-600/40 backdrop-blur-sm shadow-lg"
+        className="tap-target px-5 bg-[#0f1a2e] text-gray-400 text-sm rounded-xl border border-gray-600/40 shadow-lg active:scale-95"
       >
         ← 戻る
       </button>

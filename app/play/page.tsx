@@ -101,6 +101,9 @@ function GameScreen() {
         {/* ヒントパネル */}
         <HintPanel session={session} mode={mode} />
 
+        {/* 移動モード中：その場に留まる / 戻る（インライン表示） */}
+        <SkipMoveButton mode={mode} />
+
         {/* ゲームログ */}
         <div className="border-t border-[#1e3a5f]/40 h-16 overflow-hidden flex-shrink-0">
           <GameLog log={session.log} />
@@ -136,8 +139,7 @@ function GameScreen() {
         </div>
       </div>
 
-      {/* 移動先選択中：フローティングボタン */}
-      <SkipMoveButton mode={mode} />
+      {/* SkipMoveButton は layout 内に移動済み */}
 
       {/* アクション選択メニュー */}
       {(mode.type === 'unit_selected' || mode.type === 'unit_post_move') && (
