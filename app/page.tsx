@@ -23,8 +23,8 @@ export default function HomePage() {
     <main className="game-layout items-center justify-center bg-[#1a1a2e]">
       <div className="flex flex-col items-center gap-8 px-6 max-w-sm w-full">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-2">⚔️ ai-tactics</h1>
-          <p className="text-[#94a3b8] text-sm">将棋風タクティクスTCG</p>
+          <h1 className="text-4xl font-bold text-white mb-2">⚒️ 最強カード鍛冶師</h1>
+          <p className="text-[#94a3b8] text-sm">THE APEX CARDSMITH</p>
         </div>
 
         <div className="bg-[#16213e] rounded-xl p-4 w-full text-sm text-[#94a3b8] space-y-1">

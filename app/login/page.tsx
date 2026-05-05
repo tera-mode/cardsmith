@@ -43,7 +43,7 @@ export default function LoginPage() {
   return (
     <div className="game-layout items-center justify-center bg-[#1a1a2e] px-6">
       <div className="flex flex-col gap-4 max-w-sm w-full">
-        <h1 className="text-xl font-bold text-white text-center">⚔️ ai-tactics</h1>
+        <h1 className="text-xl font-bold text-white text-center">⚒️ 最強カード鍛冶師</h1>
 
         {/* タブ */}
         <div className="flex rounded-xl overflow-hidden border border-[#1e3a5f]">

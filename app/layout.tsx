@@ -3,8 +3,8 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 export const metadata: Metadata = {
-  title: 'ai-tactics — 将棋風タクティクスTCG',
-  description: '最強カードを誰でも作れる将棋風タクティクスTCG',
+  title: '最強カード鍛冶師 — THE APEX CARDSMITH',
+  description: '最強カードを誰でも作れるタクティクスTCG',
   manifest: '/manifest.json',
 };
 

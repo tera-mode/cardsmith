@@ -1,7 +1,7 @@
 {
-  "name": "ai-tactics",
-  "short_name": "ai-tactics",
-  "description": "将棋風タクティクスTCG",
+  "name": "最強カード鍛冶師",
+  "short_name": "cardsmith",
+  "description": "THE APEX CARDSMITH — 最強カードを誰でも作れるタクティクスTCG",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",

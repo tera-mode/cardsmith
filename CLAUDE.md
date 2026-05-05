@@ -1,8 +1,8 @@
-# ai-tactics — Claude Code 作業ルール
+# cardsmith — Claude Code 作業ルール
 
 ## プロジェクト概要
 
-最強カードを誰でも作れる将棋風タクティクスTCGのMVP実装。6×6盤面でのターン制カード対戦ゲーム。
+「最強カード鍛冶師 / THE APEX CARDSMITH」のMVP実装。6×6盤面でのターン制カード対戦ゲーム。
 
 技術スタック: **Next.js (App Router) + TypeScript + Tailwind CSS + Firebase + Vercel**
 
