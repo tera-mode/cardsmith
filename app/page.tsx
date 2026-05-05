@@ -3,8 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import AppHeader from '@/components/ui/AppHeader';
+import { QUEST_MAP } from '@/lib/data/quests';
 
 const MENU_ITEMS = [
   { key: 'story',      label: 'ストーリー', icon: '📖', href: '/story',      accent: '#3b82f6' },
@@ -24,8 +25,21 @@ const SUB_ITEMS = [
 
 export default function HomePage() {
   const { user, loading: authLoading, signInAsGuest } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, questProgress, loading: profileLoading } = useProfile();
   const router = useRouter();
+
+  // 次の目標を計算
+  const nextGoal = useMemo(() => {
+    if (!questProgress.length) return { label: 'ストーリーを始めよう', href: '/story', sub: 'Chapter 1 Quest 1-1' };
+    const available = questProgress.filter(p => p.status === 'available');
+    if (available.length > 0) {
+      const q = QUEST_MAP[available[0].questId];
+      return q ? { label: q.title, href: `/play?questId=${q.questId}`, sub: `Chapter ${q.chapter} Quest ${q.chapter}-${q.order}` } : null;
+    }
+    const allCleared = questProgress.every(p => p.status === 'cleared');
+    if (allCleared) return { label: '自由対戦に挑む', href: '/play', sub: '最強カードを鍛えよう' };
+    return null;
+  }, [questProgress]);
 
   // ログイン済みなら何もしない（ホームに留まる）
   // 未ログインかつ読み込み完了していたら LP を表示
@@ -85,15 +99,17 @@ export default function HomePage() {
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* 次の目標 */}
-        <div
-          data-testid="home-next-goal"
-          className="bg-gradient-to-r from-[#1e3a5f] to-[#1a1a2e] border border-[#3b82f6]/30 rounded-xl p-4 cursor-pointer active:opacity-80"
-          onClick={() => router.push('/story')}
-        >
-          <p className="text-xs text-[#94a3b8] mb-1">次の目標</p>
-          <p className="text-sm font-bold text-white">📖 ストーリーを始めよう</p>
-          <p className="text-xs text-[#64748b] mt-0.5">Chapter 1 Quest 1-1</p>
-        </div>
+        {nextGoal && (
+          <div
+            data-testid="home-next-goal"
+            className="bg-gradient-to-r from-[#1e3a5f] to-[#1a1a2e] border border-[#3b82f6]/30 rounded-xl p-4 cursor-pointer active:opacity-80"
+            onClick={() => router.push(nextGoal.href)}
+          >
+            <p className="text-xs text-[#94a3b8] mb-1">次の目標</p>
+            <p className="text-sm font-bold text-white">📖 {nextGoal.label}</p>
+            <p className="text-xs text-[#64748b] mt-0.5">{nextGoal.sub}</p>
+          </div>
+        )}
 
         {/* メインメニュー 2列グリッド */}
         <div className="grid grid-cols-2 gap-2">
