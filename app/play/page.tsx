@@ -21,6 +21,9 @@ function GameScreen() {
   const { session, mode, highlightedCells, initGame, endTurn } = useGame();
   const router = useRouter();
   const [detailUnit, setDetailUnit] = useState<Unit | null>(null);
+  const searchParams = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search)
+    : new URLSearchParams();
 
   const openCardPreview = (card: Card) => {
     setDetailUnit({
@@ -53,6 +56,7 @@ function GameScreen() {
         turns: String(session.turnCount),
         playerHp: String(session.player.baseHp),
         aiHp: String(session.ai.baseHp),
+        ...(searchParams.get('questId') ? { questId: searchParams.get('questId')! } : {}),
       });
       setTimeout(() => router.push(`/result?${params}`), 1500);
     }

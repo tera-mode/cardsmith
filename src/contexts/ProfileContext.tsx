@@ -4,13 +4,16 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { useAuth } from './AuthContext';
 import { PlayerProfile, OwnedCard, OwnedMaterial, Deck } from '@/lib/types/meta';
 import { getOrCreateProfile, saveProfile, getCardInventory, saveCardInventory, getMaterialInventory, saveMaterialInventory, getDecks, saveDeck, deleteDeck } from '@/lib/firebase/profile';
+import { getQuestProgress, saveQuestProgress, computeQuestStatuses } from '@/lib/firebase/quests';
 import { getExpProgress } from '@/lib/server-logic/profile';
+import { QuestProgress } from '@/lib/types/meta';
 
 interface ProfileContextType {
   profile: PlayerProfile | null;
   ownedCards: OwnedCard[];
   ownedMaterials: OwnedMaterial[];
   decks: Deck[];
+  questProgress: QuestProgress[];
   loading: boolean;
   expProgress: { current: number; required: number; pct: number };
   refreshProfile: () => Promise<void>;
@@ -19,6 +22,7 @@ interface ProfileContextType {
   updateMaterials: (mats: OwnedMaterial[]) => Promise<void>;
   saveOrUpdateDeck: (deck: Deck) => Promise<void>;
   removeDeck: (deckId: string) => Promise<void>;
+  markQuestCleared: (questId: string) => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType>({
@@ -26,6 +30,7 @@ const ProfileContext = createContext<ProfileContextType>({
   ownedCards: [],
   ownedMaterials: [],
   decks: [],
+  questProgress: [],
   loading: true,
   expProgress: { current: 0, required: 100, pct: 0 },
   refreshProfile: async () => {},
@@ -34,6 +39,7 @@ const ProfileContext = createContext<ProfileContextType>({
   updateMaterials: async () => {},
   saveOrUpdateDeck: async () => {},
   removeDeck: async () => {},
+  markQuestCleared: async () => {},
 });
 
 export const useProfile = () => useContext(ProfileContext);
@@ -44,21 +50,24 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
   const [ownedCards, setOwnedCards] = useState<OwnedCard[]>([]);
   const [ownedMaterials, setOwnedMaterials] = useState<OwnedMaterial[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
+  const [questProgress, setQuestProgress] = useState<QuestProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
     try {
-      const [p, cards, mats, d] = await Promise.all([
+      const [p, cards, mats, d, qp] = await Promise.all([
         getOrCreateProfile(uid),
         getCardInventory(uid),
         getMaterialInventory(uid),
         getDecks(uid),
+        getQuestProgress(uid),
       ]);
       setProfile(p);
       setOwnedCards(cards);
       setOwnedMaterials(mats);
       setDecks(d);
+      setQuestProgress(qp);
     } finally {
       setLoading(false);
     }
@@ -115,13 +124,22 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     await deleteDeck(user.uid, deckId);
   }, [user]);
 
+  const markQuestCleared = useCallback(async (questId: string) => {
+    if (!user) return;
+    const updated = computeQuestStatuses(questProgress, questId);
+    setQuestProgress(updated);
+    for (const p of updated) {
+      await saveQuestProgress(user.uid, p);
+    }
+  }, [user, questProgress]);
+
   const expProgress = profile ? getExpProgress(profile) : { current: 0, required: 100, pct: 0 };
 
   return (
     <ProfileContext.Provider value={{
-      profile, ownedCards, ownedMaterials, decks, loading, expProgress,
+      profile, ownedCards, ownedMaterials, decks, questProgress, loading, expProgress,
       refreshProfile, updateProfile, updateCards, updateMaterials,
-      saveOrUpdateDeck, removeDeck,
+      saveOrUpdateDeck, removeDeck, markQuestCleared,
     }}>
       {children}
     </ProfileContext.Provider>
