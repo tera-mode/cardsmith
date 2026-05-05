@@ -1,5 +1,18 @@
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from './config';
+
+// Firestore は undefined を許可しないので再帰的に除去する
+function stripUndefined<T>(obj: T): T {
+  if (Array.isArray(obj)) return obj.map(stripUndefined) as unknown as T;
+  if (obj && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, stripUndefined(v)])
+    ) as T;
+  }
+  return obj;
+}
 import { PlayerProfile, OwnedCard, OwnedMaterial, Deck, CardInventoryDoc, MaterialInventoryDoc } from '@/lib/types/meta';
 import { createInitialProfile } from '@/lib/server-logic/profile';
 import { CARDS } from '@/lib/game/cards';
@@ -39,7 +52,7 @@ export async function getCardInventory(userId: string): Promise<OwnedCard[]> {
 
 export async function saveCardInventory(userId: string, ownedCards: OwnedCard[]): Promise<void> {
   const ref = doc(db, 'users', userId, 'inventory', 'cards');
-  await setDoc(ref, { ownedCards }, { merge: true });
+  await setDoc(ref, stripUndefined({ ownedCards }), { merge: true });
 }
 
 // ─── マテリアルインベントリ ─────────────────────────────────────────────────
