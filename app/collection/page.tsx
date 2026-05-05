@@ -1,20 +1,170 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
+import RarityBadge from '@/components/ui/RarityBadge';
+import ConfirmSheet from '@/components/ui/ConfirmSheet';
+import { CARDS_WITH_RARITY } from '@/lib/data/cards';
+import { PRESET_CARD_MATERIALS, getMaterial } from '@/lib/data/materials';
+import { RARITY_COLORS, OwnedCard } from '@/lib/types/meta';
+import { applyReward } from '@/lib/server-logic/reward';
 
 export default function CollectionPage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { profile, ownedCards, ownedMaterials, loading, updateProfile, updateCards, updateMaterials } = useProfile();
   const router = useRouter();
-  useEffect(() => { if (!loading && !user) router.push('/'); }, [user, loading, router]);
+
+  const [extractTarget, setExtractTarget] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) router.push('/');
+  }, [user, authLoading, router]);
+
+  const getOwned = (cardId: string) =>
+    ownedCards.find(c => c.cardId === cardId && !c.isCrafted);
+
+  const extractMaterialIds = extractTarget
+    ? (PRESET_CARD_MATERIALS[extractTarget] ?? [])
+    : [];
+
+  const handleExtract = async () => {
+    if (!extractTarget || !profile) return;
+    setExtracting(true);
+    try {
+      const owned = getOwned(extractTarget);
+      if (!owned || owned.count < 1) return;
+
+      // カードを1枚減らす
+      const newCards = ownedCards.map(c =>
+        c.cardId === extractTarget && !c.isCrafted
+          ? { ...c, count: c.count - 1 }
+          : c
+      ).filter(c => c.count > 0);
+
+      // マテリアルを付与
+      const matReward = extractMaterialIds.map(id => ({ materialId: id, count: 1 }));
+      const { inventory } = applyReward(
+        profile,
+        { ownedCards: newCards, ownedMaterials },
+        { exp: 0, runes: 0, materials: matReward }
+      );
+
+      await updateCards(inventory.ownedCards);
+      await updateMaterials(inventory.ownedMaterials);
+    } finally {
+      setExtracting(false);
+      setExtractTarget(null);
+    }
+  };
+
+  if (loading || !profile) {
+    return (
+      <div className="game-layout flex-col bg-[#0a0e27]">
+        <AppHeader backHref="/" title="コレクション" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="game-layout flex-col bg-[#0a0e27]">
       <AppHeader backHref="/" title="コレクション" />
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-[#94a3b8] text-sm">準備中...</p>
+
+      <div className="flex-1 overflow-y-auto p-3">
+        <p className="text-xs text-[#64748b] mb-3">
+          所持 {ownedCards.reduce((s, c) => s + c.count, 0)} 枚 / 全{CARDS_WITH_RARITY.length} 種
+        </p>
+
+        <div className="grid grid-cols-2 gap-2">
+          {CARDS_WITH_RARITY.map(card => {
+            const owned = getOwned(card.id);
+            const count = owned?.count ?? 0;
+            const color = RARITY_COLORS[card.rarity];
+
+            return (
+              <div
+                key={card.id}
+                data-testid={`collection-card-${card.id}`}
+                className={`bg-[#16213e]/80 rounded-xl p-3 border transition-opacity ${count > 0 ? 'opacity-100' : 'opacity-40'}`}
+                style={{ borderColor: `${color}40` }}
+              >
+                <div className="flex items-start justify-between mb-1">
+                  <RarityBadge rarity={card.rarity} size="xs" />
+                  <span className="text-xs text-[#64748b]">×{count}</span>
+                </div>
+                <div className="text-center py-1">
+                  <div className="text-2xl mb-1">
+                    {card.id === 'archer' ? '🏹' : card.id === 'cavalry' ? '🐎' : card.id === 'cannon' ? '💣' : card.id === 'healer' ? '💚' : card.id === 'defender' ? '🛡️' : card.id === 'guard' ? '🛡️' : '⚔️'}
+                  </div>
+                  <div className="text-xs font-bold text-white">{card.name}</div>
+                  <div className="text-[10px] text-[#64748b]">ATK{card.atk} HP{card.hp} C{card.cost}</div>
+                </div>
+                {count > 0 && (
+                  <button
+                    data-testid="collection-extract-button"
+                    onClick={() => setExtractTarget(card.id)}
+                    className="w-full mt-2 py-1.5 rounded-lg bg-[#0d2137] border border-[#1e3a5f] text-[#94a3b8] text-xs font-bold"
+                  >
+                    抽出
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 生成カード */}
+        {ownedCards.filter(c => c.isCrafted).map(c => (
+          <div key={c.cardId} className="mt-2 bg-[#16213e]/80 rounded-xl p-3 border border-[#fbbf24]/30">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-[#fbbf24]">{c.craftedData?.name ?? '生成カード'}</span>
+              <span className="text-xs text-[#64748b]">×{c.count}</span>
+            </div>
+            <div className="text-[10px] text-[#64748b] mt-0.5">
+              ATK{c.craftedData?.atk} HP{c.craftedData?.hp} C{c.craftedData?.cost}
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* 抽出確認シート */}
+      <ConfirmSheet
+        open={!!extractTarget}
+        title="カードを抽出しますか？"
+        onConfirm={handleExtract}
+        onCancel={() => setExtractTarget(null)}
+        confirmLabel="抽出する"
+        danger
+        loading={extracting}
+      >
+        {extractTarget && (
+          <div className="space-y-3">
+            <div className="flex gap-4 justify-center text-sm">
+              <div className="text-center">
+                <p className="text-[#94a3b8] text-xs mb-1">失うもの</p>
+                <p className="text-white font-bold">
+                  {CARDS_WITH_RARITY.find(c => c.id === extractTarget)?.name} ×1
+                </p>
+              </div>
+              <div className="text-[#64748b] self-center text-lg">→</div>
+              <div className="text-center">
+                <p className="text-[#94a3b8] text-xs mb-1">得るもの</p>
+                <div className="space-y-0.5">
+                  {extractMaterialIds.map((id, i) => (
+                    <p key={i} className="text-[#22d3ee] text-xs">{getMaterial(id)?.name ?? id}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </ConfirmSheet>
     </div>
   );
 }
