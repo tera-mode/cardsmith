@@ -2,7 +2,7 @@
 
 ## プロジェクト概要
 
-「最強カード鍛冶師 / THE APEX CARDSMITH」のMVP実装。6×6盤面でのターン制カード対戦ゲーム。
+「最強カード鍛冶師 / THE APEX CARDSMITH」のMVP実装。4×4盤面でのターン制カード対戦ゲーム。
 
 技術スタック: **Next.js (App Router) + TypeScript + Tailwind CSS + Firebase + Vercel**
 
@@ -122,7 +122,7 @@ python tools/gen_images.py militia
 **カードイラスト：ファンタジー戦略ゲーム風イラスト**
 - 中世ファンタジー風（騎士・弓兵・大砲等のモチーフ）
 - カードゲームらしい迫力のある構図（正面 or 斜め向き）
-- アニメ風スタイル、シンプルで視認性高め（6×6の小マスでも識別できる）
+- アニメ風スタイル、シンプルで視認性高め（4×4の小マスでも識別できる）
 
 ### 1. 画像種別ごとの仕様
 
@@ -205,6 +205,13 @@ absolutely NO text NO letters NO words NO numbers NO kanji NO hiragana NO kataka
 
 ## プレイテスト（Playwright MCP）
 
+### dev server 起動について
+
+`npm run dev` は `next dev --webpack` で起動する（`package.json` 設定済み）。
+`next.config.ts` の webpack watchOptions により、`.playwright-mcp/` と `docs/playtest_reports/` への書き込みが HMR リビルドをトリガーしない。
+
+> Turbopack（`next dev` デフォルト）では watchOptions が未サポートのため webpack を使用している。
+
 ### .mcp.json セットアップ
 
 プロジェクトルートに以下を配置：
@@ -224,9 +231,9 @@ absolutely NO text NO letters NO words NO numbers NO kanji NO hiragana NO kataka
 
 **Level 1: スモークテスト（UI + 画面遷移）**
 1. `localhost:3000` にアクセス
-2. 「ゲストで試す」で認証通過
+2. 「ゲストでプレイ」で認証通過
 3. `/play` へ遷移 → ゲーム画面のUI要素確認
-4. 必須要素の存在確認：Board（6×6）, Hand, BaseHpBar, TurnIndicator, EndTurnButton
+4. 必須要素の存在確認：Board（4×4）, Hand, BaseHpBar, TurnIndicator, EndTurnButton
 
 **Level 2: ゲームフローテスト**
 1. 手札のカードをタップ → 召喚可能マスがハイライトされる
@@ -246,8 +253,8 @@ absolutely NO text NO letters NO words NO numbers NO kanji NO hiragana NO kataka
 
 ```
 必須の data-testid:
-  [data-testid="board"]                    — 6×6盤面
-  [data-testid="cell-{row}-{col}"]         — 各マス（例: cell-0-3）
+  [data-testid="board"]                    — 4×4盤面
+  [data-testid="cell-{row}-{col}"]         — 各マス（例: cell-0-3、row/col は 0〜3）
   [data-testid="unit-{instanceId}"]        — 場のユニット
   [data-testid="hand"]                     — 手札エリア
   [data-testid="card-{cardId}-{index}"]    — 手札のカード
@@ -268,10 +275,11 @@ absolutely NO text NO letters NO words NO numbers NO kanji NO hiragana NO kataka
 
 ```
 Step 1: 「ターン終了」ボタンをクリック
-Step 2: snapshot → [data-testid="turn-indicator"] が "AIのターン" になっているか確認
-Step 3: 再度 snapshot（1秒後）→ "プレイヤーのターン" に変わったか確認
-Step 4: 盤面状態・HPを読み取り
+Step 2: browser_wait_for("あなたのターン") でプレイヤーターン復帰を待つ
+Step 3: evaluate で盤面状態・HPを読み取り
 ```
+
+> AI ターンはクライアント同期実行のため即時完了する。`wait_for("AIのターン")` を挟む必要はない。
 
 ### プレイテスト出力の管理
 
