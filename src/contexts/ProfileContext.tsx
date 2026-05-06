@@ -7,6 +7,10 @@ import { getOrCreateProfile, saveProfile, getCardInventory, saveCardInventory, g
 import { getQuestProgress, saveQuestProgress, computeQuestStatuses } from '@/lib/firebase/quests';
 import { getExpProgress } from '@/lib/server-logic/profile';
 import { QuestProgress } from '@/lib/types/meta';
+import { CARDS } from '@/lib/game/cards';
+import { MATERIALS } from '@/lib/data/materials';
+import { INITIAL_PROFILE } from '@/lib/data/economy';
+import { buildStandardDeck } from '@/lib/game/decks';
 
 interface ProfileContextType {
   profile: PlayerProfile | null;
@@ -23,6 +27,8 @@ interface ProfileContextType {
   saveOrUpdateDeck: (deck: Deck) => Promise<void>;
   removeDeck: (deckId: string) => Promise<void>;
   markQuestCleared: (questId: string) => Promise<void>;
+  debugMaxOut: () => Promise<void>;
+  debugReset: () => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType>({
@@ -40,6 +46,8 @@ const ProfileContext = createContext<ProfileContextType>({
   saveOrUpdateDeck: async () => {},
   removeDeck: async () => {},
   markQuestCleared: async () => {},
+  debugMaxOut: async () => {},
+  debugReset: async () => {},
 });
 
 export const useProfile = () => useContext(ProfileContext);
@@ -133,6 +141,78 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, [user, questProgress]);
 
+  const debugMaxOut = useCallback(async () => {
+    if (!user || !profile) return;
+    const now = Date.now();
+    const maxProfile: typeof profile = {
+      ...profile,
+      level: 99,
+      exp: 9_999_999,
+      runes: 999_999,
+      updatedAt: now,
+    };
+    const maxCards: OwnedCard[] = CARDS.map(card => ({
+      cardId: card.id,
+      count: 10,
+      isCrafted: false,
+      acquiredAt: now,
+    }));
+    const maxMaterials: OwnedMaterial[] = MATERIALS.map(mat => ({
+      materialId: mat.id,
+      count: 99,
+    }));
+    setProfile(maxProfile);
+    setOwnedCards(maxCards);
+    setOwnedMaterials(maxMaterials);
+    await Promise.all([
+      saveProfile(maxProfile),
+      saveCardInventory(user.uid, maxCards),
+      saveMaterialInventory(user.uid, maxMaterials),
+    ]);
+  }, [user, profile]);
+
+  const debugReset = useCallback(async () => {
+    if (!user || !profile) return;
+    const now = Date.now();
+    const resetProfile: typeof profile = {
+      ...profile,
+      ...INITIAL_PROFILE,
+      updatedAt: now,
+    };
+    const resetCards: OwnedCard[] = CARDS.map(card => ({
+      cardId: card.id,
+      count: 1,
+      isCrafted: false,
+      acquiredAt: now,
+    }));
+    const standardCards = buildStandardDeck();
+    const cardCounts: Record<string, number> = {};
+    for (const card of standardCards) {
+      cardCounts[card.id] = (cardCounts[card.id] ?? 0) + 1;
+    }
+    const defaultDeck: Deck = {
+      deckId: 'default',
+      name: '標準デッキ',
+      entries: Object.entries(cardCounts).map(([cardId, count]) => ({ cardId, count, isCrafted: false })),
+      createdAt: now,
+      updatedAt: now,
+    };
+    setProfile(resetProfile);
+    setOwnedCards(resetCards);
+    setOwnedMaterials([]);
+    setDecks([defaultDeck]);
+    const deleteOtherDecks = decks
+      .filter(d => d.deckId !== 'default')
+      .map(d => deleteDeck(user.uid, d.deckId));
+    await Promise.all([
+      saveProfile(resetProfile),
+      saveCardInventory(user.uid, resetCards),
+      saveMaterialInventory(user.uid, []),
+      saveDeck(user.uid, defaultDeck),
+      ...deleteOtherDecks,
+    ]);
+  }, [user, profile, decks]);
+
   const expProgress = profile ? getExpProgress(profile) : { current: 0, required: 100, pct: 0 };
 
   return (
@@ -140,6 +220,7 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       profile, ownedCards, ownedMaterials, decks, questProgress, loading, expProgress,
       refreshProfile, updateProfile, updateCards, updateMaterials,
       saveOrUpdateDeck, removeDeck, markQuestCleared,
+      debugMaxOut, debugReset,
     }}>
       {children}
     </ProfileContext.Provider>

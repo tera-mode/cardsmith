@@ -3,13 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import AppHeader from '@/components/ui/AppHeader';
 import GlassPanel from '@/components/ui/GlassPanel';
 
 export default function ProfilePage() {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { profile, ownedCards, ownedMaterials, decks, loading } = useProfile();
+  const { profile, ownedCards, ownedMaterials, decks, loading, debugMaxOut, debugReset } = useProfile();
+  const [debugBusy, setDebugBusy] = useState<'maxout' | 'reset' | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -56,6 +57,32 @@ export default function ProfilePage() {
             <span className="text-secondary text-sm">デッキ数</span>
             <span className="text-white font-bold">{decks.length}</span>
           </div>
+        </GlassPanel>
+
+        {/* ─── デバッグパネル ─── */}
+        <GlassPanel className="p-4 space-y-3 border border-yellow-600/40">
+          <p className="text-yellow-400 text-xs font-bold tracking-widest">DEBUG</p>
+          <button
+            disabled={debugBusy !== null}
+            onClick={async () => {
+              setDebugBusy('maxout');
+              try { await debugMaxOut(); } finally { setDebugBusy(null); }
+            }}
+            className="w-full py-3 rounded-xl bg-yellow-900/30 border border-yellow-600/40 text-yellow-300 text-sm font-bold disabled:opacity-50"
+          >
+            {debugBusy === 'maxout' ? '適用中...' : '全カード＆全マテリアル最強モード'}
+          </button>
+          <button
+            disabled={debugBusy !== null}
+            onClick={async () => {
+              if (!confirm('データを初期状態に戻します。よろしいですか？')) return;
+              setDebugBusy('reset');
+              try { await debugReset(); } finally { setDebugBusy(null); }
+            }}
+            className="w-full py-3 rounded-xl bg-gray-900/40 border border-gray-600/40 text-gray-400 text-sm font-bold disabled:opacity-50"
+          >
+            {debugBusy === 'reset' ? '初期化中...' : '初期化（最初の状態に戻す）'}
+          </button>
         </GlassPanel>
 
         <button
