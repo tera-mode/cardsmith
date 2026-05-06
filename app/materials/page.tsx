@@ -33,7 +33,7 @@ export default function MaterialsPage() {
 
   if (loading) {
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
+      <div className="game-layout stone-bg flex-col">
         <AppHeader backHref="/" title="マテリアル" />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
@@ -43,11 +43,11 @@ export default function MaterialsPage() {
   }
 
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
+    <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="マテリアル" />
 
       {/* タブ */}
-      <div className="flex-shrink-0 flex border-b border-[#1e3a5f]/50">
+      <div className="flex-shrink-0 flex border-b ">
         {TABS.map(t => (
           <button
             key={t.key}
@@ -55,7 +55,7 @@ export default function MaterialsPage() {
             className={`flex-1 py-2 text-xs font-bold transition-colors ${
               tab === t.key
                 ? 'text-[#3b82f6] border-b-2 border-[#3b82f6]'
-                : 'text-[#64748b]'
+                : 'text-muted'
             }`}
           >
             {t.label}
@@ -70,17 +70,17 @@ export default function MaterialsPage() {
             return (
               <div
                 key={mat.id}
-                className={`bg-[#16213e]/80 rounded-xl p-3 border border-[#1e3a5f]/50 transition-opacity ${count > 0 ? 'opacity-100' : 'opacity-40'}`}
+                className={`panel--ornate p-3  transition-opacity ${count > 0 ? 'opacity-100' : 'opacity-40'}`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-lg">{mat.icon}</span>
-                  <span className={`text-xs font-bold ${count > 0 ? 'text-white' : 'text-[#64748b]'}`}>
+                  <span className={`text-xs font-bold ${count > 0 ? 'text-white' : 'text-muted'}`}>
                     ×{count}
                   </span>
                 </div>
                 <p className="text-xs font-bold text-white">{mat.name}</p>
-                <p className="text-[10px] text-[#64748b] mt-0.5">{mat.description}</p>
-                <p className="text-[10px] text-[#fbbf24] mt-1">コスト {mat.cost}</p>
+                <p className="text-[10px] text-muted mt-0.5">{mat.description}</p>
+                <p className="text-[10px] text-gold mt-1">コスト {mat.cost}</p>
               </div>
             );
           })}

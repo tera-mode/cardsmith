@@ -60,7 +60,7 @@ export default function ShopPage() {
 
   if (loading || !profile) {
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
+      <div className="game-layout stone-bg flex-col">
         <AppHeader backHref="/" title="ショップ" />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-[#10b981] border-t-transparent rounded-full animate-spin" />
@@ -72,17 +72,17 @@ export default function ShopPage() {
   const filtered = MATERIALS.filter(m => m.category === tab);
 
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
+    <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="ショップ" />
 
       {/* タブ */}
-      <div className="flex-shrink-0 flex border-b border-[#1e3a5f]/50">
+      <div className="flex-shrink-0 flex border-b ">
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`flex-1 py-2 text-xs font-bold transition-colors ${
-              tab === t.key ? 'text-[#10b981] border-b-2 border-[#10b981]' : 'text-[#64748b]'
+              tab === t.key ? 'text-[#10b981] border-b-2 border-[#10b981]' : 'text-muted'
             }`}
           >
             {t.label}
@@ -100,16 +100,16 @@ export default function ShopPage() {
             <div
               key={mat.id}
               data-testid={`shop-material-${mat.id}`}
-              className="flex items-center gap-3 bg-[#16213e]/80 rounded-xl p-3 border border-[#1e3a5f]/50"
+              className="flex items-center gap-3 panel--ornate p-3 "
             >
               <span className="text-2xl">{mat.icon}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white">{mat.name}</p>
-                <p className="text-[10px] text-[#64748b] truncate">{mat.description}</p>
-                <p className="text-xs text-[#64748b]">所持 ×{owned}</p>
+                <p className="text-[10px] text-muted truncate">{mat.description}</p>
+                <p className="text-xs text-muted">所持 ×{owned}</p>
               </div>
               <div className="flex-shrink-0 text-right">
-                <p className={`text-sm font-bold ${canBuy ? 'text-[#fbbf24]' : 'text-red-400'}`}>
+                <p className={`text-sm font-bold ${canBuy ? 'text-gold' : 'text-red-400'}`}>
                   💎 {price}
                 </p>
                 <button
@@ -136,12 +136,12 @@ export default function ShopPage() {
         {buyTarget && (
           <div className="flex justify-center gap-8 text-sm">
             <div className="text-center">
-              <p className="text-xs text-[#94a3b8] mb-1">購入するもの</p>
+              <p className="text-xs text-secondary mb-1">購入するもの</p>
               <p className="text-white font-bold">{buyTarget.icon} {buyTarget.name}</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-[#94a3b8] mb-1">消費ルーン</p>
-              <p className="text-[#fbbf24] font-bold">💎 {getMaterialPrice(buyTarget.cost)}</p>
+              <p className="text-xs text-secondary mb-1">消費ルーン</p>
+              <p className="text-gold font-bold">💎 {getMaterialPrice(buyTarget.cost)}</p>
             </div>
           </div>
         )}

@@ -32,95 +32,80 @@ function ResultContent() {
 
     const applyRewards = async () => {
       setRewardApplied(true);
-
-      // 対戦報酬
       let reward: Reward;
       if (isWin && questId) {
         const quest = QUEST_MAP[questId];
-        const progress = undefined; // クリア済みかは後で確認
         reward = quest?.reward ?? BATTLE_REWARDS.win;
-      } else if (isWin) {
-        reward = BATTLE_REWARDS.win;
-      } else if (isDraw) {
-        reward = BATTLE_REWARDS.draw;
       } else {
-        reward = BATTLE_REWARDS.lose;
+        reward = isWin ? BATTLE_REWARDS.win : isDraw ? BATTLE_REWARDS.draw : BATTLE_REWARDS.lose;
       }
 
-      const result = applyReward(
-        profile,
-        { ownedCards, ownedMaterials },
-        reward
-      );
-
+      const result = applyReward(profile, { ownedCards, ownedMaterials }, reward);
       await updateProfile(result.profile);
       await updateCards(result.inventory.ownedCards);
       await updateMaterials(result.inventory.ownedMaterials);
 
-      if (isWin && questId) {
-        await markQuestCleared(questId);
-      }
+      if (isWin && questId) await markQuestCleared(questId);
 
-      setRewardData({
-        reward,
-        leveledUp: result.leveledUp,
-        newLevel: result.leveledUp ? result.profile.level : undefined,
-      });
+      setRewardData({ reward, leveledUp: result.leveledUp, newLevel: result.leveledUp ? result.profile.level : undefined });
       setShowReward(true);
     };
 
     applyRewards();
   }, [profile]);
 
+  const statRow = (label: string, value: string, color: string) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(90,79,61,0.2)' }}>
+      <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color, fontFamily: 'var(--font-display)' }}>{value}</span>
+    </div>
+  );
+
   return (
-    <div className="game-layout items-center justify-center bg-[#1a1a2e] px-6">
-      <div className="flex flex-col items-center gap-6 max-w-sm w-full">
-        <div className="text-center">
-          <div className="text-6xl mb-3">
-            {isWin ? '🏆' : isDraw ? '🤝' : '💀'}
+    <div className="game-layout stone-bg items-center justify-center" style={{ padding: '0 24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, maxWidth: 360, width: '100%' }}>
+        {/* 勝敗アイコン */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 56, marginBottom: 8, filter: isWin ? 'drop-shadow(0 0 16px rgba(232,192,116,0.6))' : 'none' }}>
+            {isWin ? '🏆' : isDraw ? '⚖' : '💀'}
           </div>
           <div
             data-testid="result-winner"
-            className={['text-3xl font-bold',
-              isWin ? 'text-[#f59e0b]' : isDraw ? 'text-gray-300' : 'text-[#ef4444]',
-            ].join(' ')}
+            style={{
+              fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700,
+              letterSpacing: '0.1em',
+              color: isWin ? 'var(--gold)' : isDraw ? 'var(--text-secondary)' : 'var(--rune-red)',
+              textShadow: isWin ? '0 0 16px rgba(232,192,116,0.5)' : 'none',
+            }}
           >
             {isWin ? '勝利！' : isDraw ? '引き分け' : '敗北...'}
           </div>
         </div>
 
-        <div className="bg-[#16213e] rounded-xl p-4 w-full space-y-2">
-          <div data-testid="result-turns" className="flex justify-between text-sm">
-            <span className="text-gray-400">ターン数</span>
-            <span className="text-white font-bold">{turns ?? '--'}</span>
+        {/* 統計パネル */}
+        <div className="panel--ornate" style={{ padding: '14px 16px', width: '100%' }}>
+          <div data-testid="result-turns">
+            {statRow('ターン数', turns ?? '—', 'var(--text-primary)')}
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">自陣残HP</span>
-            <span className="text-[#60a5fa] font-bold">{playerHp ?? '--'}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">AI陣地残HP</span>
-            <span className="text-[#f87171] font-bold">{aiHp ?? '--'}</span>
-          </div>
-          {profile && (
-            <div className="flex justify-between text-sm border-t border-[#1e3a5f]/50 pt-2 mt-2">
-              <span className="text-gray-400">ルーン</span>
-              <span className="text-[#fbbf24] font-bold">💎 {profile.runes.toLocaleString()}</span>
-            </div>
-          )}
+          {statRow('自陣残HP', playerHp ?? '—', 'var(--rune-blue)')}
+          {statRow('AI陣地残HP', aiHp ?? '—', 'var(--rune-red)')}
+          {profile && statRow('現在のルーン', `💎 ${profile.runes.toLocaleString()}`, 'var(--gold)')}
         </div>
 
-        <div className="flex flex-col gap-3 w-full">
+        {/* ボタン */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
           <button
             data-testid="play-again"
             onClick={() => questId ? router.push('/story') : router.push('/play')}
-            className="tap-target w-full bg-[#3b82f6] text-white font-bold rounded-xl"
+            className="btn--primary"
+            style={{ minHeight: 48, fontSize: 14 }}
           >
-            {questId ? 'ストーリーへ戻る' : 'もう一度プレイ'}
+            {questId ? '📖 ストーリーへ戻る' : '⚔ もう一度プレイ'}
           </button>
           <button
             onClick={() => router.push('/')}
-            className="tap-target w-full bg-[#16213e] border border-[#3b82f6]/50 text-[#60a5fa] font-bold rounded-xl"
+            className="btn--ghost tap-target"
+            style={{ width: '100%', fontSize: 13 }}
           >
             ホームへ
           </button>
@@ -141,7 +126,11 @@ function ResultContent() {
 
 export default function ResultPage() {
   return (
-    <Suspense fallback={<div className="game-layout items-center justify-center"><p className="text-gray-400">読み込み中...</p></div>}>
+    <Suspense fallback={
+      <div className="game-layout stone-bg items-center justify-center">
+        <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12, letterSpacing: '0.08em' }}>LOADING...</p>
+      </div>
+    }>
       <ResultContent />
     </Suspense>
   );

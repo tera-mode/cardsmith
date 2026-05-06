@@ -63,7 +63,7 @@ export default function CollectionPage() {
 
   if (loading || !profile) {
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
+      <div className="game-layout stone-bg flex-col">
         <AppHeader backHref="/" title="コレクション" />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
@@ -73,11 +73,11 @@ export default function CollectionPage() {
   }
 
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
+    <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="コレクション" />
 
       <div className="flex-1 overflow-y-auto p-3">
-        <p className="text-xs text-[#64748b] mb-3">
+        <p className="text-xs text-muted mb-3">
           所持 {ownedCards.reduce((s, c) => s + c.count, 0)} 枚 / 全{CARDS_WITH_RARITY.length} 種
         </p>
 
@@ -91,25 +91,25 @@ export default function CollectionPage() {
               <div
                 key={card.id}
                 data-testid={`collection-card-${card.id}`}
-                className={`bg-[#16213e]/80 rounded-xl p-3 border transition-opacity ${count > 0 ? 'opacity-100' : 'opacity-40'}`}
+                className={`panel--ornate p-3 border transition-opacity ${count > 0 ? 'opacity-100' : 'opacity-40'}`}
                 style={{ borderColor: `${color}40` }}
               >
                 <div className="flex items-start justify-between mb-1">
                   <RarityBadge rarity={card.rarity} size="xs" />
-                  <span className="text-xs text-[#64748b]">×{count}</span>
+                  <span className="text-xs text-muted">×{count}</span>
                 </div>
                 <div className="text-center py-1">
                   <div className="text-2xl mb-1">
                     {card.id === 'archer' ? '🏹' : card.id === 'cavalry' ? '🐎' : card.id === 'cannon' ? '💣' : card.id === 'healer' ? '💚' : card.id === 'defender' ? '🛡️' : card.id === 'guard' ? '🛡️' : '⚔️'}
                   </div>
                   <div className="text-xs font-bold text-white">{card.name}</div>
-                  <div className="text-[10px] text-[#64748b]">ATK{card.atk} HP{card.hp} C{card.cost}</div>
+                  <div className="text-[10px] text-muted">ATK{card.atk} HP{card.hp} C{card.cost}</div>
                 </div>
                 {count > 0 && (
                   <button
                     data-testid="collection-extract-button"
                     onClick={() => setExtractTarget(card.id)}
-                    className="w-full mt-2 py-1.5 rounded-lg bg-[#0d2137] border border-[#1e3a5f] text-[#94a3b8] text-xs font-bold"
+                    className="w-full mt-2 py-1.5 rounded-lg bg-[#0d2137] border border-[#1e3a5f] text-secondary text-xs font-bold"
                   >
                     抽出
                   </button>
@@ -121,12 +121,12 @@ export default function CollectionPage() {
 
         {/* 生成カード */}
         {ownedCards.filter(c => c.isCrafted).map(c => (
-          <div key={c.cardId} className="mt-2 bg-[#16213e]/80 rounded-xl p-3 border border-[#fbbf24]/30">
+          <div key={c.cardId} className="mt-2 panel--ornate p-3 border border-[#fbbf24]/30">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-[#fbbf24]">{c.craftedData?.name ?? '生成カード'}</span>
-              <span className="text-xs text-[#64748b]">×{c.count}</span>
+              <span className="text-sm font-bold text-gold">{c.craftedData?.name ?? '生成カード'}</span>
+              <span className="text-xs text-muted">×{c.count}</span>
             </div>
-            <div className="text-[10px] text-[#64748b] mt-0.5">
+            <div className="text-[10px] text-muted mt-0.5">
               ATK{c.craftedData?.atk} HP{c.craftedData?.hp} C{c.craftedData?.cost}
             </div>
           </div>
@@ -147,14 +147,14 @@ export default function CollectionPage() {
           <div className="space-y-3">
             <div className="flex gap-4 justify-center text-sm">
               <div className="text-center">
-                <p className="text-[#94a3b8] text-xs mb-1">失うもの</p>
+                <p className="text-secondary text-xs mb-1">失うもの</p>
                 <p className="text-white font-bold">
                   {CARDS_WITH_RARITY.find(c => c.id === extractTarget)?.name} ×1
                 </p>
               </div>
-              <div className="text-[#64748b] self-center text-lg">→</div>
+              <div className="text-muted self-center text-lg">→</div>
               <div className="text-center">
-                <p className="text-[#94a3b8] text-xs mb-1">得るもの</p>
+                <p className="text-secondary text-xs mb-1">得るもの</p>
                 <div className="space-y-0.5">
                   {extractMaterialIds.map((id, i) => (
                     <p key={i} className="text-[#22d3ee] text-xs">{getMaterial(id)?.name ?? id}</p>

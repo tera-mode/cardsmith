@@ -9,54 +9,25 @@ interface Props {
 }
 
 export default function HintPanel({ session, mode }: Props) {
-  const isPlayerTurn = session.currentTurn === 'player';
-  if (!isPlayerTurn) return null;
+  if (session.currentTurn !== 'player') return null;
 
   let hint = '';
-
   switch (mode.type) {
-    case 'unit_moving':
-      hint = '🚶 移動先を選んでタップ。その場に留まるなら下のボタンを押して。';
-      break;
-    case 'unit_selected':
-      hint = '❓ 「移動する」「攻撃」「スキル」から選んでください。';
-      break;
-    case 'unit_post_move': {
-      const hasAttackable = session.board.some((row) =>
-        row.some((cell) => cell && cell.owner === 'player' && cell.instanceId === mode.unit.instanceId)
-      );
-      hint = hasAttackable
-        ? '⚔ 攻撃するか「行動終了」を選んでください。'
-        : '✅ 行動終了ボタンで次に進めます。';
-      break;
-    }
-    case 'card_selected':
-      hint = '📥 光ったマスをタップしてユニットを召喚！';
-      break;
+    case 'unit_moving':     hint = '🚶 移動先を選んでタップ'; break;
+    case 'unit_selected':   hint = '移動・攻撃・スキルから選択'; break;
+    case 'unit_post_move':  hint = '⚔ 攻撃か「行動終了」を選択'; break;
+    case 'card_selected':   hint = '光ったマスにユニットを召喚！'; break;
     case 'idle': {
-      // 最前線のユニットがいる場合
-      const frontRow = 0;
-      let hasFrontUnit = false;
-      for (let c = 0; c < BOARD_COLS; c++) {
-        const unit = session.board[frontRow]?.[c];
-        if (unit && unit.owner === 'player' && !unit.hasActedThisTurn) {
-          hasFrontUnit = true;
-          break;
-        }
+      const hasFront = Array.from({ length: BOARD_COLS }, (_, c) => session.board[0]?.[c])
+        .some(u => u?.owner === 'player' && !u.hasActedThisTurn);
+      if (hasFront) hint = '⚔ 最前線からベース攻撃できます';
+      else if (session.player.hand.length > 0 && !session.player.hasSummonedThisTurn)
+        hint = '手札のカードをタップして召喚';
+      else {
+        const hasUnacted = session.board.some(row => row.some(c => c?.owner === 'player' && !c.hasActedThisTurn));
+        if (hasUnacted) hint = '盤面のユニットをタップして行動';
       }
-      if (hasFrontUnit) {
-        hint = '⚔ 最前線のユニットは「ベース攻撃」で敵陣HPを削れます！';
-      } else if (session.player.hand.length > 0 && !session.player.hasSummonedThisTurn) {
-        hint = '📥 手札のカードをタップして召喚できます。';
-      } else {
-        const hasUnacted = session.board.some((row) =>
-          row.some((cell) => cell?.owner === 'player' && !cell.hasActedThisTurn)
-        );
-        if (hasUnacted) hint = '🎮 盤面のユニットをタップして行動させよう！';
-      }
-      if (session.turnCount === 1 && !hint && !session.player.hasSummonedThisTurn) {
-        hint = '📥 まず手札のカードをタップして召喚しよう！';
-      }
+      if (session.turnCount === 1 && !hint) hint = '手札のカードをタップして召喚しよう';
       break;
     }
   }
@@ -64,9 +35,18 @@ export default function HintPanel({ session, mode }: Props) {
   if (!hint) return null;
 
   return (
-    <div className="px-3 py-1">
-      <p className="text-[11px] text-[#94a3b8] bg-[#0f1a2e]/60 rounded px-2 py-1">
-        💡 {hint}
+    <div style={{ padding: '3px 12px', flexShrink: 0 }}>
+      <p style={{
+        fontSize: 10,
+        color: 'var(--text-muted)',
+        fontFamily: 'var(--font-display)',
+        letterSpacing: '0.04em',
+        background: 'rgba(8,6,4,0.6)',
+        border: '1px solid var(--border-rune)',
+        borderRadius: 3,
+        padding: '3px 8px',
+      }}>
+        {hint}
       </p>
     </div>
   );

@@ -17,12 +17,9 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      if (tab === 'login') {
-        await signInWithEmail(email, password);
-      } else {
-        await signUpWithEmail(email, password);
-      }
-      router.push('/play');
+      if (tab === 'login') await signInWithEmail(email, password);
+      else await signUpWithEmail(email, password);
+      router.push('/');
     } catch {
       setError(tab === 'login' ? 'メールアドレスまたはパスワードが違います' : '登録に失敗しました');
     } finally {
@@ -34,27 +31,38 @@ export default function LoginPage() {
     setError('');
     try {
       await signInWithGoogle();
-      router.push('/play');
+      router.push('/');
     } catch {
       setError('Googleログインに失敗しました');
     }
   };
 
   return (
-    <div className="game-layout items-center justify-center bg-[#1a1a2e] px-6">
-      <div className="flex flex-col gap-4 max-w-sm w-full">
-        <h1 className="text-xl font-bold text-white text-center">⚒️ 最強カード鍛冶師</h1>
+    <div className="game-layout stone-bg items-center justify-center" style={{ padding: '0 24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 360, width: '100%' }}>
+        {/* ロゴ */}
+        <div style={{ textAlign: 'center', marginBottom: 4 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', textShadow: '0 0 12px rgba(232,192,116,0.4)' }}>
+            ⚒ CARDSMITH
+          </h1>
+        </div>
 
         {/* タブ */}
-        <div className="flex rounded-xl overflow-hidden border border-[#1e3a5f]">
-          {(['login', 'signup'] as const).map((t) => (
+        <div style={{ display: 'flex', border: '1px solid var(--border-rune)', borderRadius: 4, overflow: 'hidden' }}>
+          {(['login', 'signup'] as const).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={[
-                'flex-1 py-2 text-sm font-bold transition-colors',
-                tab === t ? 'bg-[#3b82f6] text-white' : 'bg-[#16213e] text-gray-400',
-              ].join(' ')}
+              style={{
+                flex: 1, padding: '8px 0',
+                fontFamily: 'var(--font-display)', fontSize: 12,
+                fontWeight: 600, letterSpacing: '0.05em', cursor: 'pointer',
+                background: tab === t
+                  ? 'linear-gradient(180deg, #d4942a 0%, #8a5a18 100%)'
+                  : 'rgba(14,10,6,0.8)',
+                color: tab === t ? '#1a0e02' : 'var(--text-muted)',
+                border: 'none',
+              }}
             >
               {t === 'login' ? 'ログイン' : '新規登録'}
             </button>
@@ -62,50 +70,62 @@ export default function LoginPage() {
         </div>
 
         {/* フォーム */}
-        <div className="flex flex-col gap-3">
-          <input
-            type="email"
-            placeholder="メールアドレス"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-[#16213e] border border-[#1e3a5f] rounded-xl text-white text-sm placeholder-gray-500 outline-none focus:border-[#3b82f6]"
-          />
-          <input
-            type="password"
-            placeholder="パスワード"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            className="w-full px-4 py-3 bg-[#16213e] border border-[#1e3a5f] rounded-xl text-white text-sm placeholder-gray-500 outline-none focus:border-[#3b82f6]"
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {(['email', 'password'] as const).map(field => (
+            <input
+              key={field}
+              type={field}
+              placeholder={field === 'email' ? 'メールアドレス' : 'パスワード'}
+              value={field === 'email' ? email : password}
+              onChange={e => field === 'email' ? setEmail(e.target.value) : setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              style={{
+                width: '100%', padding: '10px 14px',
+                background: 'rgba(20,16,10,0.9)',
+                border: '1px solid var(--border-rune)',
+                borderRadius: 4,
+                color: 'var(--text-primary)',
+                fontFamily: 'var(--font-ui)', fontSize: 13,
+                outline: 'none',
+              }}
+            />
+          ))}
 
-          {error && <p className="text-[#f87171] text-xs">{error}</p>}
+          {error && (
+            <p style={{ fontSize: 11, color: 'var(--rune-red)', fontFamily: 'var(--font-display)' }}>{error}</p>
+          )}
 
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="tap-target w-full bg-[#3b82f6] text-white font-bold rounded-xl disabled:opacity-50"
+            className="btn--primary"
+            style={{ minHeight: 46, fontSize: 14 }}
           >
-            {loading ? '処理中...' : tab === 'login' ? 'ログイン' : '登録'}
+            {loading ? '処理中...' : tab === 'login' ? '⚔ ログイン' : '⚒ 登録する'}
           </button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <hr className="flex-1 border-[#1e3a5f]" />
-          <span className="text-xs text-gray-500">または</span>
-          <hr className="flex-1 border-[#1e3a5f]" />
-        </div>
+        {/* 区切り */}
+        <div className="divider-rune" style={{ fontSize: 10 }}>または</div>
 
+        {/* Google */}
         <button
           onClick={handleGoogle}
-          className="tap-target w-full bg-[#16213e] border border-[#1e3a5f] text-white font-bold rounded-xl text-sm"
+          className="btn--ghost tap-target"
+          style={{ width: '100%', fontSize: 13 }}
         >
           🔵 Google でログイン
         </button>
 
+        {/* ゲスト */}
         <button
-          onClick={async () => { await signInAsGuest(); router.push('/play'); }}
-          className="text-sm text-[#94a3b8] underline text-center"
+          onClick={async () => { await signInAsGuest(); router.push('/'); }}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 11, color: 'var(--text-muted)',
+            fontFamily: 'var(--font-display)', textDecoration: 'underline',
+            textAlign: 'center', letterSpacing: '0.04em',
+          }}
         >
           ゲストのままプレイする
         </button>

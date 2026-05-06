@@ -126,6 +126,18 @@ body {
 }
 
 /* ============================================================
+   UTILITY HELPERS (for Tailwind className usage)
+   ============================================================ */
+.text-primary   { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted     { color: var(--text-muted); }
+.text-dim       { color: var(--text-dim); }
+.text-gold      { color: var(--gold); }
+.text-rune-blue { color: var(--rune-blue); }
+.text-rune-red  { color: var(--rune-red); }
+.text-rune-green { color: var(--rune-green); }
+
+/* ============================================================
    STONE BACKGROUND
    ============================================================ */
 .stone-bg {

@@ -86,7 +86,7 @@ export default function DeckPage() {
 
   if (loading) {
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
+      <div className="game-layout stone-bg flex-col">
         <AppHeader backHref="/" title="デッキ編集" />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
@@ -99,30 +99,30 @@ export default function DeckPage() {
   if (editing) {
     const total = totalCards(editing);
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
-        <header className="flex-shrink-0 h-14 flex items-center px-3 gap-2 border-b border-[#1e3a5f]/50 bg-[#0a0e27]/90">
-          <button onClick={() => setEditing(null)} className="text-[#94a3b8] text-xl">←</button>
+      <div className="game-layout stone-bg flex-col">
+        <header className="flex-shrink-0 h-14 flex items-center px-3 gap-2 border-b  bg-[#0a0e27]/90">
+          <button onClick={() => setEditing(null)} className="text-secondary text-xl">←</button>
           <input
             value={editing.name}
             onChange={e => setEditing({ ...editing, name: e.target.value })}
             className="flex-1 bg-transparent text-white font-bold text-sm outline-none"
             maxLength={15}
           />
-          <span className={`text-xs ${total === DECK_MAX_CARDS ? 'text-[#22d3ee]' : 'text-[#94a3b8]'}`}>
+          <span className={`text-xs ${total === DECK_MAX_CARDS ? 'text-[#22d3ee]' : 'text-secondary'}`}>
             {total}/{DECK_MAX_CARDS}
           </span>
           <button
             data-testid="deck-builder-save"
             onClick={handleSave}
             disabled={saving}
-            className="px-3 py-1.5 bg-[#3b82f6] text-white text-xs font-bold rounded-lg disabled:opacity-50"
+            className="px-3 py-1.5 bg-rune-blue text-white text-xs font-bold rounded-lg disabled:opacity-50"
           >
             {saving ? '保存中' : '保存'}
           </button>
         </header>
 
         {/* 現在のデッキ */}
-        <div className="flex-shrink-0 p-2 bg-[#0d1b35] border-b border-[#1e3a5f]/50 min-h-[80px]">
+        <div className="flex-shrink-0 p-2 bg-[#0d1b35] border-b  min-h-[80px]">
           <div className="flex flex-wrap gap-1">
             {editing.entries.flatMap(e =>
               Array.from({ length: e.count }, (_, i) => {
@@ -160,7 +160,7 @@ export default function DeckPage() {
                 }`}
               >
                 <div className="text-xs font-bold text-white truncate">{card.name}</div>
-                <div className="text-[9px] text-[#64748b]">{inDeck > 0 ? `×${inDeck}` : ''} C{card.cost}</div>
+                <div className="text-[9px] text-muted">{inDeck > 0 ? `×${inDeck}` : ''} C{card.cost}</div>
               </button>
             );
           })}
@@ -171,7 +171,7 @@ export default function DeckPage() {
 
   // ─── デッキ一覧 ───────────────────────────────────────────────────────────────
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
+    <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="デッキ編集" />
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {decks.map(deck => (
@@ -179,12 +179,12 @@ export default function DeckPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p data-testid={`deck-list-item-${deck.deckId}`} className="font-bold text-white text-sm">{deck.name}</p>
-                <p className="text-xs text-[#64748b]">{totalCards(deck)}/{DECK_MAX_CARDS} 枚</p>
+                <p className="text-xs text-muted">{totalCards(deck)}/{DECK_MAX_CARDS} 枚</p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setEditing({ ...deck })}
-                  className="px-3 py-1.5 bg-[#1e3a5f] text-[#94a3b8] text-xs font-bold rounded-lg"
+                  className="px-3 py-1.5 bg-[#1e3a5f] text-secondary text-xs font-bold rounded-lg"
                 >
                   編集
                 </button>
@@ -204,7 +204,7 @@ export default function DeckPage() {
         {decks.length < DECK_MAX_COUNT && (
           <button
             onClick={startNew}
-            className="w-full py-3 rounded-xl border-2 border-dashed border-[#1e3a5f] text-[#64748b] text-sm font-bold"
+            className="w-full py-3 rounded-xl border-2 border-dashed border-[#1e3a5f] text-muted text-sm font-bold"
           >
             ＋ 新しいデッキを作成
           </button>
@@ -219,7 +219,7 @@ export default function DeckPage() {
         confirmLabel="削除する"
         danger
       >
-        <p className="text-sm text-[#94a3b8] text-center">
+        <p className="text-sm text-secondary text-center">
           「{decks.find(d => d.deckId === deleteTarget)?.name}」を削除します。
         </p>
       </ConfirmSheet>

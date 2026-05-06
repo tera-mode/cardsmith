@@ -18,42 +18,42 @@ export default function ProfilePage() {
 
   if (loading || !profile) {
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
+      <div className="game-layout stone-bg flex-col">
         <AppHeader backHref="/" title="プロフィール" />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-[#94a3b8] text-sm">読み込み中...</p>
+          <p className="text-secondary text-sm">読み込み中...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
+    <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="プロフィール" />
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <GlassPanel className="p-4 space-y-3">
           <div className="flex justify-between">
-            <span className="text-[#94a3b8] text-sm">レベル</span>
+            <span className="text-secondary text-sm">レベル</span>
             <span className="text-white font-bold">{profile.level}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#94a3b8] text-sm">累積EXP</span>
+            <span className="text-secondary text-sm">累積EXP</span>
             <span className="text-[#22d3ee] font-bold">{profile.exp.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#94a3b8] text-sm">ルーン</span>
-            <span className="text-[#fbbf24] font-bold">💎 {profile.runes.toLocaleString()}</span>
+            <span className="text-secondary text-sm">ルーン</span>
+            <span className="text-gold font-bold">💎 {profile.runes.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#94a3b8] text-sm">所持カード</span>
+            <span className="text-secondary text-sm">所持カード</span>
             <span className="text-white font-bold">{ownedCards.reduce((s, c) => s + c.count, 0)} 枚</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#94a3b8] text-sm">マテリアル</span>
+            <span className="text-secondary text-sm">マテリアル</span>
             <span className="text-white font-bold">{ownedMaterials.reduce((s, m) => s + m.count, 0)} 個</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#94a3b8] text-sm">デッキ数</span>
+            <span className="text-secondary text-sm">デッキ数</span>
             <span className="text-white font-bold">{decks.length}</span>
           </div>
         </GlassPanel>
