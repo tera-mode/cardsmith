@@ -110,61 +110,99 @@ export default function GachaPage() {
   }
 
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
+    <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="召喚" />
-      <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
-        <div className="text-center">
-          <div className="text-6xl mb-3">✨</div>
-          <h2 className="text-xl font-bold text-white mb-1">標準召喚</h2>
-          <p className="text-sm text-[#94a3b8]">カードを召喚して戦力を強化しよう</p>
-        </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
 
-        <div className="w-full space-y-3 max-w-sm">
-          {/* 単発 */}
-          <div className="bg-[#16213e]/80 rounded-xl p-4 border border-[#fbbf24]/20">
-            <div className="flex justify-between items-center mb-3">
-              <div>
-                <p className="text-sm font-bold text-white">単発召喚</p>
-                <p className="text-xs text-[#64748b]">1枚を召喚する</p>
-              </div>
-              <span className="text-[#fbbf24] font-bold">💎 {STANDARD_GACHA.pricePerPull}</span>
-            </div>
-            <button
-              data-testid="gacha-pull-single"
-              onClick={() => setConfirmPull(1)}
-              disabled={!canAfford(1) || pulling}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-black font-bold text-sm disabled:opacity-50 disabled:grayscale"
-            >
-              {pulling ? '召喚中...' : '召喚する'}
-            </button>
-            {!canAfford(1) && <p className="text-xs text-red-400 text-center mt-1">ルーンが足りません</p>}
-          </div>
-
-          {/* 10連 */}
-          <div className="bg-[#16213e]/80 rounded-xl p-4 border border-[#fbbf24]/30">
-            <div className="flex justify-between items-center mb-1">
-              <div>
-                <p className="text-sm font-bold text-white">10連召喚</p>
-                <p className="text-xs text-[#64748b]">10枚を召喚（R以上1枚保証）</p>
-              </div>
-              <span className="text-[#fbbf24] font-bold">💎 {STANDARD_GACHA.bundlePrice}</span>
-            </div>
-            <p className="text-[10px] text-[#fbbf24] mb-3">通常より10%お得</p>
-            <button
-              data-testid="gacha-pull-ten"
-              onClick={() => setConfirmPull(10)}
-              disabled={!canAfford(10) || pulling}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-black font-bold text-sm disabled:opacity-50 disabled:grayscale"
-            >
-              {pulling ? '召喚中...' : '10連召喚する'}
-            </button>
-            {!canAfford(10) && <p className="text-xs text-red-400 text-center mt-1">ルーンが足りません</p>}
+        {/* 魔法陣エリア */}
+        <div style={{ height: 180, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+          {/* 魔法陣 SVG */}
+          <svg
+            width="160" height="160"
+            viewBox="0 0 160 160"
+            style={{ position: 'absolute', animation: 'spin 30s linear infinite', opacity: 0.25 }}
+          >
+            <circle cx="80" cy="80" r="75" fill="none" stroke="#e8c074" strokeWidth="1" />
+            <circle cx="80" cy="80" r="55" fill="none" stroke="#e8c074" strokeWidth="0.5" />
+            <circle cx="80" cy="80" r="35" fill="none" stroke="#e8c074" strokeWidth="0.5" />
+            {/* 五芒星 */}
+            <polygon points="80,8 95,55 145,55 105,83 120,130 80,100 40,130 55,83 15,55 65,55"
+              fill="none" stroke="#e8c074" strokeWidth="1" opacity="0.6" />
+            {/* 8方向ルーン文字 */}
+            {['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ'].map((r, i) => {
+              const angle = (i * 45 - 90) * Math.PI / 180;
+              const x = 80 + 65 * Math.cos(angle);
+              const y = 80 + 65 * Math.sin(angle);
+              return <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="middle"
+                fontSize="11" fill="#e8c074" fontFamily="serif">{r}</text>;
+            })}
+          </svg>
+          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 6, filter: 'drop-shadow(0 0 12px rgba(232,192,116,0.6))' }}>✨</div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--gold)', marginBottom: 4 }}>
+              標準召喚
+            </h2>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
+              ルーンを捧げ、戦士を呼び出せ
+            </p>
           </div>
         </div>
 
-        <div className="text-xs text-[#475569] text-center space-y-0.5">
-          <p>排出率：C 70% / R 22% / SR 7% / SSR 1%</p>
-          <p>所持ルーン: 💎 {profile.runes.toLocaleString()}</p>
+        {/* 単発 */}
+        <div className="panel--ornate" style={{ width: '100%', padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+            <div>
+              <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', letterSpacing: '0.04em' }}>単発召喚</p>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>1枚を召喚する</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div className="rune-gem" />
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--gold)', fontSize: 15 }}>
+                {STANDARD_GACHA.pricePerPull}
+              </span>
+            </div>
+          </div>
+          <button
+            data-testid="gacha-pull-single"
+            onClick={() => setConfirmPull(1)}
+            disabled={!canAfford(1) || pulling}
+            className="btn--primary"
+            style={{ minHeight: 44, fontSize: 14 }}
+          >
+            {pulling ? '召喚中...' : '⚔ 召喚する'}
+          </button>
+          {!canAfford(1) && <p style={{ fontSize: 11, color: 'var(--rune-red)', textAlign: 'center', marginTop: 6 }}>ルーンが足りません</p>}
+        </div>
+
+        {/* 10連 */}
+        <div className="panel--ornate" style={{ width: '100%', padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+            <div>
+              <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', letterSpacing: '0.04em' }}>10連召喚</p>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>10枚（R以上1枚保証）</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div className="rune-gem" />
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--gold)', fontSize: 15 }}>
+                {STANDARD_GACHA.bundlePrice}
+              </span>
+            </div>
+          </div>
+          <p style={{ fontSize: 10, color: 'var(--gold-deep)', marginBottom: 10 }}>通常より10%お得</p>
+          <button
+            data-testid="gacha-pull-ten"
+            onClick={() => setConfirmPull(10)}
+            disabled={!canAfford(10) || pulling}
+            className="btn--primary"
+            style={{ minHeight: 44, fontSize: 14 }}
+          >
+            {pulling ? '召喚中...' : '✨ 10連召喚する'}
+          </button>
+          {!canAfford(10) && <p style={{ fontSize: 11, color: 'var(--rune-red)', textAlign: 'center', marginTop: 6 }}>ルーンが足りません</p>}
+        </div>
+
+        <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
+          <p>C 70% ・ R 22% ・ SR 7% ・ SSR 1%</p>
         </div>
       </div>
 

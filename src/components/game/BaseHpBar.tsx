@@ -8,58 +8,51 @@ interface Props {
   maxHp?: number;
 }
 
+function Heart({ active, isPlayer }: { active: boolean; isPlayer: boolean }) {
+  const color = active ? (isPlayer ? '#5db8ff' : '#e85a4a') : '#2a2218';
+  const glow = active ? (isPlayer ? '0 0 4px rgba(93,184,255,0.7)' : '0 0 4px rgba(232,90,74,0.7)') : 'none';
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" style={{ filter: active ? `drop-shadow(${isPlayer ? '0 0 3px #5db8ff' : '0 0 3px #e85a4a'})` : 'grayscale(1) opacity(0.3)' }}>
+      <path
+        d="M12 21s-7-4.5-9-9.5C1.5 7 5 3 8.5 3c1.8 0 3 1 3.5 2 .5-1 1.7-2 3.5-2C19 3 22.5 7 21 11.5c-2 5-9 9.5-9 9.5z"
+        fill={active ? (isPlayer ? '#5db8ff' : '#e85a4a') : '#2a1810'}
+        stroke={active ? (isPlayer ? '#8ecfff' : '#ff8a78') : '#3a2a20'}
+        strokeWidth="1"
+      />
+    </svg>
+  );
+}
+
 export default function BaseHpBar({ owner, hp, maxHp = BASE_HP }: Props) {
   const isPlayer = owner === 'player';
   const percent = Math.max(0, (hp / maxHp) * 100);
+  const cls = `hp-bar-dungeon hp-bar-dungeon--${isPlayer ? 'player' : 'enemy'}`;
 
   return (
     <div
       data-testid={isPlayer ? 'player-base-hp' : 'ai-base-hp'}
-      className={[
-        'flex items-center gap-2 px-3 py-1.5 rounded-lg',
-        isPlayer ? 'bg-[#1e3a5f]/80' : 'bg-[#3b1e1e]/80',
-      ].join(' ')}
+      className={cls}
     >
-      <span className="text-xs font-bold text-gray-400 w-12">
+      <span className="hp-bar-dungeon__label">
         {isPlayer ? '自陣' : 'AI陣地'}
       </span>
 
-      {/* HP ハート（最大 maxHp 個） */}
-      <div className="flex gap-1">
+      <div className="hp-bar-dungeon__hearts">
         {Array.from({ length: maxHp }).map((_, i) => (
-          <span
-            key={i}
-            className={[
-              'text-lg leading-none transition-all duration-300',
-              i < hp
-                ? (isPlayer ? 'text-[#3b82f6]' : 'text-[#ef4444]')
-                : 'text-gray-700',
-              hp === 1 && i === 0 ? 'animate-pulse' : '',
-            ].join(' ')}
-          >
-            {i < hp ? '❤️' : '🖤'}
-          </span>
+          <Heart key={i} active={i < hp} isPlayer={isPlayer} />
         ))}
       </div>
 
-      {/* HP数値 */}
-      <span className={[
-        'text-base font-bold ml-auto',
-        isPlayer ? 'text-[#60a5fa]' : 'text-[#f87171]',
-      ].join(' ')}>
+      <span style={{
+        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12,
+        color: isPlayer ? 'var(--rune-blue)' : 'var(--rune-red)',
+        minWidth: 14, textAlign: 'center', flexShrink: 0,
+      }}>
         {hp}
       </span>
 
-      {/* HPバー */}
-      <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-        <div
-          className={[
-            'h-full rounded-full transition-all duration-500',
-            isPlayer ? 'bg-[#3b82f6]' : 'bg-[#ef4444]',
-            percent <= 33 ? 'animate-pulse' : '',
-          ].join(' ')}
-          style={{ width: `${percent}%` }}
-        />
+      <div className="hp-bar-dungeon__track">
+        <div className="hp-bar-dungeon__fill" style={{ width: `${percent}%` }} />
       </div>
     </div>
   );

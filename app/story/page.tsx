@@ -41,20 +41,26 @@ export default function StoryPage() {
   }
 
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
+    <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="ストーリー" />
 
       {/* 章タブ */}
-      <div className="flex-shrink-0 flex overflow-x-auto border-b border-[#1e3a5f]/50">
+      <div style={{ flexShrink: 0, display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-rune)', background: 'rgba(14,10,6,0.85)' }}>
         {CHAPTERS.map(c => (
           <button
             key={c.chapter}
             onClick={() => setChapter(c.chapter)}
-            className={`flex-shrink-0 px-4 py-2 text-xs font-bold whitespace-nowrap transition-colors ${
-              chapter === c.chapter
-                ? 'text-[#3b82f6] border-b-2 border-[#3b82f6]'
-                : 'text-[#64748b]'
-            }`}
+            style={{
+              flexShrink: 0, padding: '8px 14px',
+              fontFamily: 'var(--font-display)', fontSize: 11,
+              fontWeight: 600, letterSpacing: '0.05em',
+              whiteSpace: 'nowrap',
+              color: chapter === c.chapter ? 'var(--gold)' : 'var(--text-muted)',
+              background: 'none', border: 'none',
+              borderBottom: chapter === c.chapter ? '2px solid var(--gold)' : '2px solid transparent',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
           >
             {c.title}
           </button>
@@ -62,51 +68,52 @@ export default function StoryPage() {
       </div>
 
       {/* クエスト一覧 */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {quests.map((q, idx) => {
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {quests.map((q) => {
           const progress = getProgress(q.questId);
           const status = progress?.status ?? (q.prerequisites.length === 0 ? 'available' : 'locked');
           const isLocked = status === 'locked';
+          const isCleared = status === 'cleared';
 
           return (
             <div
               key={q.questId}
               data-testid={`story-quest-${q.questId}`}
-              className={`rounded-xl p-4 border transition-opacity ${
-                isLocked
-                  ? 'bg-[#0d1b35] border-[#1e3a5f]/30 opacity-50'
-                  : status === 'cleared'
-                    ? 'bg-[#16213e]/80 border-[#22d3ee]/20'
-                    : 'bg-[#16213e]/80 border-[#3b82f6]/30'
-              }`}
+              className="panel--ornate"
+              style={{
+                padding: '12px 14px',
+                opacity: isLocked ? 0.45 : 1,
+                borderColor: isCleared ? 'rgba(107,217,152,0.4)' : isLocked ? 'var(--border-rune)' : 'var(--gold-deep)',
+              }}
             >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0 mt-0.5">{STATUS_ICON[status] ?? '▶️'}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white">{q.title}</p>
-                  <p className="text-xs text-[#94a3b8] mt-0.5">{q.description}</p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-[#64748b]">
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <span style={{ fontSize: 18, flexShrink: 0, marginTop: 2 }}>
+                  {STATUS_ICON[status] ?? '▶️'}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 2 }}>
+                    {q.title}
+                  </p>
+                  <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{q.description}</p>
+                  <div style={{ display: 'flex', gap: 10, marginTop: 6, fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
                     <span>+{q.reward.exp} EXP</span>
-                    <span>+{q.reward.runes} 💎</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <div className="rune-gem" style={{ width: 9, height: 9 }} />
+                      +{q.reward.runes}
+                    </span>
                     {q.reward.cards && q.reward.cards.length > 0 && (
-                      <span className="text-[#fbbf24]">カード報酬あり</span>
+                      <span style={{ color: 'var(--gold)' }}>◆ カード</span>
                     )}
                   </div>
-                  {progress?.attemptCount && progress.attemptCount > 0 && (
-                    <p className="text-[10px] text-[#475569] mt-1">挑戦回数: {progress.attemptCount}</p>
-                  )}
                 </div>
                 {!isLocked && (
                   <button
                     data-testid="story-quest-start"
                     onClick={() => router.push(`/play?questId=${q.questId}`)}
-                    className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs font-bold ${
-                      status === 'cleared'
-                        ? 'bg-[#1e3a5f] text-[#94a3b8]'
-                        : 'bg-[#3b82f6] text-white'
-                    }`}
+                    className={isCleared ? 'btn--ghost' : 'btn--primary'}
+                    style={{ flexShrink: 0, padding: '6px 12px', width: 'auto', minHeight: 34, fontSize: 11 }}
                   >
-                    {status === 'cleared' ? '再挑戦' : '挑戦'}
+                    {isCleared ? '再挑戦' : '挑戦'}
                   </button>
                 )}
               </div>

@@ -11,13 +11,15 @@ export default function TurnIndicator({ currentTurn, turnCount }: Props) {
   return (
     <div
       data-testid="turn-indicator"
-      className={[
-        'flex items-center justify-between px-3 py-1.5 rounded-lg text-sm font-bold',
-        isPlayer ? 'bg-[#1e3a5f]/60 text-[#60a5fa]' : 'bg-[#3b1e1e]/60 text-[#f87171]',
-      ].join(' ')}
+      className="turn-indicator-dungeon"
     >
-      <span>ターン {turnCount}</span>
-      <span className="flex items-center gap-1">
+      <span className="turn-indicator-dungeon__count">
+        TURN {turnCount}
+      </span>
+      <span className="turn-indicator-dungeon__turn" style={{
+        color: isPlayer ? 'var(--rune-blue)' : 'var(--rune-red)',
+        animation: isPlayer ? 'gold-pulse 2s ease-in-out infinite' : 'none',
+      }}>
         {isPlayer ? '▶ あなたのターン' : '⏳ AIのターン...'}
       </span>
     </div>

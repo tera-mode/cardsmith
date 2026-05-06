@@ -3,146 +3,264 @@
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
-import { useEffect, useMemo } from 'react';
-import AppHeader from '@/components/ui/AppHeader';
+import { useMemo } from 'react';
 import { QUEST_MAP } from '@/lib/data/quests';
 
 const MENU_ITEMS = [
-  { key: 'story',      label: 'ストーリー', icon: '📖', href: '/story',      accent: '#3b82f6' },
-  { key: 'play',       label: '自由対戦',   icon: '⚔️',  href: '/play',       accent: '#ef4444' },
-  { key: 'collection', label: 'コレクション', icon: '🃏', href: '/collection', accent: '#a855f7' },
-  { key: 'materials',  label: 'マテリアル', icon: '🔩',  href: '/materials',  accent: '#6b7280' },
+  { key: 'story',      label: 'ストーリー', icon: '📖', href: '/story',      accent: '#5db8ff' },
+  { key: 'play',       label: '自由対戦',   icon: '⚔️',  href: '/play',       accent: '#e85a4a' },
+  { key: 'collection', label: 'コレクション', icon: '🃏', href: '/collection', accent: '#c478ff' },
+  { key: 'materials',  label: 'マテリアル', icon: '🔩',  href: '/materials',  accent: '#8a7a5e' },
   { key: 'deck',       label: 'デッキ編集', icon: '📋',  href: '/deck',       accent: '#22d3ee' },
-  { key: 'forge',      label: '鍛冶',       icon: '🔨',  href: '/forge',      accent: '#f59e0b' },
-  { key: 'shop',       label: 'ショップ',   icon: '🏪',  href: '/shop',       accent: '#10b981' },
-  { key: 'gacha',      label: '召喚',       icon: '✨',  href: '/gacha',      accent: '#fbbf24' },
+  { key: 'forge',      label: '鍛冶',       icon: '🔨',  href: '/forge',      accent: '#e8a93a' },
+  { key: 'shop',       label: 'ショップ',   icon: '🏪',  href: '/shop',       accent: '#6bd998' },
+  { key: 'gacha',      label: '召喚',       icon: '✨',  href: '/gacha',      accent: '#ffd54a' },
 ] as const;
 
 const SUB_ITEMS = [
-  { key: 'history',  label: '履歴',            icon: '📜', href: '/history' },
-  { key: 'profile',  label: 'プロフィール',     icon: '👤', href: '/profile' },
+  { key: 'history',  label: '履歴',        icon: '📜', href: '/history' },
+  { key: 'profile',  label: 'プロフィール', icon: '👤', href: '/profile' },
 ] as const;
+
+function Torch({ style }: { style?: React.CSSProperties }) {
+  return <div className="torch" style={style} />;
+}
 
 export default function HomePage() {
   const { user, loading: authLoading, signInAsGuest } = useAuth();
   const { profile, questProgress, loading: profileLoading } = useProfile();
   const router = useRouter();
 
-  // 次の目標を計算
   const nextGoal = useMemo(() => {
     if (!questProgress.length) return { label: 'ストーリーを始めよう', href: '/story', sub: 'Chapter 1 Quest 1-1' };
     const available = questProgress.filter(p => p.status === 'available');
     if (available.length > 0) {
       const q = QUEST_MAP[available[0].questId];
-      return q ? { label: q.title, href: `/play?questId=${q.questId}`, sub: `Chapter ${q.chapter} Quest ${q.chapter}-${q.order}` } : null;
+      return q ? { label: q.title, href: `/play?questId=${q.questId}`, sub: `Ch.${q.chapter}-${q.order}` } : null;
     }
-    const allCleared = questProgress.every(p => p.status === 'cleared');
-    if (allCleared) return { label: '自由対戦に挑む', href: '/play', sub: '最強カードを鍛えよう' };
-    return null;
+    return { label: '自由対戦に挑む', href: '/play', sub: '最強カードを鍛えよう' };
   }, [questProgress]);
-
-  // ログイン済みなら何もしない（ホームに留まる）
-  // 未ログインかつ読み込み完了していたら LP を表示
-  const isLoggedIn = !!user;
-
-  const handleGuest = async () => {
-    await signInAsGuest();
-  };
 
   if (authLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#1a1a2e]">
-        <p className="text-gray-400 text-sm">読み込み中...</p>
+      <div className="game-layout stone-bg items-center justify-center">
+        <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 13, letterSpacing: '0.08em' }}>
+          LOADING...
+        </p>
       </div>
     );
   }
 
-  // 未ログイン：LP
-  if (!isLoggedIn) {
+  // ─── 未ログイン：LP ──────────────────────────────────────────────────────────
+  if (!user) {
     return (
-      <main className="game-layout items-center justify-center bg-[#1a1a2e]">
-        <div className="flex flex-col items-center gap-8 px-6 max-w-sm w-full">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-2">⚒️ 最強カード鍛冶師</h1>
-            <p className="text-[#94a3b8] text-sm">THE APEX CARDSMITH</p>
+      <main className="game-layout stone-bg items-center justify-center" style={{ position: 'relative' }}>
+        {/* 松明装飾 */}
+        <Torch style={{ position: 'absolute', top: 20, left: 20 }} />
+        <Torch style={{ position: 'absolute', top: 20, right: 20 }} />
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, padding: '0 24px', maxWidth: 360, width: '100%' }}>
+          {/* ロゴ */}
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 30, fontWeight: 700,
+              letterSpacing: '0.12em',
+              color: 'var(--gold)',
+              textShadow: '0 0 16px rgba(232,192,116,0.5), 0 2px 0 #000',
+              marginBottom: 4,
+            }}>
+              ⚒ CARDSMITH
+            </h1>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: '0.2em', color: 'var(--text-muted)' }}>
+              THE APEX RUNESMITH
+            </p>
           </div>
-          <div className="bg-[#16213e] rounded-xl p-4 w-full text-sm text-[#94a3b8] space-y-1">
-            <p>• 4×4盤面でのターン制カード対戦</p>
-            <p>• 13種類のユニットカードで戦略を組み立てろ</p>
-            <p>• マテリアルを集めてオリジナルカードを鍛えろ</p>
+
+          {/* キャッチコピー */}
+          <div className="panel--ornate" style={{ padding: '14px 16px', width: '100%', textAlign: 'center' }}>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+              地下迷宮の奥深く、<br />ルーンを刻み、最強のカードを鍛えよ。<br />4×4の戦場で覇を競え。
+            </p>
           </div>
-          <div className="flex flex-col gap-3 w-full">
+
+          {/* ボタン */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
             <button
               data-testid="guest-login"
-              onClick={handleGuest}
-              className="tap-target w-full bg-[#3b82f6] hover:bg-[#2563eb] active:bg-[#1d4ed8] text-white font-bold rounded-xl text-base transition-colors"
+              onClick={() => signInAsGuest()}
+              className="btn--primary"
+              style={{ minHeight: 48, fontSize: 15 }}
             >
-              ゲストでプレイ
+              ⚔ ゲストでプレイ
             </button>
             <button
               onClick={() => router.push('/login')}
-              className="tap-target w-full bg-[#16213e] border border-[#3b82f6] hover:bg-[#1e3a5f] text-[#3b82f6] font-bold rounded-xl text-base transition-colors"
+              className="btn--ghost tap-target"
+              style={{ width: '100%' }}
             >
               ログイン / 新規登録
             </button>
           </div>
-          <p className="text-xs text-[#475569] text-center">© 合同会社LAIV</p>
+
+          <p style={{ fontSize: 10, color: 'var(--text-dim)' }}>© 合同会社LAIV</p>
         </div>
       </main>
     );
   }
 
-  // ログイン済み：ホームメニュー
+  // ─── ログイン済み：ホームメニュー ─────────────────────────────────────────────
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
-      <AppHeader />
+    <div className="game-layout stone-bg flex-col" style={{ position: 'relative' }}>
+      {/* プレイヤーバー */}
+      <div style={{
+        flexShrink: 0,
+        padding: '12px 16px 10px',
+        background: 'linear-gradient(180deg, rgba(40,28,16,0.98) 0%, rgba(20,14,8,0.9) 100%)',
+        borderBottom: '1px solid var(--border-rune)',
+        position: 'relative',
+      }}>
+        {/* 金グラデ下線 */}
+        <div style={{ position: 'absolute', bottom: -1, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, var(--gold), transparent)', opacity: 0.5 }} />
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* 次の目標 */}
+        {/* ロゴ + 松明 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+          <Torch />
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', textShadow: '0 0 10px rgba(232,192,116,0.4)' }}>
+            CARDSMITH
+          </h1>
+          <Torch />
+        </div>
+
+        {/* Lv バッジ + EXP バー + ルーン */}
+        {!profileLoading && profile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Lv バッジ */}
+            <div style={{
+              fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700,
+              color: 'var(--gold)', border: '1px solid var(--gold-deep)',
+              padding: '2px 8px', borderRadius: 3, background: 'rgba(42,28,12,0.9)',
+              flexShrink: 0, letterSpacing: '0.04em',
+            }}>
+              Lv {profile.level}
+            </div>
+
+            {/* EXP バー */}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                <span data-testid="header-level" style={{ fontSize: 9, color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>EXP</span>
+                <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+                  {(profile.exp - [...Array(profile.level)].reduce((s, _, i) => i < profile.level - 1 ? s + (i + 1) * 100 : s, 0)).toString().slice(0, 6)}
+                </span>
+              </div>
+              <div style={{ height: 5, background: 'rgba(0,0,0,0.7)', borderRadius: 2, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.8)' }}>
+                <div
+                  data-testid="header-exp-bar"
+                  style={{
+                    height: '100%',
+                    width: `${(profile.exp % 100) / 100 * 100}%`,
+                    background: 'linear-gradient(90deg, #4a9eff, #6ec6ff)',
+                    boxShadow: '0 0 6px rgba(74,158,255,0.5)',
+                    transition: 'width 0.5s',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* ルーン */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              <div className="rune-gem" />
+              <span
+                data-testid="header-runes"
+                style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600, color: 'var(--gold)' }}
+              >
+                {profile.runes.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 8px' }}>
+        {/* NEXT QUEST */}
         {nextGoal && (
           <div
             data-testid="home-next-goal"
-            className="bg-gradient-to-r from-[#1e3a5f] to-[#1a1a2e] border border-[#3b82f6]/30 rounded-xl p-4 cursor-pointer active:opacity-80"
+            className="panel--ornate"
             onClick={() => router.push(nextGoal.href)}
+            style={{ padding: '12px 14px', marginBottom: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}
           >
-            <p className="text-xs text-[#94a3b8] mb-1">次の目標</p>
-            <p className="text-sm font-bold text-white">📖 {nextGoal.label}</p>
-            <p className="text-xs text-[#64748b] mt-0.5">{nextGoal.sub}</p>
+            <div style={{ fontSize: 24, filter: 'drop-shadow(0 0 8px rgba(232,192,116,0.5))' }}>📖</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em', marginBottom: 2 }}>
+                ⚜ NEXT QUEST
+              </p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-body)', lineHeight: 1.3 }}>
+                {nextGoal.label}
+              </p>
+              <p style={{ fontSize: 10, color: 'var(--text-dim)' }}>{nextGoal.sub}</p>
+            </div>
+            <span style={{ color: 'var(--gold)', fontSize: 16 }}>▶</span>
           </div>
         )}
 
-        {/* メインメニュー 2列グリッド */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* 区切り線 */}
+        <div className="divider-rune" style={{ marginBottom: 10, fontSize: 10 }}>⚜ メニュー ⚜</div>
+
+        {/* メインメニュー 2×4グリッド */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
           {MENU_ITEMS.map(item => (
             <button
               key={item.key}
               data-testid={`home-menu-${item.key}`}
               onClick={() => router.push(item.href)}
-              className="bg-[#16213e]/80 border border-[#1e3a5f]/60 rounded-xl p-4 text-left active:opacity-70 transition-opacity"
-              style={{ borderColor: `${item.accent}30` }}
+              className="panel--ornate"
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                gap: 4, padding: '14px 12px',
+                cursor: 'pointer',
+                background: `linear-gradient(180deg, rgba(50,36,22,0.96) 0%, rgba(28,20,12,0.96) 100%), radial-gradient(ellipse at top right, ${item.accent}28 0%, transparent 60%)`,
+                minHeight: 80,
+                transition: 'transform 0.12s, box-shadow 0.12s',
+              }}
             >
-              <div className="text-2xl mb-1">{item.icon}</div>
-              <div className="text-sm font-bold text-white">{item.label}</div>
+              <div style={{ fontSize: 26, filter: `drop-shadow(0 0 8px ${item.accent}90)` }}>{item.icon}</div>
+              <div style={{
+                fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 600,
+                color: 'var(--gold-glow)', letterSpacing: '0.04em',
+                textShadow: '0 1px 0 #000',
+              }}>
+                {item.label}
+              </div>
             </button>
           ))}
         </div>
 
         {/* サブメニュー */}
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           {SUB_ITEMS.map(item => (
             <button
               key={item.key}
               data-testid={`home-menu-${item.key}`}
               onClick={() => router.push(item.href)}
-              className="flex-1 bg-[#16213e]/60 border border-[#1e3a5f]/40 rounded-xl py-3 text-center active:opacity-70"
+              style={{
+                flex: 1, padding: '10px 8px',
+                background: 'rgba(28,20,12,0.7)',
+                border: '1px solid var(--border-rune)',
+                borderRadius: 4,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                cursor: 'pointer',
+              }}
             >
-              <div className="text-lg">{item.icon}</div>
-              <div className="text-xs text-[#94a3b8]">{item.label}</div>
+              <span style={{ fontSize: 18 }}>{item.icon}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{item.label}</span>
             </button>
           ))}
         </div>
 
-        <p className="text-xs text-[#475569] text-center pb-2">© 合同会社LAIV</p>
+        <p style={{ fontSize: 10, color: 'var(--text-dim)', textAlign: 'center', paddingBottom: 4 }}>
+          © 合同会社LAIV
+        </p>
       </div>
     </div>
   );

@@ -6,77 +6,139 @@ import { useProfile } from '@/contexts/ProfileContext';
 interface Props {
   backHref?: string;
   title?: string;
+  showLvBar?: boolean;
 }
 
-export default function AppHeader({ backHref, title }: Props) {
+export default function AppHeader({ backHref, title, showLvBar = true }: Props) {
   const router = useRouter();
   const { profile, expProgress, loading } = useProfile();
 
   return (
-    <header className="flex-shrink-0 bg-[#0a0e27]/90 backdrop-blur-sm border-b border-[#1e3a5f]/50 px-3 py-2 h-14 flex items-center gap-2">
-      {/* 左：戻るボタン or タイトル */}
-      <div className="w-8 flex-shrink-0">
-        {backHref ? (
+    <header
+      className="flex-shrink-0 flex items-center gap-2 relative"
+      style={{
+        padding: '10px 14px',
+        background: 'linear-gradient(180deg, rgba(40,28,16,0.97) 0%, rgba(20,14,8,0.92) 100%)',
+        borderBottom: '1px solid var(--border-rune)',
+      }}
+    >
+      {/* 金グラデ下線装飾 */}
+      <div style={{
+        position: 'absolute', bottom: -1, left: '10%', right: '10%',
+        height: 1,
+        background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
+        opacity: 0.5,
+        pointerEvents: 'none',
+      }} />
+
+      {/* 左：戻るボタン */}
+      <div style={{ width: 32, flexShrink: 0 }}>
+        {backHref && (
           <button
             onClick={() => router.push(backHref)}
-            className="text-[#94a3b8] hover:text-white text-xl leading-none"
             aria-label="戻る"
+            style={{
+              width: 32, height: 32,
+              display: 'grid', placeItems: 'center',
+              color: 'var(--gold)',
+              background: 'transparent',
+              border: '1px solid var(--border-rune)',
+              borderRadius: 4,
+              fontSize: 16,
+              cursor: 'pointer',
+            }}
           >
             ←
+          </button>
+        )}
+      </div>
+
+      {/* 中央：タイトル or Lv/EXP */}
+      <div className="flex-1 flex flex-col items-center justify-center min-w-0">
+        {title ? (
+          <button
+            onClick={() => router.push('/')}
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 16, fontWeight: 600,
+              letterSpacing: '0.08em',
+              color: 'var(--gold)',
+              textShadow: '0 0 10px rgba(232,192,116,0.4)',
+              background: 'none', border: 'none', cursor: 'pointer',
+            }}
+          >
+            {title}
+          </button>
+        ) : loading || !profile ? (
+          <div style={{ width: 140, height: 28, background: 'rgba(42,32,18,0.6)', borderRadius: 4, animation: 'pulse 1.5s infinite' }} />
+        ) : showLvBar ? (
+          <button
+            onClick={() => router.push('/')}
+            className="w-full max-w-[200px]"
+            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 3 }}>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 12, fontWeight: 700,
+                color: 'var(--gold)',
+                border: '1px solid var(--gold-deep)',
+                padding: '1px 6px',
+                borderRadius: 3,
+                background: 'rgba(42,28,12,0.8)',
+                letterSpacing: '0.04em',
+              }}>
+                Lv {profile.level}
+              </span>
+              <span
+                data-testid="header-level"
+                style={{ fontSize: 10, color: 'var(--text-muted)' }}
+              >
+                {expProgress.current}/{expProgress.required} EXP
+              </span>
+            </div>
+            {/* EXP バー */}
+            <div style={{
+              width: '100%', height: 5,
+              background: 'rgba(0,0,0,0.6)',
+              border: '1px solid rgba(0,0,0,0.8)',
+              borderRadius: 2, overflow: 'hidden',
+            }}>
+              <div
+                data-testid="header-exp-bar"
+                style={{
+                  width: `${expProgress.pct * 100}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #4a9eff, #6ec6ff)',
+                  borderRadius: 1,
+                  boxShadow: '0 0 6px rgba(74,158,255,0.5)',
+                  transition: 'width 0.5s ease',
+                }}
+              />
+            </div>
           </button>
         ) : null}
       </div>
 
-      {/* 中央：Lv/EXPバー or タイトル */}
-      <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-        {title ? (
-          <button onClick={() => router.push('/')} className="text-sm font-bold text-white truncate">
-            {title}
-          </button>
-        ) : loading || !profile ? (
-          <div className="w-32 h-4 bg-[#1e3a5f] rounded animate-pulse" />
-        ) : (
-          <div
-            className="w-full max-w-[200px] cursor-pointer"
-            onClick={() => router.push('/')}
-          >
-            <div className="flex items-center justify-center gap-1.5 mb-0.5">
-              <span className="text-xs font-bold text-[#22d3ee]">Lv {profile.level}</span>
-              <span className="text-[10px] text-[#64748b]">
-                {expProgress.current}/{expProgress.required} EXP
-              </span>
-            </div>
-            <div className="w-full h-1.5 bg-[#1e3a5f] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-[#22d3ee] to-[#3b82f6] rounded-full transition-all duration-500"
-                style={{ width: `${expProgress.pct * 100}%` }}
-              />
-            </div>
+      {/* 右：ルーン残高 */}
+      <div style={{ width: 72, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+        {!loading && profile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div className="rune-gem" />
+            <span
+              data-testid="header-runes"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 13, fontWeight: 600,
+                color: 'var(--gold)',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {profile.runes.toLocaleString()}
+            </span>
           </div>
         )}
       </div>
-
-      {/* 右：ルーン残高 */}
-      <div className="w-20 flex-shrink-0 flex justify-end">
-        {loading || !profile ? (
-          <div className="w-16 h-4 bg-[#1e3a5f] rounded animate-pulse" />
-        ) : (
-          <span
-            data-testid="header-runes"
-            className="text-sm font-bold text-[#fbbf24]"
-          >
-            💎 {profile.runes.toLocaleString()}
-          </span>
-        )}
-      </div>
-
-      {/* 非表示だが testid 提供 */}
-      {profile && (
-        <>
-          <span data-testid="header-level" className="sr-only">{profile.level}</span>
-          <span data-testid="header-exp-bar" className="sr-only">{expProgress.pct}</span>
-        </>
-      )}
     </header>
   );
 }

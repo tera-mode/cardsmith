@@ -1,68 +1,518 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
+/* ============================================================
+   DESIGN TOKENS — Dungeon Fantasy (heavy/heritage tone)
+   ============================================================ */
 :root {
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-board: #0f3460;
-  --color-player: #3b82f6;
-  --color-ai: #ef4444;
-  --color-highlight: #f59e0b;
-  --color-text: #f5f5f4;
-  --color-text-muted: #94a3b8;
+  --bg-deep:       #0d0a06;
+  --bg-stone:      #1a1410;
+  --bg-panel:      rgba(28, 22, 16, 0.92);
+  --bg-panel-soft: rgba(38, 30, 22, 0.85);
+
+  --border-rune:        rgba(196, 154, 90, 0.45);
+  --border-rune-bright: rgba(232, 192, 116, 0.85);
+
+  --gold:      #e8c074;
+  --gold-deep: #a87a36;
+  --gold-glow: #ffd98a;
+
+  --rune-blue:  #5db8ff;
+  --rune-red:   #ff6b5b;
+  --rune-green: #6bd998;
+
+  --text-primary:   #f4e9d4;
+  --text-secondary: #c5b294;
+  --text-muted:     #8a7a5e;
+  --text-dim:       #5a4f3d;
+
+  --hp-red:  #e85a4a;
+  --mp-blue: #4a9eff;
+
+  --rarity-c:   #8a7a5e;
+  --rarity-r:   #5db8ff;
+  --rarity-sr:  #c478ff;
+  --rarity-ssr: #ff9d3a;
+
+  --font-display: 'Cinzel', 'Noto Serif JP', serif;
+  --font-body:    'Noto Serif JP', 'Yu Mincho', serif;
+  --font-ui:      'Noto Sans JP', system-ui, sans-serif;
+
+  /* legacy compat */
+  --bg-primary:      var(--bg-deep);
+  --bg-secondary:    var(--bg-stone);
+  --color-player:    var(--rune-blue);
+  --color-ai:        var(--rune-red);
+  --color-highlight: var(--gold);
+  --color-text:      var(--text-primary);
+  --color-text-muted:var(--text-muted);
 }
 
-@theme inline {
-  --color-background: var(--bg-primary);
-  --color-foreground: var(--color-text);
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes flicker {
+  0%,100% { opacity: 1; transform: scaleX(1); }
+  50%     { opacity: 0.85; transform: scaleX(0.95); }
+}
+@keyframes pulse-summon {
+  0%,100% { box-shadow: 0 0 8px rgba(232,192,116,0.3); }
+  50%     { box-shadow: 0 0 20px rgba(232,192,116,0.8); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes gold-pulse {
+  0%,100% { text-shadow: 0 0 8px rgba(232,192,116,0.3); }
+  50%     { text-shadow: 0 0 16px rgba(232,192,116,0.8); }
+}
+@keyframes levelup {
+  0%   { transform: scale(1);    opacity: 1; }
+  50%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
 }
 
-* {
-  box-sizing: border-box;
-}
+/* ============================================================
+   BASE
+   ============================================================ */
+* { box-sizing: border-box; }
 
 html, body {
   height: 100%;
-  overflow: hidden; /* スマホでの過度なスクロール防止 */
+  overflow: hidden;
 }
 
 body {
-  background: var(--bg-primary);
-  color: var(--color-text);
-  font-family: 'Noto Sans JP', 'Hiragino Sans', Arial, sans-serif;
-  -webkit-tap-highlight-color: transparent; /* スマホのタップハイライト無効化 */
-  touch-action: manipulation; /* ダブルタップズーム無効化 */
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-/* スマホ縦持ちレイアウトの基準 */
+/* ============================================================
+   LAYOUT
+   ============================================================ */
 .game-layout {
   display: flex;
   flex-direction: column;
-  height: 100dvh; /* Dynamic viewport height (iOS Safari 対応) */
+  height: 100dvh;
   height: 100vh;
   overflow: hidden;
 }
 
-/* セーフエリア */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* 手札の横スクロール */
 .hand-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
-.hand-scroll::-webkit-scrollbar {
-  display: none;
-}
+.hand-scroll::-webkit-scrollbar { display: none; }
 
-/* タップ可能エリアの最小サイズ（48×48px）*/
 .tap-target {
   min-width: 48px;
   min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ============================================================
+   STONE BACKGROUND
+   ============================================================ */
+.stone-bg {
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255,180,80,0.08), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(80,40,20,0.18), transparent 60%),
+    radial-gradient(ellipse at 50% 30%, rgba(80,60,40,0.3), transparent 70%),
+    linear-gradient(180deg, #1a1410 0%, #0d0a06 100%);
+}
+
+/* ============================================================
+   PANEL / ORNATE PANEL
+   ============================================================ */
+.panel {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-rune);
+  border-radius: 4px;
+  padding: 14px;
+}
+
+.panel--ornate {
+  background: linear-gradient(180deg, rgba(50,36,22,0.96) 0%, rgba(28,20,12,0.96) 100%);
+  border: 1px solid var(--gold-deep);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(232,192,116,0.2),
+    inset 0 -1px 0 rgba(0,0,0,0.6),
+    0 4px 20px rgba(0,0,0,0.5);
+}
+.panel--ornate::before,
+.panel--ornate::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  border: 1.5px solid var(--gold);
+  opacity: 0.8;
+  pointer-events: none;
+}
+.panel--ornate::before { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+.panel--ornate::after  { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn--primary {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  background: linear-gradient(180deg, #d4942a 0%, #8a5a18 100%);
+  color: #1a0e02;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  padding: 12px 20px;
+  font-size: 15px;
+  text-shadow: 0 1px 0 rgba(255,220,140,0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255,220,140,0.5),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 2px 8px rgba(212,148,42,0.3);
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn--primary:hover {
+  background: linear-gradient(180deg, #e8a93a 0%, #9a6a28 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,220,140,0.6),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 0 16px rgba(232,192,116,0.5);
+}
+.btn--primary:disabled {
+  background: linear-gradient(180deg, #3a3024 0%, #1e180f 100%);
+  border-color: var(--text-dim);
+  color: var(--text-dim);
+  cursor: not-allowed;
+  text-shadow: none;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+}
+
+.btn--ghost {
+  font-family: var(--font-display);
+  background: rgba(40,30,18,0.6);
+  color: var(--gold);
+  border: 1px solid var(--border-rune);
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+.btn--ghost:hover {
+  background: rgba(60,44,24,0.8);
+  border-color: var(--gold);
+}
+
+/* ============================================================
+   RUNE TILE (board cell)
+   ============================================================ */
+.rune-tile {
+  aspect-ratio: 1;
+  position: relative;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(180,160,130,0.4) 0%, transparent 50%),
+    linear-gradient(160deg, #6a5e48 0%, #3a3224 100%);
+  border: 1.5px solid #2a2218;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(180,160,130,0.25),
+    inset 0 -2px 0 rgba(0,0,0,0.5);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.rune-tile--enemy {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(220,130,110,0.35) 0%, transparent 50%),
+    linear-gradient(160deg, #6a3020 0%, #30120a 100%);
+  border-color: #1a0a06;
+  box-shadow:
+    inset 0 1px 0 rgba(220,130,110,0.25),
+    inset 0 -2px 0 rgba(0,0,0,0.5),
+    0 0 6px rgba(220,80,60,0.15);
+}
+.rune-tile--player {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(110,200,255,0.35) 0%, transparent 50%),
+    linear-gradient(160deg, #1e3a5a 0%, #0c1e30 100%);
+  border-color: #06121a;
+  box-shadow:
+    inset 0 1px 0 rgba(110,200,255,0.25),
+    inset 0 -2px 0 rgba(0,0,0,0.5),
+    0 0 6px rgba(74,158,255,0.15);
+}
+.rune-tile--highlight-summon {
+  outline: 2px dashed var(--gold);
+  outline-offset: -3px;
+  animation: pulse-summon 1.4s ease-in-out infinite;
+}
+.rune-tile--highlight-move {
+  outline: 2px solid var(--rune-green);
+  outline-offset: -2px;
+  box-shadow: 0 0 12px var(--rune-green), inset 0 0 8px rgba(107,217,152,0.25);
+}
+.rune-tile--highlight-attack {
+  outline: 2px solid var(--rune-red);
+  outline-offset: -2px;
+  box-shadow: 0 0 12px var(--rune-red), inset 0 0 8px rgba(255,107,91,0.25);
+}
+.rune-tile--selected {
+  outline: 2px solid var(--gold-glow);
+  outline-offset: -2px;
+  box-shadow: 0 0 14px var(--gold), inset 0 0 8px rgba(255,217,138,0.25);
+}
+
+/* ============================================================
+   UNIT TOKEN
+   ============================================================ */
+.unit-token {
+  position: absolute;
+  inset: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(40,30,20,0.97) 0%, rgba(20,14,8,0.97) 100%);
+  border: 1.5px solid var(--gold-deep);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(232,192,116,0.3), 0 2px 6px rgba(0,0,0,0.6);
+}
+.unit-token--player { border-color: #4a9eff; box-shadow: inset 0 1px 0 rgba(110,198,255,0.3), 0 0 6px rgba(74,158,255,0.35); }
+.unit-token--enemy  { border-color: #d96a5a; box-shadow: inset 0 1px 0 rgba(255,140,120,0.3), 0 0 6px rgba(217,106,90,0.35); }
+.unit-token--acted  { opacity: 0.5; filter: grayscale(0.5); }
+
+/* ============================================================
+   CARD (hand)
+   ============================================================ */
+.dungeon-card {
+  position: relative;
+  background: linear-gradient(180deg, #3a2c1a 0%, #1a1208 100%);
+  border: 2px solid var(--gold-deep);
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(232,192,116,0.25),
+    0 2px 8px rgba(0,0,0,0.5);
+  transition: transform 0.15s, box-shadow 0.15s;
+  scroll-snap-align: start;
+}
+.dungeon-card:hover         { transform: translateY(-4px); }
+.dungeon-card.is-selected   { transform: translateY(-8px); box-shadow: 0 0 20px var(--gold-glow); border-color: var(--gold-glow); }
+.dungeon-card.is-disabled   { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.5); transform: none !important; }
+
+.dungeon-card__cost {
+  position: absolute;
+  top: -7px; right: -7px;
+  width: 22px; height: 22px;
+  background: radial-gradient(circle, #5ab0ff 0%, #1e3a7a 80%);
+  border: 1.5px solid var(--gold);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  color: #fff;
+  text-shadow: 0 1px 0 #000;
+  box-shadow: 0 0 8px rgba(74,158,255,0.6);
+  z-index: 3;
+}
+.dungeon-card__rarity {
+  position: absolute;
+  top: -5px; left: -5px;
+  width: 17px; height: 17px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  background: var(--bg-stone);
+  display: grid; place-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9px;
+  z-index: 3;
+}
+.dungeon-card__art {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(180deg, #5a3a1a 0%, #2a1808 100%);
+  border-radius: 3px;
+  border: 1px solid #1a0e02;
+  display: grid; place-items: center;
+  font-size: 26px;
+  overflow: hidden;
+  position: relative;
+}
+.dungeon-card__name {
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  margin-top: 3px;
+  text-shadow: 0 1px 0 #000;
+  line-height: 1.2;
+}
+.dungeon-card__stats {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.dungeon-card__atk { color: #ffb44a; }
+.dungeon-card__hp  { color: #6bd998; }
+
+/* ============================================================
+   TORCH DECORATION
+   ============================================================ */
+.torch {
+  width: 10px;
+  height: 20px;
+  position: relative;
+  pointer-events: none;
+}
+.torch::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 4px; height: 12px;
+  background: linear-gradient(180deg, #8a5a18, #5a3a08);
+  border-radius: 1px;
+}
+.torch::after {
+  content: '';
+  position: absolute;
+  bottom: 10px; left: 50%;
+  transform: translateX(-50%);
+  width: 8px; height: 10px;
+  background: radial-gradient(ellipse at center bottom, #ffd98a 0%, #ff9d3a 40%, rgba(255,80,20,0) 100%);
+  border-radius: 50% 50% 30% 30%;
+  animation: flicker 0.4s ease-in-out infinite alternate;
+}
+
+/* ============================================================
+   DIVIDER RUNE
+   ============================================================ */
+.divider-rune {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-family: var(--font-display);
+}
+.divider-rune::before,
+.divider-rune::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-deep), transparent);
+}
+
+/* ============================================================
+   HP BAR (battle)
+   ============================================================ */
+.hp-bar-dungeon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(14,10,6,0.88);
+  border: 1px solid var(--border-rune);
+  border-radius: 3px;
+}
+.hp-bar-dungeon__label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.hp-bar-dungeon__hearts {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.hp-bar-dungeon__track {
+  flex: 1;
+  height: 6px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(0,0,0,0.8);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.hp-bar-dungeon__fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.35s ease;
+  position: relative;
+}
+.hp-bar-dungeon__fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 60%);
+}
+.hp-bar-dungeon--enemy .hp-bar-dungeon__label { color: var(--rune-red); }
+.hp-bar-dungeon--enemy .hp-bar-dungeon__fill  { background: linear-gradient(180deg, #ff8a78 0%, #c83a28 100%); }
+.hp-bar-dungeon--player .hp-bar-dungeon__label { color: var(--rune-blue); }
+.hp-bar-dungeon--player .hp-bar-dungeon__fill  { background: linear-gradient(180deg, #6ec6ff 0%, #2a6fdb 100%); }
+
+/* ============================================================
+   TURN INDICATOR / STEP BAR
+   ============================================================ */
+.turn-indicator-dungeon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  background: rgba(14,10,6,0.8);
+  border-top: 1px solid var(--border-rune);
+  border-bottom: 1px solid var(--border-rune);
+  font-family: var(--font-display);
+  font-size: 11px;
+}
+.turn-indicator-dungeon__count { color: var(--text-muted); letter-spacing: 0.06em; }
+.turn-indicator-dungeon__turn  { color: var(--gold); font-weight: 600; letter-spacing: 0.04em; }
+
+/* ============================================================
+   RUNE GEM (currency icon)
+   ============================================================ */
+.rune-gem {
+  width: 13px; height: 13px;
+  background: linear-gradient(135deg, #6ec6ff 0%, #2a6fdb 100%);
+  clip-path: polygon(50% 0, 100% 35%, 80% 100%, 20% 100%, 0 35%);
+  filter: drop-shadow(0 0 3px rgba(74,158,255,0.6));
+  display: inline-block;
+  flex-shrink: 0;
 }

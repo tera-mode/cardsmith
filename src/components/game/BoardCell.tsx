@@ -15,6 +15,8 @@ interface Props {
   onLongPress?: (unit: Unit) => void;
 }
 
+const RUNE_CHARS = ['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ'];
+
 export default function BoardCell({ row, col, unit, isHighlighted, isSelected, onClick, onLongPress }: Props) {
   const isPlayerZone = row >= BOARD_ROWS - 1;
   const isAiZone = row <= 0;
@@ -24,37 +26,65 @@ export default function BoardCell({ row, col, unit, isHighlighted, isSelected, o
   }, 450);
 
   const handleClick = () => {
-    // 長押し後はクリックイベントを無視
-    if (didFire.current) {
-      didFire.current = false;
-      return;
-    }
+    if (didFire.current) { didFire.current = false; return; }
     onClick({ row, col });
   };
+
+  const runeChar = RUNE_CHARS[(row * 4 + col) % RUNE_CHARS.length];
+
+  // CSS クラス構成
+  let tileClass = 'rune-tile';
+  if (isAiZone) tileClass += ' rune-tile--enemy';
+  else if (isPlayerZone) tileClass += ' rune-tile--player';
+
+  if (isSelected)    tileClass += ' rune-tile--selected';
+  else if (isHighlighted && unit === null) tileClass += ' rune-tile--highlight-summon';
+  else if (isHighlighted) tileClass += ' rune-tile--highlight-attack';
 
   return (
     <div
       data-testid={`cell-${row}-${col}`}
+      className={tileClass}
       onClick={handleClick}
       onMouseDown={start}
       onMouseUp={cancel}
       onTouchStart={(e) => { e.preventDefault(); start(); }}
       onTouchEnd={cancel}
       onTouchCancel={cancel}
-      className={[
-        'relative w-full aspect-square flex items-center justify-center',
-        'border border-[#1e3a5f] cursor-pointer transition-all duration-150',
-        isPlayerZone ? 'bg-[#0d2137]' : isAiZone ? 'bg-[#1a0d0d]' : 'bg-[#0f1a2e]',
-        isHighlighted ? 'bg-[#f59e0b]/30 border-[#f59e0b] border-2' : '',
-        isSelected ? 'bg-[#3b82f6]/20 border-[#3b82f6] border-2' : '',
-        'active:opacity-70',
-      ].join(' ')}
     >
-      {unit && <UnitToken unit={unit} isSelected={isSelected} />}
-
-      {isHighlighted && !unit && (
-        <div className="w-3 h-3 rounded-full bg-[#f59e0b]/60 animate-pulse" />
+      {/* ルーン文字（背景） */}
+      {!unit && (
+        <span style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '1.5em',
+          color: 'rgba(20,14,8,0.45)',
+          textShadow: '1px 1px 0 rgba(180,160,130,0.25)',
+          userSelect: 'none',
+          pointerEvents: 'none',
+        }}>
+          {runeChar}
+        </span>
       )}
+
+      {/* 移動可能ドット */}
+      {isHighlighted && !unit && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'grid',
+          placeItems: 'center',
+        }}>
+          <div style={{
+            width: 10, height: 10,
+            borderRadius: '50%',
+            background: 'var(--gold)',
+            boxShadow: '0 0 8px var(--gold)',
+            opacity: 0.8,
+          }} />
+        </div>
+      )}
+
+      {unit && <UnitToken unit={unit} isSelected={isSelected} />}
     </div>
   );
 }

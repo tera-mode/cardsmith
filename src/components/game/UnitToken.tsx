@@ -3,19 +3,19 @@
 import { Unit } from '@/lib/types/game';
 
 const UNIT_EMOJI: Record<string, string> = {
-  militia: '🪖',
-  light_infantry: '⚔️',
+  militia:         '🪖',
+  light_infantry:  '⚔️',
   assault_soldier: '🗡️',
-  scout: '🏃',
-  spear_soldier: '🔱',
-  heavy_infantry: '🛡️',
-  combat_soldier: '⚔️',
-  archer: '🏹',
-  guard: '🛡️',
-  healer: '✨',
-  cavalry: '🐴',
-  cannon: '💣',
-  defender: '🏰',
+  scout:           '🏃',
+  spear_soldier:   '🔱',
+  heavy_infantry:  '🛡️',
+  combat_soldier:  '⚔️',
+  archer:          '🏹',
+  guard:           '🛡️',
+  healer:          '✨',
+  cavalry:         '🐎',
+  cannon:          '💣',
+  defender:        '🏰',
 };
 
 interface Props {
@@ -32,39 +32,51 @@ export default function UnitToken({ unit, isSelected }: Props) {
   return (
     <div
       data-testid={`unit-${unit.instanceId}`}
-      className={[
-        'relative w-full h-full flex flex-col items-center justify-center rounded select-none',
-        isPlayer ? 'bg-[#1e3a5f] border-2 border-[#3b82f6]' : 'bg-[#3b1e1e] border-2 border-[#ef4444]',
-        isSelected ? 'ring-2 ring-[#f59e0b] ring-offset-1 ring-offset-[#0f3460]' : '',
-        unit.hasActedThisTurn ? 'opacity-50' : '',
-      ].join(' ')}
+      className={`unit-token unit-token--${isPlayer ? 'player' : 'enemy'}${unit.hasActedThisTurn ? ' unit-token--acted' : ''}`}
+      style={{ position: 'absolute', inset: 2 }}
     >
-      {/* HP バー */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700 rounded-t">
-        <div
-          className="h-full rounded-t transition-all duration-300"
-          style={{
-            width: `${hpPercent}%`,
-            backgroundColor: hpPercent > 50 ? '#22c55e' : hpPercent > 25 ? '#f59e0b' : '#ef4444',
-          }}
-        />
+      {/* HP バー (上部) */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+        background: 'rgba(0,0,0,0.7)', borderRadius: '2px 2px 0 0', overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${hpPercent}%`,
+          background: hpPercent > 50
+            ? 'linear-gradient(90deg, #6bd998, #4aaf78)'
+            : hpPercent > 25
+              ? 'linear-gradient(90deg, #ffd54a, #e8a93a)'
+              : 'linear-gradient(90deg, #ff6b5b, #c83a28)',
+          transition: 'width 0.3s',
+        }} />
       </div>
 
-      {/* 絵文字 */}
-      <span className="text-base leading-none mt-1">{emoji}</span>
+      {/* アイコン */}
+      <span style={{ fontSize: 15, lineHeight: 1, marginTop: 3, display: 'block' }}>
+        {emoji}
+      </span>
 
       {/* ATK / HP */}
-      <div className="flex gap-1 text-[9px] leading-none mt-0.5">
-        <span className={isPlayer ? 'text-[#60a5fa]' : 'text-[#f87171]'}>
-          {atk}
-        </span>
-        <span className="text-gray-400">/</span>
-        <span className="text-green-400">{unit.currentHp}</span>
+      <div style={{ display: 'flex', gap: 3, fontSize: 9, fontFamily: 'var(--font-display)', fontWeight: 700, lineHeight: 1, marginTop: 1 }}>
+        <span style={{ color: '#ffb44a' }}>{atk}</span>
+        <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span>
+        <span style={{ color: '#6bd998' }}>{unit.currentHp}</span>
       </div>
 
-      {/* スキル残回数 */}
+      {/* スキル残数バッジ */}
       {unit.card.skill && unit.skillUsesRemaining !== 0 && (
-        <div className="absolute bottom-0 right-0 text-[8px] leading-none bg-purple-700 px-0.5 rounded-bl rounded-tr text-white">
+        <div style={{
+          position: 'absolute', bottom: 1, right: 1,
+          background: 'rgba(196,120,255,0.85)',
+          borderRadius: '2px 0 2px 0',
+          padding: '0 2px',
+          fontSize: 8,
+          fontFamily: 'var(--font-display)',
+          fontWeight: 700,
+          color: '#fff',
+          lineHeight: '11px',
+        }}>
           {unit.skillUsesRemaining === 'infinite' ? '∞' : unit.skillUsesRemaining}
         </div>
       )}

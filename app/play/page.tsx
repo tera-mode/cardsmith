@@ -75,16 +75,18 @@ function GameScreen() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col"
-      style={{
-        backgroundImage: "url('/images/backgrounds/board.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundColor: '#1a1a2e',
-      }}
+      className="fixed inset-0 flex flex-col stone-bg"
+      style={{ position: 'relative' }}
     >
-      {/* 背景オーバーレイ */}
-      <div className="absolute inset-0 bg-[#1a1a2e]/85 pointer-events-none" />
+      {/* ダンジョン ambient overlay */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: 'radial-gradient(ellipse at 20% 10%, rgba(255,180,80,0.07), transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
+      }} />
+
+      {/* 松明装飾 */}
+      <div className="torch" style={{ position: 'absolute', top: 56, left: 8, zIndex: 5 }} />
+      <div className="torch" style={{ position: 'absolute', top: 56, right: 8, zIndex: 5 }} />
 
       <div className="relative z-10 flex flex-col h-full w-full max-w-[480px] mx-auto">
 
@@ -125,12 +127,12 @@ function GameScreen() {
         <SkipMoveButton mode={mode} />
 
         {/* ゲームログ */}
-        <div className="border-t border-[#1e3a5f]/40 h-16 overflow-hidden flex-shrink-0">
+        <div style={{ flexShrink: 0, height: 52, overflow: 'hidden', borderTop: '1px solid var(--border-rune)' }}>
           <GameLog log={session.log} />
         </div>
 
         {/* 手札 */}
-        <div className="flex-shrink-0 border-t border-[#1e3a5f]/40 py-1">
+        <div style={{ flexShrink: 0, borderTop: '1px solid var(--border-rune)', paddingTop: 4, paddingBottom: 4 }}>
           <Hand
             hand={session.player.hand}
             mode={mode}
@@ -141,21 +143,24 @@ function GameScreen() {
         </div>
 
         {/* ターン終了ボタン */}
-        <div className="px-3 pb-3 pt-1 flex-shrink-0 safe-bottom">
+        <div style={{ padding: '6px 12px 10px', flexShrink: 0 }} className="safe-bottom">
           <button
             data-testid="end-turn-button"
             onClick={isPlayerTurn && !isFinished ? endTurn : undefined}
             disabled={!isPlayerTurn || isFinished}
-            className={[
-              'tap-target w-full rounded-xl text-base font-bold transition-all duration-150',
-              isPlayerTurn && !isFinished
-                ? 'bg-[#3b82f6] hover:bg-[#2563eb] active:bg-[#1d4ed8] text-white'
-                : 'bg-gray-800 text-gray-500 cursor-not-allowed',
-            ].join(' ')}
+            className={isPlayerTurn && !isFinished ? 'btn--primary' : 'btn--primary'}
+            style={!isPlayerTurn || isFinished ? {
+              background: 'linear-gradient(180deg, #3a3024 0%, #1e180f 100%)',
+              borderColor: 'var(--text-dim)',
+              color: 'var(--text-dim)',
+              cursor: 'not-allowed',
+              boxShadow: 'none',
+              minHeight: 48,
+            } : { minHeight: 48, fontSize: 15 }}
           >
             {isFinished
-              ? (session.winner === 'player' ? '🎉 勝利！' : session.winner === 'ai' ? '😢 敗北...' : '🤝 引き分け')
-              : isPlayerTurn ? 'ターン終了' : '⏳ AI思考中...'}
+              ? (session.winner === 'player' ? '🏆 勝利！' : session.winner === 'ai' ? '💀 敗北...' : '⚖ 引き分け')
+              : isPlayerTurn ? '⚔ ターン終了' : '⏳ AI思考中...'}
           </button>
         </div>
       </div>
