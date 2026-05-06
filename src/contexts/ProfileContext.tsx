@@ -11,6 +11,7 @@ import { CARDS } from '@/lib/game/cards';
 import { MATERIALS } from '@/lib/data/materials';
 import { INITIAL_PROFILE } from '@/lib/data/economy';
 import { buildStandardDeck } from '@/lib/game/decks';
+import { QUESTS } from '@/lib/data/quests';
 
 interface ProfileContextType {
   profile: PlayerProfile | null;
@@ -197,10 +198,16 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       createdAt: now,
       updatedAt: now,
     };
+    const initialQuests: QuestProgress[] = QUESTS.map(q => ({
+      questId: q.questId,
+      status: q.prerequisites.length === 0 ? 'available' : 'locked',
+      attemptCount: 0,
+    }));
     setProfile(resetProfile);
     setOwnedCards(resetCards);
     setOwnedMaterials([]);
     setDecks([defaultDeck]);
+    setQuestProgress(initialQuests);
     const deleteOtherDecks = decks
       .filter(d => d.deckId !== 'default')
       .map(d => deleteDeck(user.uid, d.deckId));
@@ -210,6 +217,7 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       saveMaterialInventory(user.uid, []),
       saveDeck(user.uid, defaultDeck),
       ...deleteOtherDecks,
+      ...initialQuests.map(q => saveQuestProgress(user.uid, q)),
     ]);
   }, [user, profile, decks]);
 
