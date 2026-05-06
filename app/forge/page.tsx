@@ -11,11 +11,8 @@ import { MATERIALS } from '@/lib/data/materials';
 import { getCostCapForLevel, rarityFromCost } from '@/lib/data/economy';
 import { ForgeSpec, validateForge, buildCraftedCard, consumeMaterialsForForge } from '@/lib/server-logic/forge';
 import { MaterialCategory, OwnedCard, RARITY_COLORS } from '@/lib/types/meta';
-import { useAuth as useAuthCtx } from '@/contexts/AuthContext';
 
 const ICONS = ['⚔️','🛡️','🏹','🐎','💣','🔱','🗡️','💀','🌟','🔥','❄️','⚡','🌊','🌿','💎','🦅','🐉','🎯','🔮','🏰'];
-
-type SlotKey = 'movement' | 'attack_range';
 
 function getMaterialsByCategory(cat: MaterialCategory, ownedMaterials: {materialId: string; count: number}[]) {
   return MATERIALS.filter(m => m.category === cat).map(m => ({
@@ -23,6 +20,13 @@ function getMaterialsByCategory(cat: MaterialCategory, ownedMaterials: {material
     owned: ownedMaterials.find(o => o.materialId === m.id)?.count ?? 0,
   }));
 }
+
+const slotStyle = {
+  display: 'flex', alignItems: 'center', gap: 8,
+  background: 'rgba(20,14,8,0.7)',
+  border: '1px solid var(--border-rune)',
+  borderRadius: 4, padding: '8px 12px',
+};
 
 export default function ForgePage() {
   const { user, loading: authLoading } = useAuth();
@@ -46,34 +50,12 @@ export default function ForgePage() {
   const getMat = (id?: string) => id ? MATERIALS.find(m => m.id === id) : null;
 
   const handleSelectMaterial = (matId: string) => {
-    const mat = MATERIALS.find(m => m.id === matId);
-    if (!mat) return;
-    if (selectingSlot === 'movement') {
-      setSpec(s => ({ ...s, movementMaterialId: matId }));
-    } else if (selectingSlot === 'attack_range') {
-      setSpec(s => ({ ...s, attackRangeMaterialId: matId }));
-    } else if (selectingSlot === 'atk') {
-      setSpec(s => ({ ...s, atkMaterialIds: [...(s.atkMaterialIds ?? []), matId] }));
-    } else if (selectingSlot === 'hp') {
-      setSpec(s => ({ ...s, hpMaterialIds: [...(s.hpMaterialIds ?? []), matId] }));
-    } else if (selectingSlot === 'skill') {
-      setSpec(s => ({ ...s, skillMaterialId: matId }));
-    }
+    if (selectingSlot === 'movement')     setSpec(s => ({ ...s, movementMaterialId: matId }));
+    else if (selectingSlot === 'attack_range') setSpec(s => ({ ...s, attackRangeMaterialId: matId }));
+    else if (selectingSlot === 'atk')     setSpec(s => ({ ...s, atkMaterialIds: [...(s.atkMaterialIds ?? []), matId] }));
+    else if (selectingSlot === 'hp')      setSpec(s => ({ ...s, hpMaterialIds: [...(s.hpMaterialIds ?? []), matId] }));
+    else if (selectingSlot === 'skill')   setSpec(s => ({ ...s, skillMaterialId: matId }));
     setSelectingSlot(null);
-  };
-
-  const removeAtkMat = (idx: number) =>
-    setSpec(s => ({ ...s, atkMaterialIds: s.atkMaterialIds?.filter((_, i) => i !== idx) }));
-  const removeHpMat = (idx: number) =>
-    setSpec(s => ({ ...s, hpMaterialIds: s.hpMaterialIds?.filter((_, i) => i !== idx) }));
-
-  const getSlotMaterials = (slot: string) => {
-    const cat: MaterialCategory =
-      slot === 'movement' ? 'movement' :
-      slot === 'attack_range' ? 'attack_range' :
-      slot === 'atk' ? 'stat_atk' :
-      slot === 'hp' ? 'stat_hp' : 'skill';
-    return getMaterialsByCategory(cat, ownedMaterials);
   };
 
   const handleForge = async () => {
@@ -82,7 +64,6 @@ export default function ForgePage() {
     try {
       const fullSpec = spec as ForgeSpec;
       const card = buildCraftedCard(fullSpec, user.uid, validation);
-
       const newMats = consumeMaterialsForForge(ownedMaterials, fullSpec);
       const newCards: OwnedCard[] = [
         ...ownedCards,
@@ -97,47 +78,58 @@ export default function ForgePage() {
     }
   };
 
+  // ローディング
   if (loading || !profile) {
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
+      <div className="game-layout stone-bg flex-col">
         <AppHeader backHref="/" title="鍛冶" />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-[#f59e0b] border-t-transparent rounded-full animate-spin" />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 28, height: 28, border: '2px solid var(--gold)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         </div>
       </div>
     );
   }
 
-  // 鍛冶完了画面
+  // ── 鍛冶完了画面 ──────────────────────────────────────────────────────────────
   if (forgedCard) {
     const color = RARITY_COLORS[forgedCard.rarity];
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
+      <div className="game-layout stone-bg flex-col">
         <AppHeader backHref="/" title="鍛冶完了" />
-        <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
-          <div className="text-5xl animate-bounce">🔨</div>
-          <div
-            className="w-48 rounded-2xl p-5 border-2 text-center"
-            style={{ borderColor: color, background: `${color}10` }}
-          >
-            <RarityBadge rarity={forgedCard.rarity} />
-            <div className="text-4xl my-3">{forgedCard.iconKey}</div>
-            <div className="text-base font-bold text-white">{forgedCard.name}</div>
-            <div className="text-sm text-[#94a3b8] mt-1">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 24 }}>
+          <div style={{ fontSize: 48 }}>🔨</div>
+
+          {/* 完成カード表示 */}
+          <div className="panel--ornate" style={{
+            width: 180, padding: '16px 14px', textAlign: 'center',
+            borderColor: `${color}70`,
+            background: `linear-gradient(180deg, rgba(50,36,22,0.97) 0%, rgba(28,20,12,0.97) 100%)`,
+          }}>
+            <div style={{ marginBottom: 8 }}><RarityBadge rarity={forgedCard.rarity} /></div>
+            <div style={{ fontSize: 40, marginBottom: 8, filter: `drop-shadow(0 0 12px ${color}80)` }}>{forgedCard.iconKey}</div>
+            <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 6 }}>
+              {forgedCard.name}
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)' }}>
               ATK {forgedCard.atk} / HP {forgedCard.hp}
             </div>
-            <div className="text-xs text-[#64748b]">コスト {forgedCard.cost}</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+              コスト {forgedCard.cost}
+            </div>
           </div>
-          <div className="flex gap-3 w-full max-w-xs">
+
+          <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 320 }}>
             <button
               onClick={() => { setForgedCard(null); setSpec({ atkMaterialIds: [], hpMaterialIds: [] }); }}
-              className="flex-1 py-3 bg-[#f59e0b] text-black font-bold rounded-xl text-sm"
+              className="btn--primary"
+              style={{ flex: 1, minHeight: 44, fontSize: 13 }}
             >
-              また鍛える
+              🔨 また鍛える
             </button>
             <button
               onClick={() => router.push('/collection')}
-              className="flex-1 py-3 bg-[#1e3a5f] text-[#94a3b8] font-bold rounded-xl text-sm"
+              className="btn--ghost"
+              style={{ flex: 1, minHeight: 44, fontSize: 13 }}
             >
               コレクションへ
             </button>
@@ -147,31 +139,47 @@ export default function ForgePage() {
     );
   }
 
-  // マテリアル選択シート
+  // ── マテリアル選択シート ──────────────────────────────────────────────────────
   if (selectingSlot) {
-    const mats = getSlotMaterials(selectingSlot);
+    const catMap: Record<string, MaterialCategory> = {
+      movement: 'movement', attack_range: 'attack_range',
+      atk: 'stat_atk', hp: 'stat_hp', skill: 'skill',
+    };
+    const mats = getMaterialsByCategory(catMap[selectingSlot] ?? 'stat_hp', ownedMaterials);
     return (
-      <div className="game-layout flex-col bg-[#0a0e27]">
-        <header className="flex-shrink-0 h-14 flex items-center px-3 gap-2 border-b border-[#1e3a5f]/50 bg-[#0a0e27]/90">
-          <button onClick={() => setSelectingSlot(null)} className="text-[#94a3b8] text-xl">←</button>
-          <span className="font-bold text-white text-sm">マテリアルを選択</span>
+      <div className="game-layout stone-bg flex-col">
+        <header style={{
+          flexShrink: 0, height: 56, display: 'flex', alignItems: 'center', gap: 10,
+          padding: '0 14px',
+          background: 'linear-gradient(180deg, rgba(40,28,16,0.97) 0%, rgba(20,14,8,0.9) 100%)',
+          borderBottom: '1px solid var(--border-rune)',
+        }}>
+          <button onClick={() => setSelectingSlot(null)} style={{ color: 'var(--gold)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', width: 32 }}>←</button>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--gold)', letterSpacing: '0.06em' }}>
+            マテリアルを選択
+          </span>
         </header>
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {mats.map(mat => (
             <button
               key={mat.id}
               onClick={() => handleSelectMaterial(mat.id)}
               disabled={mat.owned === 0}
-              className="w-full flex items-center gap-3 bg-[#16213e]/80 rounded-xl p-3 border border-[#1e3a5f]/50 disabled:opacity-40"
+              className="panel--ornate"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 14px', opacity: mat.owned === 0 ? 0.4 : 1, cursor: mat.owned === 0 ? 'not-allowed' : 'pointer',
+                textAlign: 'left', width: '100%',
+              }}
             >
-              <span className="text-2xl">{mat.icon}</span>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-bold text-white">{mat.name}</p>
-                <p className="text-xs text-[#64748b]">{mat.description}</p>
+              <span style={{ fontSize: 22 }}>{mat.icon}</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{mat.name}</p>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{mat.description}</p>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-[#fbbf24]">コスト {mat.cost}</p>
-                <p className="text-xs text-[#64748b]">所持 ×{mat.owned}</p>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <p style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--gold)' }}>コスト {mat.cost}</p>
+                <p style={{ fontSize: 10, color: 'var(--text-dim)' }}>所持 ×{mat.owned}</p>
               </div>
             </button>
           ))}
@@ -180,44 +188,74 @@ export default function ForgePage() {
     );
   }
 
+  // ── メイン鍛冶画面 ────────────────────────────────────────────────────────────
   const rarity = validation.totalCost > 0 ? rarityFromCost(validation.totalCost) : null;
+  const overCap = validation.totalCost > cap;
 
   return (
-    <div className="game-layout flex-col bg-[#0a0e27]">
-      <header className="flex-shrink-0 h-14 flex items-center px-3 gap-2 border-b border-[#1e3a5f]/50 bg-[#0a0e27]/90">
-        <button onClick={() => router.push('/')} className="text-[#94a3b8] text-xl">←</button>
-        <span className="font-bold text-white text-sm flex-1">鍛冶</span>
-        <span className="text-xs text-[#64748b]">Lv{playerLevel} 上限{cap}</span>
+    <div className="game-layout stone-bg flex-col">
+      {/* カスタムヘッダー（Lv/上限表示込み） */}
+      <header style={{
+        flexShrink: 0, height: 56, display: 'flex', alignItems: 'center', gap: 8,
+        padding: '0 14px',
+        background: 'linear-gradient(180deg, rgba(40,28,16,0.97) 0%, rgba(20,14,8,0.9) 100%)',
+        borderBottom: '1px solid var(--border-rune)',
+        position: 'relative',
+      }}>
+        <div style={{ position: 'absolute', bottom: -1, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, var(--gold), transparent)', opacity: 0.45 }} />
+        <button onClick={() => router.push('/')} style={{ color: 'var(--gold)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', width: 32 }}>←</button>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, color: 'var(--gold)', letterSpacing: '0.08em', flex: 1 }}>鍛冶</span>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+          Lv{playerLevel} ・ 上限 {cap}
+        </span>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
         {/* プレビューカード */}
-        <div className="flex justify-center">
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
           <div
-            className={`w-36 rounded-xl p-4 border-2 text-center ${validation.totalCost > cap ? 'border-red-500' : rarity ? `border-[${RARITY_COLORS[rarity]}]` : 'border-[#1e3a5f]'}`}
-            style={rarity ? { borderColor: RARITY_COLORS[rarity] } : {}}
+            className="panel--ornate"
+            style={{
+              width: 144, padding: '12px 10px', textAlign: 'center',
+              borderColor: overCap ? 'var(--rune-red)' : rarity ? `${RARITY_COLORS[rarity]}70` : 'var(--border-rune)',
+              boxShadow: rarity && !overCap ? `0 0 16px ${RARITY_COLORS[rarity]}30` : overCap ? '0 0 12px rgba(255,107,91,0.3)' : undefined,
+            }}
           >
-            {rarity && <RarityBadge rarity={rarity} />}
-            <div className="text-3xl my-2">{spec.iconKey ?? '❓'}</div>
-            <div className="text-xs font-bold text-white">{spec.name?.trim() || '(名前未入力)'}</div>
-            <div className="text-[10px] text-[#94a3b8] mt-1">
+            {rarity && <div style={{ marginBottom: 6 }}><RarityBadge rarity={rarity} /></div>}
+            <div style={{ fontSize: 32, marginBottom: 6, filter: rarity ? `drop-shadow(0 0 8px ${RARITY_COLORS[rarity]}80)` : 'none' }}>
+              {spec.iconKey ?? '❓'}
+            </div>
+            <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 12, color: 'var(--text-primary)', marginBottom: 4 }}>
+              {spec.name?.trim() || <span style={{ color: 'var(--text-dim)' }}>(名前未入力)</span>}
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)' }}>
               ATK {validation.atk} / HP {validation.hp}
             </div>
-            <div data-testid="forge-cost-display" className={`text-[10px] font-bold mt-0.5 ${validation.totalCost > cap ? 'text-red-400' : 'text-[#fbbf24]'}`}>
-              {validation.totalCost}/{cap}
+            <div
+              data-testid="forge-cost-display"
+              style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, color: overCap ? 'var(--rune-red)' : 'var(--gold)', marginTop: 4 }}
+            >
+              {validation.totalCost} / {cap}
             </div>
           </div>
         </div>
 
         {/* カード名・アイコン */}
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: 8 }}>
           <input
             data-testid="forge-card-name-input"
             value={spec.name ?? ''}
             onChange={e => setSpec(s => ({ ...s, name: e.target.value }))}
             placeholder="カード名（15文字以内）"
             maxLength={15}
-            className="flex-1 bg-[#16213e] border border-[#1e3a5f] rounded-xl px-3 py-2 text-white text-sm outline-none focus:border-[#3b82f6]"
+            style={{
+              flex: 1, padding: '9px 12px',
+              background: 'rgba(14,10,6,0.8)',
+              border: '1px solid var(--border-rune)',
+              borderRadius: 4, color: 'var(--text-primary)',
+              fontFamily: 'var(--font-ui)', fontSize: 13, outline: 'none',
+            }}
           />
           <button
             data-testid="forge-icon-picker"
@@ -225,110 +263,113 @@ export default function ForgePage() {
               const idx = ICONS.indexOf(spec.iconKey ?? '');
               setSpec(s => ({ ...s, iconKey: ICONS[(idx + 1) % ICONS.length] }));
             }}
-            className="w-12 bg-[#16213e] border border-[#1e3a5f] rounded-xl text-2xl flex items-center justify-center"
+            style={{
+              width: 44, height: 44,
+              background: 'rgba(14,10,6,0.8)',
+              border: '1px solid var(--border-rune)',
+              borderRadius: 4, fontSize: 22,
+              display: 'grid', placeItems: 'center', cursor: 'pointer',
+            }}
           >
             {spec.iconKey ?? '❓'}
           </button>
         </div>
 
-        {/* スロット */}
-        <div className="space-y-2">
-          {([
-            { key: 'movement', label: '移動', mat: getMat(spec.movementMaterialId) },
-            { key: 'attack_range', label: '攻撃範囲', mat: getMat(spec.attackRangeMaterialId) },
-          ] as const).map(({ key, label, mat }) => (
-            <div key={key} className="flex items-center gap-2 bg-[#16213e]/60 rounded-xl p-3 border border-[#1e3a5f]/50">
-              <span className="text-xs text-[#64748b] w-16 flex-shrink-0">{label}</span>
-              <button
-                data-testid={`forge-slot-${key}`}
-                onClick={() => setSelectingSlot(key)}
-                className="flex-1 text-left text-sm"
-              >
-                {mat ? (
-                  <span className="text-white">{mat.icon} {mat.name}</span>
-                ) : (
-                  <span className="text-[#475569]">＋ 選択</span>
+        {/* スロット群 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {/* 移動 */}
+          {(['movement', 'attack_range'] as const).map(key => {
+            const label = key === 'movement' ? '移動' : '攻撃範囲';
+            const mat = getMat(key === 'movement' ? spec.movementMaterialId : spec.attackRangeMaterialId);
+            return (
+              <div key={key} style={slotStyle}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 52, flexShrink: 0, letterSpacing: '0.04em' }}>{label}</span>
+                <button
+                  data-testid={`forge-slot-${key}`}
+                  onClick={() => setSelectingSlot(key)}
+                  style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}
+                >
+                  {mat
+                    ? <span style={{ color: 'var(--text-primary)' }}>{mat.icon} {mat.name}</span>
+                    : <span style={{ color: 'var(--text-dim)' }}>＋ 選択</span>}
+                </button>
+                {mat && (
+                  <button onClick={() => setSpec(s => ({ ...s, [`${key}MaterialId`]: undefined }))}
+                    style={{ color: 'var(--text-dim)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                 )}
-              </button>
-              {mat && <button onClick={() => setSpec(s => ({ ...s, [`${key}MaterialId`]: undefined }))} className="text-[#475569] text-xs">✕</button>}
-            </div>
-          ))}
+              </div>
+            );
+          })}
 
           {/* ATK */}
-          <div className="bg-[#16213e]/60 rounded-xl p-3 border border-[#1e3a5f]/50">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs text-[#64748b] w-16">ATK</span>
-              <button
-                data-testid="forge-slot-atk"
-                onClick={() => setSelectingSlot('atk')}
-                className="text-xs text-[#3b82f6]"
-              >
+          <div style={{ ...slotStyle, flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 52, flexShrink: 0 }}>ATK</span>
+              <button data-testid="forge-slot-atk" onClick={() => setSelectingSlot('atk')}
+                style={{ fontSize: 11, color: 'var(--rune-blue)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-display)' }}>
                 ＋追加
               </button>
             </div>
-            <div className="flex flex-wrap gap-1">
-              {(spec.atkMaterialIds ?? []).map((id, i) => {
-                const m = getMat(id);
-                return (
-                  <button key={i} onClick={() => removeAtkMat(i)}
-                    className="text-xs bg-[#1e3a5f] text-white px-2 py-0.5 rounded">
-                    {m?.icon}{m?.name} ✕
-                  </button>
-                );
-              })}
-            </div>
+            {(spec.atkMaterialIds ?? []).length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {(spec.atkMaterialIds ?? []).map((id, i) => {
+                  const m = getMat(id);
+                  return (
+                    <button key={i} onClick={() => setSpec(s => ({ ...s, atkMaterialIds: s.atkMaterialIds?.filter((_, j) => j !== i) }))}
+                      style={{ fontSize: 11, background: 'rgba(30,50,80,0.8)', border: '1px solid rgba(93,184,255,0.3)', borderRadius: 3, padding: '2px 6px', color: 'var(--rune-blue)', cursor: 'pointer', fontFamily: 'var(--font-display)' }}>
+                      {m?.icon}{m?.name} ✕
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* HP */}
-          <div className="bg-[#16213e]/60 rounded-xl p-3 border border-[#1e3a5f]/50">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs text-[#64748b] w-16">HP</span>
-              <button
-                data-testid="forge-slot-hp"
-                onClick={() => setSelectingSlot('hp')}
-                className="text-xs text-[#3b82f6]"
-              >
+          <div style={{ ...slotStyle, flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 52, flexShrink: 0 }}>HP</span>
+              <button data-testid="forge-slot-hp" onClick={() => setSelectingSlot('hp')}
+                style={{ fontSize: 11, color: 'var(--rune-green)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-display)' }}>
                 ＋追加
               </button>
             </div>
-            <div className="flex flex-wrap gap-1">
-              {(spec.hpMaterialIds ?? []).map((id, i) => {
-                const m = getMat(id);
-                return (
-                  <button key={i} onClick={() => removeHpMat(i)}
-                    className="text-xs bg-[#1e3a5f] text-white px-2 py-0.5 rounded">
-                    {m?.icon}{m?.name} ✕
-                  </button>
-                );
-              })}
-            </div>
+            {(spec.hpMaterialIds ?? []).length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {(spec.hpMaterialIds ?? []).map((id, i) => {
+                  const m = getMat(id);
+                  return (
+                    <button key={i} onClick={() => setSpec(s => ({ ...s, hpMaterialIds: s.hpMaterialIds?.filter((_, j) => j !== i) }))}
+                      style={{ fontSize: 11, background: 'rgba(20,50,30,0.8)', border: '1px solid rgba(107,217,152,0.3)', borderRadius: 3, padding: '2px 6px', color: 'var(--rune-green)', cursor: 'pointer', fontFamily: 'var(--font-display)' }}>
+                      {m?.icon}{m?.name} ✕
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* スキル */}
-          <div className="flex items-center gap-2 bg-[#16213e]/60 rounded-xl p-3 border border-[#1e3a5f]/50">
-            <span className="text-xs text-[#64748b] w-16">スキル</span>
-            <button
-              data-testid="forge-slot-skill"
-              onClick={() => setSelectingSlot('skill')}
-              className="flex-1 text-left text-sm"
-            >
-              {spec.skillMaterialId ? (
-                <span className="text-white">{getMat(spec.skillMaterialId)?.icon} {getMat(spec.skillMaterialId)?.name}</span>
-              ) : (
-                <span className="text-[#475569]">＋ 任意</span>
-              )}
+          <div style={slotStyle}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 52, flexShrink: 0 }}>スキル</span>
+            <button data-testid="forge-slot-skill" onClick={() => setSelectingSlot('skill')}
+              style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}>
+              {spec.skillMaterialId
+                ? <span style={{ color: 'var(--text-primary)' }}>{getMat(spec.skillMaterialId)?.icon} {getMat(spec.skillMaterialId)?.name}</span>
+                : <span style={{ color: 'var(--text-dim)' }}>＋ 任意</span>}
             </button>
             {spec.skillMaterialId && (
-              <button onClick={() => setSpec(s => ({ ...s, skillMaterialId: undefined }))} className="text-[#475569] text-xs">✕</button>
+              <button onClick={() => setSpec(s => ({ ...s, skillMaterialId: undefined }))}
+                style={{ color: 'var(--text-dim)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
             )}
           </div>
         </div>
 
-        {/* エラー表示 */}
+        {/* エラー */}
         {validation.errors.length > 0 && (
-          <div className="space-y-1">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {validation.errors.map((e, i) => (
-              <p key={i} className="text-xs text-red-400">• {e}</p>
+              <p key={i} style={{ fontSize: 11, color: 'var(--rune-red)', fontFamily: 'var(--font-display)' }}>• {e}</p>
             ))}
           </div>
         )}
@@ -338,26 +379,32 @@ export default function ForgePage() {
           data-testid="forge-create-button"
           onClick={() => setShowConfirm(true)}
           disabled={!validation.valid}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-[#f59e0b] to-[#d97706] text-black font-bold text-sm disabled:opacity-40 disabled:grayscale"
+          className="btn--primary"
+          style={{ minHeight: 50, fontSize: 15 }}
         >
-          🔨 カードを生成する
+          🔨 カードを鍛造する
         </button>
       </div>
 
       <ConfirmSheet
         open={showConfirm}
-        title="カードを生成しますか？"
+        title="カードを鍛造しますか？"
         onConfirm={handleForge}
         onCancel={() => setShowConfirm(false)}
-        confirmLabel="生成する"
+        confirmLabel="鍛造する"
         loading={forging}
       >
-        <p className="text-sm text-[#94a3b8] text-center">
-          使用したマテリアルは消費されます。
-        </p>
-        <p className="text-center text-[#fbbf24] font-bold mt-1">
-          コスト {validation.totalCost}
-        </p>
+        <div style={{ textAlign: 'center', padding: '0 0 8px' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
+            マテリアルを消費してカードを生成します
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)' }}>総コスト</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: 'var(--gold)' }}>
+              {validation.totalCost}
+            </span>
+          </div>
+        </div>
       </ConfirmSheet>
     </div>
   );
