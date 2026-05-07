@@ -87,11 +87,11 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 'min(300px, 90vw)',
-          maxHeight: '86dvh',
+          width: 'min(440px, 92vw)',
+          maxHeight: '88dvh',
           overflowY: 'auto',
           border: `2px solid ${borderColor}80`,
-          boxShadow: `0 0 32px ${borderColor}30`,
+          boxShadow: `0 0 40px ${borderColor}35`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -99,7 +99,7 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
         <div
           className="relative w-full overflow-hidden"
           style={{
-            height: 200,
+            height: 'min(260px, 56vw)',
             background: `linear-gradient(160deg, ${gradFrom}, ${gradTo})`,
           }}
         >
@@ -125,7 +125,7 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
           <div className="absolute top-2 left-2 flex items-center gap-1.5">
             {card.rarity && (
               <span
-                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                className="text-xs font-bold px-2 py-0.5 rounded-full"
                 style={{
                   background: `${rarityColor}25`,
                   color: rarityColor,
@@ -138,7 +138,7 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
             )}
             {attrLabel && (
               <span
-                className="text-[10px] px-1.5 py-0.5 rounded-full"
+                className="text-xs px-2 py-0.5 rounded-full"
                 style={{ background: 'rgba(0,0,0,0.55)', color: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)' }}
               >
                 {attrLabel}
@@ -148,7 +148,7 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
 
           {/* コストバッジ */}
           <div
-            className="absolute top-2 right-2 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-lg"
+            className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center text-base font-bold shadow-lg"
             style={{ backgroundColor: '#f59e0b', color: '#000' }}
           >
             {card.cost}
@@ -169,22 +169,22 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
         </div>
 
         {/* ── テキストエリア ── */}
-        <div className="bg-[#16213e] px-4 pt-3 pb-4 space-y-2.5">
+        <div className="bg-[#16213e] px-5 pt-4 pb-5 space-y-3">
 
           {/* カード名 + ATK/HP */}
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-bold text-white leading-tight">{card.name}</h2>
-            <div className="flex items-center gap-2 text-xs shrink-0">
-              <span className="font-bold" style={{ color: '#ffb44a' }}>⚔{atk}</span>
+            <h2 className="text-base font-bold text-white leading-tight">{card.name}</h2>
+            <div className="flex items-center gap-3 text-sm shrink-0">
+              <span className="font-bold" style={{ color: '#ffb44a' }}>⚔ {atk}</span>
               <span className="font-bold" style={{ color: '#6bd998' }}>
-                ♥{unit ? `${currentHp}/${maxHp}` : maxHp}
+                ♥ {unit ? `${currentHp}/${maxHp}` : maxHp}
               </span>
             </div>
           </div>
 
           {/* HP バー（ユニットがある場合のみ） */}
           {unit && (
-            <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -206,25 +206,25 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
 
           {/* スキル */}
           {skillDef ? (
-            <div className="bg-[#0f1a2e] rounded-xl px-3 py-2 space-y-1">
+            <div className="bg-[#0f1a2e] rounded-xl px-4 py-3 space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="text-purple-400 text-xs font-bold">★ {skillDef.displayName}</span>
-                <span className="text-[10px] text-gray-500 ml-auto">
+                <span className="text-purple-400 text-sm font-bold">★ {skillDef.displayName}</span>
+                <span className="text-xs text-gray-500 ml-auto">
                   {skillUses === 'infinite' ? '∞ 無限' : `${unit ? '残' : ''}${skillUses}回`}
                 </span>
               </div>
               {skillDef.description && (
-                <p className="text-[11px] text-gray-400 leading-relaxed">{skillDef.description}</p>
+                <p className="text-xs text-gray-400 leading-relaxed">{skillDef.description}</p>
               )}
             </div>
           ) : (
-            <p className="text-[11px] text-gray-600 text-center py-0.5">スキルなし</p>
+            <p className="text-xs text-gray-600 text-center py-1">スキルなし</p>
           )}
 
           {/* 閉じるボタン */}
           <button
             onClick={onClose}
-            className="w-full py-2 rounded-xl text-xs font-bold"
+            className="w-full py-3 rounded-xl text-sm font-bold"
             style={{
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
