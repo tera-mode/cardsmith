@@ -81,9 +81,10 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         setShowMigrationModal(true);
         // リセットを非同期で実行（UIをブロックしない）
         const now = Date.now();
+        // starterArchetype を除いた既存フィールドに INITIAL_PROFILE + schemaVersion を上書き
+        const { starterArchetype: _sa, ...profileRest } = p;
         const resetProfile: PlayerProfile = {
-          ...p, ...INITIAL_PROFILE, updatedAt: now, schemaVersion: CURRENT_SCHEMA_VERSION,
-          starterArchetype: undefined,
+          ...profileRest, ...INITIAL_PROFILE, updatedAt: now, schemaVersion: CURRENT_SCHEMA_VERSION,
         };
         const resetCards: OwnedCard[] = (await import('@/lib/game/cards')).CARDS.map(card => ({
           cardId: card.id, count: 1, isCrafted: false, acquiredAt: now,
