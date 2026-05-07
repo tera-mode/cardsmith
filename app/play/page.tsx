@@ -131,11 +131,6 @@ function GameScreen() {
           <TurnIndicator currentTurn={session.currentTurn} turnCount={session.turnCount} />
         </div>
 
-        {/* ターンステップバー */}
-        <div className="flex-shrink-0">
-          <TurnStepBar session={session} mode={mode} />
-        </div>
-
         {/* ヒントパネル */}
         <HintPanel session={session} mode={mode} />
 
@@ -158,26 +153,14 @@ function GameScreen() {
           />
         </div>
 
-        {/* ターン終了ボタン */}
-        <div style={{ padding: '6px 12px 10px', flexShrink: 0 }} className="safe-bottom">
-          <button
-            data-testid="end-turn-button"
-            onClick={isPlayerTurn && !isFinished ? endTurn : undefined}
-            disabled={!isPlayerTurn || isFinished}
-            className={isPlayerTurn && !isFinished ? 'btn--primary' : 'btn--primary'}
-            style={!isPlayerTurn || isFinished ? {
-              background: 'linear-gradient(180deg, #3a3024 0%, #1e180f 100%)',
-              borderColor: 'var(--text-dim)',
-              color: 'var(--text-dim)',
-              cursor: 'not-allowed',
-              boxShadow: 'none',
-              minHeight: 48,
-            } : { minHeight: 48, fontSize: 15 }}
-          >
-            {isFinished
-              ? (session.winner === 'player' ? '🏆 勝利！' : session.winner === 'ai' ? '💀 敗北...' : '⚖ 引き分け')
-              : isPlayerTurn ? '⚔ ターン終了' : '⏳ AI思考中...'}
-          </button>
+        {/* 召喚・移動・攻撃 + ターン終了（一体化バー） */}
+        <div className="flex-shrink-0 safe-bottom">
+          <TurnStepBar
+            session={session}
+            mode={mode}
+            isFinished={isFinished}
+            onEndTurn={isPlayerTurn && !isFinished ? endTurn : () => {}}
+          />
         </div>
       </div>
 

@@ -16,6 +16,7 @@ import {
   buildStandardDeck, buildStarterDeck, buildEnemyDeck, shuffleDeck, INITIAL_HAND_SIZE, BASE_HP,
   Archetype,
 } from '@/lib/game/decks';
+import { CARD_MAP } from '@/lib/game/cards';
 import {
   applyDamage, triggerOnSummon, triggerOnAttack,
   triggerOnTurnStart, triggerOnTurnEnd, resolveActivatedSkill,
@@ -114,7 +115,44 @@ function resolveEnemyConfig(questId?: string): {
     return { difficulty, enemyDeck: shuffleDeck(buildEnemyDeck(archetype, order as 1|2|3|4|5)), enemyBaseHp };
   }
 
-  // チュートリアルなど: 標準デッキを使用
+  // チュートリアル専用デッキ
+  // 各系統の最安コストカード (cost 4): sei_noa, mei_cal, shin_hina, kou_mk01
+  // 2番目 (cost 6): sei_eluna, shin_lil
+  // 3番目 (cost 8): kou_luna, shin_lilia
+  const c = (id: string) => CARD_MAP[id]!;
+  if (quest.enemyDeckId === 'tutorial_scarecrow') {
+    // q0_1: 6系統の最安コストカードだけ × 10枚
+    const deck = [
+      c('sei_noa'), c('sei_noa'), c('sei_noa'),
+      c('mei_cal'), c('mei_cal'),
+      c('shin_hina'), c('shin_hina'),
+      c('kou_mk01'), c('kou_mk01'), c('kou_mk01'),
+    ];
+    return { difficulty, enemyDeck: shuffleDeck(deck), enemyBaseHp };
+  }
+  if (quest.enemyDeckId === 'tutorial_militia') {
+    // q0_2: 最安 8枚 + 2番目コストを 2枚
+    const deck = [
+      c('sei_noa'), c('sei_noa'),
+      c('mei_cal'), c('mei_cal'),
+      c('shin_hina'), c('shin_hina'),
+      c('kou_mk01'), c('kou_mk01'),
+      c('sei_eluna'), c('shin_lil'),
+    ];
+    return { difficulty, enemyDeck: shuffleDeck(deck), enemyBaseHp };
+  }
+  if (quest.enemyDeckId === 'tutorial_mentor') {
+    // q0_3: 最安 6枚 + 2番目 2枚 + 3番目 2枚
+    const deck = [
+      c('sei_noa'), c('sei_noa'),
+      c('mei_cal'), c('mei_cal'),
+      c('shin_hina'), c('shin_hina'),
+      c('sei_eluna'), c('shin_lil'),
+      c('kou_luna'), c('shin_lilia'),
+    ];
+    return { difficulty, enemyDeck: shuffleDeck(deck), enemyBaseHp };
+  }
+
   return { difficulty, enemyDeck: shuffleDeck(buildStandardDeck()), enemyBaseHp };
 }
 
