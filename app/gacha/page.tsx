@@ -68,7 +68,7 @@ export default function GachaPage() {
     return (
       <div className="game-layout flex-col bg-[#0a0e27]">
         <AppHeader backHref="/" title="召喚結果" />
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 safe-scroll">
           <div className="grid grid-cols-2 gap-2">
             {results.map((r, i) => {
               const card = CARDS.find(c => c.id === r.cardId);

@@ -90,7 +90,7 @@ export default function ShopPage() {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 safe-scroll">
         {filtered.map(mat => {
           const price = getMaterialPrice(mat.cost);
           const canBuy = profile.runes >= price;

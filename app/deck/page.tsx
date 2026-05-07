@@ -143,7 +143,7 @@ export default function DeckPage() {
         </div>
 
         {/* 所持カード一覧 */}
-        <div className="flex-1 overflow-y-auto p-2 grid grid-cols-3 gap-1.5 content-start">
+        <div className="flex-1 overflow-y-auto p-2 grid grid-cols-3 gap-1.5 content-start safe-scroll">
           {CARDS_WITH_RARITY.map(card => {
             const owned = ownedCards.find(c => c.cardId === card.id && !c.isCrafted);
             const inDeck = getEntryCount(editing, card.id);
@@ -173,7 +173,7 @@ export default function DeckPage() {
   return (
     <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="デッキ編集" />
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 safe-scroll">
         {decks.map(deck => (
           <GlassPanel key={deck.deckId} className="p-4">
             <div className="flex items-center justify-between">

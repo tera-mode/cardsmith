@@ -13,7 +13,7 @@ interface Props {
 export default function RewardModal({ reward, leveledUp, newLevel, onClose }: Props) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center overlay-full"
       style={{ background: 'rgba(0,0,0,0.8)' }}
       onClick={onClose}
     >

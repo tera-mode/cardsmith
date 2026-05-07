@@ -100,13 +100,26 @@ body {
 .game-layout {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  height: 100vh;
+  height: 100vh;         /* fallback */
+  height: 100dvh;        /* 動的VH: アドレスバーを除いた実際の表示領域 */
   overflow: hidden;
 }
 
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* スクロールコンテナのホームインジケーター対応 */
+.safe-scroll {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+}
+
+/* fixed オーバーレイの高さを dvh で正しく指定 */
+.overlay-full {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
 }
 
 .hand-scroll {

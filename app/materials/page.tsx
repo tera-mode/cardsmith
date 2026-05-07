@@ -63,7 +63,7 @@ export default function MaterialsPage() {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto p-3 safe-scroll">
         <div className="grid grid-cols-2 gap-2">
           {filtered.map(mat => {
             const count = getCount(mat.id);

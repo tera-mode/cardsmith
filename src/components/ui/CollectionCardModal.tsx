@@ -37,7 +37,7 @@ export default function CollectionCardModal({ card, count = 0, onClose }: Props)
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-50 flex items-end justify-center overlay-full"
       style={{ backgroundColor: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
@@ -50,7 +50,7 @@ export default function CollectionCardModal({ card, count = 0, onClose }: Props)
           border: `1.5px solid ${rarityColor}50`,
           borderBottom: 'none',
           boxShadow: `0 -4px 40px ${rarityColor}25`,
-          maxHeight: '92vh',
+          maxHeight: 'min(92dvh, 92vh)',
           overflowY: 'auto',
         }}
         onClick={(e) => e.stopPropagation()}

@@ -31,7 +31,7 @@ export default function ProfilePage() {
   return (
     <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="プロフィール" />
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 safe-scroll">
         <GlassPanel className="p-4 space-y-3">
           <div className="flex justify-between">
             <span className="text-secondary text-sm">レベル</span>
