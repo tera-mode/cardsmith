@@ -9,15 +9,14 @@ import GlassPanel from '@/components/ui/GlassPanel';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
 import { CARDS_WITH_RARITY } from '@/lib/data/cards';
 import { Deck, DeckEntry } from '@/lib/types/meta';
+import { DECK_MAX_CARDS, DECK_MAX_SAME, getCostCapForLevel } from '@/lib/data/economy';
 import { v4 as uuidv4 } from 'uuid';
 
-const DECK_MAX_CARDS = 20;
-const DECK_MAX_SAME = 2;
 const DECK_MAX_COUNT = 5;
 
 export default function DeckPage() {
   const { user, loading: authLoading } = useAuth();
-  const { ownedCards, decks, loading, saveOrUpdateDeck, removeDeck } = useProfile();
+  const { profile, ownedCards, decks, loading, saveOrUpdateDeck, removeDeck } = useProfile();
   const router = useRouter();
 
   const [editing, setEditing] = useState<Deck | null>(null);
@@ -98,6 +97,13 @@ export default function DeckPage() {
   // ─── デッキビルダー ───────────────────────────────────────────────────────────
   if (editing) {
     const total = totalCards(editing);
+    const totalCost = editing.entries.reduce((sum, e) => {
+      const card = CARDS_WITH_RARITY.find(c => c.id === e.cardId);
+      return sum + (card?.cost ?? 0) * e.count;
+    }, 0);
+    const costCap = profile ? getCostCapForLevel(profile.level) : 80;
+    const overCap = totalCost > costCap;
+
     return (
       <div className="game-layout stone-bg flex-col">
         <header className="flex-shrink-0 h-14 flex items-center px-3 gap-2 border-b  bg-[#0a0e27]/90">
@@ -108,13 +114,23 @@ export default function DeckPage() {
             className="flex-1 bg-transparent text-white font-bold text-sm outline-none"
             maxLength={15}
           />
-          <span className={`text-xs ${total === DECK_MAX_CARDS ? 'text-[#22d3ee]' : 'text-secondary'}`}>
-            {total}/{DECK_MAX_CARDS}
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+            <span className={`text-xs ${total === DECK_MAX_CARDS ? 'text-[#22d3ee]' : 'text-secondary'}`}>
+              {total}/{DECK_MAX_CARDS}枚
+            </span>
+            <span
+              data-testid="cost-cap-warning"
+              className="text-[10px]"
+              style={{ color: overCap ? '#ef4444' : '#6b7280' }}
+            >
+              {totalCost}/{costCap}
+              {overCap && ' ⚠'}
+            </span>
+          </div>
           <button
             data-testid="deck-builder-save"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || overCap}
             className="px-3 py-1.5 bg-rune-blue text-white text-xs font-bold rounded-lg disabled:opacity-50"
           >
             {saving ? '保存中' : '保存'}
@@ -147,7 +163,7 @@ export default function DeckPage() {
           {CARDS_WITH_RARITY.map(card => {
             const owned = ownedCards.find(c => c.cardId === card.id && !c.isCrafted);
             const inDeck = getEntryCount(editing, card.id);
-            const canAdd = !!owned && owned.count > inDeck && inDeck < DECK_MAX_SAME && total < DECK_MAX_CARDS;
+            const canAdd = !!owned && owned.count > inDeck && inDeck < DECK_MAX_SAME && total < DECK_MAX_CARDS && !overCap;
 
             return (
               <button
@@ -179,7 +195,22 @@ export default function DeckPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p data-testid={`deck-list-item-${deck.deckId}`} className="font-bold text-white text-sm">{deck.name}</p>
-                <p className="text-xs text-muted">{totalCards(deck)}/{DECK_MAX_CARDS} 枚</p>
+                <p className="text-xs text-muted">
+                  {totalCards(deck)}/{DECK_MAX_CARDS} 枚
+                  {(() => {
+                    const cost = deck.entries.reduce((s, e) => {
+                      const c = CARDS_WITH_RARITY.find(cd => cd.id === e.cardId);
+                      return s + (c?.cost ?? 0) * e.count;
+                    }, 0);
+                    const cap = profile ? getCostCapForLevel(profile.level) : 80;
+                    return (
+                      <span style={{ marginLeft: 6, color: cost > cap ? '#ef4444' : 'inherit' }}>
+                        コスト {cost}/{cap}
+                        {cost > cap && ' ⚠'}
+                      </span>
+                    );
+                  })()}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button

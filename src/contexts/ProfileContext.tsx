@@ -53,6 +53,8 @@ const ProfileContext = createContext<ProfileContextType>({
 
 export const useProfile = () => useContext(ProfileContext);
 
+const CURRENT_SCHEMA_VERSION = 2;
+
 export const ProfileProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
@@ -61,6 +63,7 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
   const [decks, setDecks] = useState<Deck[]>([]);
   const [questProgress, setQuestProgress] = useState<QuestProgress[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showMigrationModal, setShowMigrationModal] = useState(false);
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
@@ -72,6 +75,46 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         getDecks(uid),
         getQuestProgress(uid),
       ]);
+
+      // スキーマバージョンチェック — 古いデータは強制リセット
+      if (!p.schemaVersion || p.schemaVersion < CURRENT_SCHEMA_VERSION) {
+        setShowMigrationModal(true);
+        // リセットを非同期で実行（UIをブロックしない）
+        const now = Date.now();
+        const resetProfile: PlayerProfile = {
+          ...p, ...INITIAL_PROFILE, updatedAt: now, schemaVersion: CURRENT_SCHEMA_VERSION,
+          starterArchetype: undefined,
+        };
+        const resetCards: OwnedCard[] = (await import('@/lib/game/cards')).CARDS.map(card => ({
+          cardId: card.id, count: 1, isCrafted: false, acquiredAt: now,
+        }));
+        const { buildStandardDeck } = await import('@/lib/game/decks');
+        const standardCards = buildStandardDeck();
+        const cardCounts: Record<string, number> = {};
+        for (const card of standardCards) cardCounts[card.id] = (cardCounts[card.id] ?? 0) + 1;
+        const defaultDeck: Deck = {
+          deckId: 'default', name: '標準デッキ',
+          entries: Object.entries(cardCounts).map(([cardId, count]) => ({ cardId, count, isCrafted: false })),
+          createdAt: now, updatedAt: now,
+        };
+        const initialQuests: QuestProgress[] = QUESTS.map(q => ({
+          questId: q.questId, status: q.prerequisites.length === 0 ? 'available' : 'locked', attemptCount: 0,
+        }));
+        setProfile(resetProfile);
+        setOwnedCards(resetCards);
+        setOwnedMaterials([]);
+        setDecks([defaultDeck]);
+        setQuestProgress(initialQuests);
+        await Promise.all([
+          saveProfile(resetProfile),
+          saveCardInventory(uid, resetCards),
+          saveMaterialInventory(uid, []),
+          saveDeck(uid, defaultDeck),
+          ...initialQuests.map(q => saveQuestProgress(uid, q)),
+        ]);
+        return;
+      }
+
       setProfile(p);
       setOwnedCards(cards);
       setOwnedMaterials(mats);
@@ -231,6 +274,34 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       debugMaxOut, debugReset,
     }}>
       {children}
+      {showMigrationModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px',
+        }}>
+          <div style={{
+            background: 'var(--bg-panel)', border: '1px solid var(--border-rune)',
+            borderRadius: 16, padding: '24px 20px', maxWidth: 320, textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>⚒</div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--gold)', marginBottom: 10, letterSpacing: '0.06em' }}>
+              バージョンアップ
+            </h2>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 20 }}>
+              ゲームの仕様が大幅に更新されました。<br />
+              データをリセットして再スタートします。
+            </p>
+            <button
+              onClick={() => setShowMigrationModal(false)}
+              className="btn--primary"
+              style={{ width: '100%', minHeight: 44, fontSize: 13 }}
+            >
+              了解しました
+            </button>
+          </div>
+        </div>
+      )}
     </ProfileContext.Provider>
   );
 };
