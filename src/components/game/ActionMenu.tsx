@@ -59,12 +59,13 @@ export default function ActionMenu({ mode, session }: Props) {
   const canUseSkill = isActivated && !isSkillBlocked(unit) && unit.skillUsesRemaining !== 0 &&
     (!skillDef?.canActivate || skillDef.canActivate(session, unit, ctx));
   const canMove = isUnitSelected && !session.player.hasMovedThisTurn;
-  const hasAttackOptions = attacks.length > 0 || canUseSkill;
+  const alreadyAttacked = session.player.hasAttackedThisTurn;
+  const hasAttackOptions = (attacks.length > 0 || canUseSkill) && !alreadyAttacked;
 
   return (
     <div data-testid="action-menu" className="fixed inset-x-0 bottom-0 z-20 safe-bottom">
       {isUnitSelected && (
-        <div className="fixed inset-0 -z-10" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={cancel} />
+        <div className="fixed inset-0 -z-10" style={{ background: 'rgba(0,0,0,0.6)', pointerEvents: 'none' }} />
       )}
 
       <div style={{
@@ -117,8 +118,12 @@ export default function ActionMenu({ mode, session }: Props) {
             </button>
           )}
 
-          {/* 攻撃ボタン */}
-          {attacks.map((target, i) => (
+          {/* 攻撃ボタン（1ターン1回まで） */}
+          {alreadyAttacked ? (
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '4px 0', fontFamily: 'var(--font-display)' }}>
+              ⚔ このターンはすでに攻撃済み
+            </p>
+          ) : attacks.map((target, i) => (
             <button
               key={i}
               onClick={() => attackTarget(target)}
@@ -136,8 +141,8 @@ export default function ActionMenu({ mode, session }: Props) {
             </button>
           ))}
 
-          {/* スキル */}
-          {skill && canUseSkill && (
+          {/* スキル（攻撃と同じ制限） */}
+          {skill && canUseSkill && !alreadyAttacked && (
             <button
               data-testid="skill-button"
               onClick={() => {

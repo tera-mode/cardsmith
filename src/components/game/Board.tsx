@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function Board({ board, mode, highlightedCells, onUnitLongPress }: Props) {
-  const { selectUnit, moveUnit, summonToCell } = useGame();
+  const { selectUnit, moveUnit, summonToCell, cancel } = useGame();
 
   const isHighlighted = (row: number, col: number) =>
     highlightedCells.some((p) => p.row === row && p.col === col);
@@ -45,14 +45,18 @@ export default function Board({ board, mode, highlightedCells, onUnitLongPress }
       return;
     }
 
-    // unit_selected（アクション選択メニュー表示中）：
-    // オーバーレイ背後なのでボードタップは基本的に cancel に流れるが、
-    // 別のプレイヤーユニットを選び直す場合のみ処理
+    // unit_selected: ハイライトセルをタップで直接移動 / 別ユニット選択 / 空セルでキャンセル
     if (mode.type === 'unit_selected') {
+      if (isHighlighted(pos.row, pos.col)) {
+        moveUnit(pos);
+        return;
+      }
       if (unit && unit.owner === 'player' && !unit.hasActedThisTurn &&
           unit.instanceId !== mode.unit.instanceId) {
         selectUnit(unit);
+        return;
       }
+      cancel();
       return;
     }
 

@@ -9,10 +9,8 @@ import { Unit, Card } from '@/lib/types/game';
 import Board from '@/components/game/Board';
 import Hand from '@/components/game/Hand';
 import BaseHpBar from '@/components/game/BaseHpBar';
-import TurnIndicator from '@/components/game/TurnIndicator';
 import TurnStepBar from '@/components/game/TurnStepBar';
 import ActionMenu, { SkipMoveButton } from '@/components/game/ActionMenu';
-import HintPanel from '@/components/game/HintPanel';
 import GameLog from '@/components/game/GameLog';
 import CardModal from '@/components/ui/CardModal';
 import ArchetypeSelectModal from '@/components/game/ArchetypeSelectModal';
@@ -125,14 +123,6 @@ function GameScreen() {
         <div className="px-3 py-1 flex-shrink-0">
           <BaseHpBar owner="player" hp={session.player.baseHp} />
         </div>
-
-        {/* ターンインジケーター */}
-        <div className="px-3 py-1 flex-shrink-0">
-          <TurnIndicator currentTurn={session.currentTurn} turnCount={session.turnCount} />
-        </div>
-
-        {/* ヒントパネル */}
-        <HintPanel session={session} mode={mode} />
 
         {/* 移動モード中：その場に留まる / 戻る（インライン表示） */}
         <SkipMoveButton mode={mode} />

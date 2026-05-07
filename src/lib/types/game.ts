@@ -75,6 +75,7 @@ export interface PlayerState {
   hand: Card[];
   hasSummonedThisTurn: boolean;
   hasMovedThisTurn: boolean;
+  hasAttackedThisTurn: boolean;  // 1ターンに攻撃できるのは1回まで
 }
 
 export type GamePhase = 'draw' | 'main' | 'end_turn' | 'finished';

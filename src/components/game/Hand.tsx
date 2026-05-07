@@ -31,7 +31,7 @@ export default function Hand({ hand, mode, hasSummonedThisTurn, isPlayerTurn, on
         )}
       </div>
 
-      <div className="hand-scroll flex gap-2 px-3 pb-1 min-h-[7rem]">
+      <div className="hand-scroll flex gap-2 px-3 pb-1 min-h-[7rem]" style={{ paddingTop: 10 }}>
         {hand.length === 0 ? (
           <div className="flex items-center text-xs text-gray-500 w-full justify-center">
             手札なし

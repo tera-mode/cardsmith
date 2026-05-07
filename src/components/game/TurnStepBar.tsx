@@ -76,8 +76,18 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
       background: 'rgba(8,6,4,0.8)',
       borderTop: '1px solid var(--border-rune)',
     }}>
+      {/* ▶ あなたのターン */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0,
+        fontFamily: 'var(--font-display)', fontSize: 9, fontWeight: 700,
+        color: '#f8d878', letterSpacing: '0.04em',
+      }}>
+        <span style={{ fontSize: 8 }}>▶</span>
+        <span style={{ whiteSpace: 'nowrap' }}>あなたのターン</span>
+      </div>
+
       {/* ステップインジケーター */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}>
         <Step label="召喚" done={summoned} active={activeSummon && !summoned} />
         <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9 }}>›</span>
         <Step label="移動" done={moved}    active={activeMove} />
