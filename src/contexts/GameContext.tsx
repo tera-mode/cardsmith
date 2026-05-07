@@ -12,7 +12,10 @@ import {
   getLegalSummonPositions, createUnit, placeUnit, removeUnit, resolveAttack,
   BOARD_ROWS, BOARD_COLS,
 } from '@/lib/game/rules';
-import { buildStandardDeck, shuffleDeck, INITIAL_HAND_SIZE, BASE_HP } from '@/lib/game/decks';
+import {
+  buildStandardDeck, buildEnemyDeck, shuffleDeck, INITIAL_HAND_SIZE, BASE_HP,
+  Archetype,
+} from '@/lib/game/decks';
 import {
   applyDamage, triggerOnSummon, triggerOnAttack,
   triggerOnTurnStart, triggerOnTurnEnd, resolveActivatedSkill,
@@ -22,7 +25,8 @@ import { getSkill } from '@/lib/game/skills/index';
 import { recalculateAuras } from '@/lib/game/aura';
 import { canAct, clearTurnStatusEffects, getEffectiveAtk, findUnit } from '@/lib/game/helpers';
 import type { GameSessionWithRevival, PendingRevival } from '@/lib/game/helpers';
-import { executeAITurn } from '@/lib/game/ai';
+import { executeAITurn, AIDifficulty } from '@/lib/game/ai/index';
+import { QUEST_MAP } from '@/lib/data/quests';
 import { auth } from '@/lib/firebase/config';
 
 // スキル登録（全スキルを初期化）
@@ -64,7 +68,7 @@ interface GameContextType {
   session: GameSession | null;
   mode: InteractionMode;
   highlightedCells: Position[];
-  initGame: (userId: string) => void;
+  initGame: (userId: string, questId?: string) => void;
   selectCard: (index: number) => void;
   summonToCell: (pos: Position) => void;
   selectUnit: (unit: Unit) => void;
@@ -85,10 +89,40 @@ export const useGame = () => useContext(GameContext);
 
 // ─── Provider ─────────────────────────────────────────────────────────────
 
+// クエスト定義からAI難易度・敵デッキ・敵HP を導出するヘルパー
+const ARCHETYPE_IDS: Archetype[] = ['sei', 'mei', 'shin', 'en', 'sou', 'kou'];
+
+function resolveEnemyConfig(questId?: string): {
+  difficulty: AIDifficulty;
+  enemyDeck: Card[];
+  enemyBaseHp: number;
+} {
+  const defaults = { difficulty: 'normal' as AIDifficulty, enemyDeck: shuffleDeck(buildStandardDeck()), enemyBaseHp: BASE_HP };
+  if (!questId) return defaults;
+
+  const quest = QUEST_MAP[questId];
+  if (!quest) return defaults;
+
+  const difficulty = quest.enemyAiLevel as AIDifficulty;
+  const enemyBaseHp = { tutorial: 3, easy: 6, normal: 8, hard: 10 }[difficulty] ?? BASE_HP;
+
+  // enemyDeckId のパース: "sei_1", "kou_5" など
+  const parts = quest.enemyDeckId.split('_');
+  const archetype = parts[0] as Archetype;
+  const order = parseInt(parts[parts.length - 1]);
+  if (ARCHETYPE_IDS.includes(archetype) && order >= 1 && order <= 5) {
+    return { difficulty, enemyDeck: shuffleDeck(buildEnemyDeck(archetype, order as 1|2|3|4|5)), enemyBaseHp };
+  }
+
+  // チュートリアルなど: 標準デッキを使用
+  return { difficulty, enemyDeck: shuffleDeck(buildStandardDeck()), enemyBaseHp };
+}
+
 export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<GameSession | null>(null);
   const [mode, setMode] = useState<InteractionMode>({ type: 'idle' });
   const [highlightedCells, setHighlightedCells] = useState<Position[]>([]);
+  const [difficulty, setDifficulty] = useState<AIDifficulty>('normal');
   const sessionRef = useRef<GameSession | null>(null);
 
   const updateSession = useCallback((s: GameSession) => {
@@ -98,9 +132,11 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ─── ゲーム初期化 ───────────────────────────────────────────────────────
 
-  const initGame = useCallback((userId: string) => {
+  const initGame = useCallback((userId: string, questId?: string) => {
+    const { difficulty: qDiff, enemyDeck, enemyBaseHp } = resolveEnemyConfig(questId);
+    setDifficulty(qDiff);
+
     const playerDeck = shuffleDeck(buildStandardDeck());
-    const aiDeck = shuffleDeck(buildStandardDeck());
 
     const newSession: GameSession = {
       sessionId: uuidv4(),
@@ -118,9 +154,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         hasMovedThisTurn: false,
       },
       ai: {
-        baseHp: BASE_HP,
-        deck: aiDeck.slice(INITIAL_HAND_SIZE),
-        hand: aiDeck.slice(0, INITIAL_HAND_SIZE),
+        baseHp: enemyBaseHp,
+        deck: enemyDeck.slice(INITIAL_HAND_SIZE),
+        hand: enemyDeck.slice(0, INITIAL_HAND_SIZE),
         hasSummonedThisTurn: false,
         hasMovedThisTurn: false,
       },
@@ -362,7 +398,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     updateSession(aiTurnWithStart);
 
     // AI実行
-    const afterAI = await executeAITurn(aiTurnWithStart, updateSession);
+    const afterAI = await executeAITurn(aiTurnWithStart, updateSession, difficulty);
 
     // AIターン終了スキル発火
     let stateAfterAITurnEnd = triggerOnTurnEnd(afterAI, 'ai');

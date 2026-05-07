@@ -47,7 +47,10 @@ function GameScreen() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user && !session) initGame(user.uid);
+    if (user && !session) {
+      const questId = searchParams.get('questId') ?? undefined;
+      initGame(user.uid, questId);
+    }
   }, [user, session, initGame]);
 
   useEffect(() => {
