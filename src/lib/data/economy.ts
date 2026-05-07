@@ -1,37 +1,34 @@
 import { Rarity } from '@/lib/types/meta';
 
-// ─── EXP テーブル（次レベルまでの必要EXP）────────────────────────────────────
+export const DECK_MAX_CARDS = 10;
+export const DECK_MAX_SAME = 2;
+export const INITIAL_HAND_SIZE = 3;
 
+// ─── EXP テーブル（次レベルまでの必要EXP）────────────────────────────────────
+// Lv10 が最大。10 → 9999 で事実上不変。
 export const EXP_TO_NEXT_LEVEL: Record<number, number> = {
   1: 100,
   2: 150,
   3: 200,
-  4: 250,
-  5: 300,
-  6: 400,
-  7: 500,
-  8: 600,
+  4: 200,
+  5: 250,
+  6: 300,
+  7: 400,
+  8: 500,
   9: 700,
-  10: 800,
-  11: 1000,
-  12: 1200,
-  13: 1400,
-  14: 1600,
-  15: 1800,
+  10: 9999,
 };
 
 export function getExpToNextLevel(level: number): number {
-  if (level <= 15) return EXP_TO_NEXT_LEVEL[level] ?? 1800;
-  return 1800 + (level - 15) * 200;
+  return EXP_TO_NEXT_LEVEL[Math.min(level, 10)] ?? 9999;
 }
 
 export function getLevelFromExp(totalExp: number): number {
   let level = 1;
   let remaining = totalExp;
-  while (remaining >= getExpToNextLevel(level)) {
+  while (level < 10 && remaining >= getExpToNextLevel(level)) {
     remaining -= getExpToNextLevel(level);
     level++;
-    if (level >= 99) break;
   }
   return level;
 }
@@ -39,34 +36,30 @@ export function getLevelFromExp(totalExp: number): number {
 export function getExpInCurrentLevel(totalExp: number): number {
   let level = 1;
   let remaining = totalExp;
-  while (remaining >= getExpToNextLevel(level)) {
+  while (level < 10 && remaining >= getExpToNextLevel(level)) {
     remaining -= getExpToNextLevel(level);
     level++;
-    if (level >= 99) break;
   }
   return remaining;
 }
 
-// ─── レベル別カード生成コスト上限 ─────────────────────────────────────────────
-
+// ─── デッキ総コスト上限（Lvごと）────────────────────────────────────────────
+// 「per-card cap」から「deck total cap」に変更。
 export const LEVEL_COST_CAP: Record<number, number> = {
-  1: 6,
-  2: 8,
-  3: 10,
-  4: 12,
-  5: 14,
-  6: 16,
-  7: 18,
-  8: 20,
-  9: 22,
-  10: 25,
+  1: 80,
+  2: 90,
+  3: 100,
+  4: 115,
+  5: 130,
+  6: 150,
+  7: 170,
+  8: 185,
+  9: 200,
+  10: 220,
 };
 
 export function getCostCapForLevel(level: number): number {
-  if (level <= 10) return LEVEL_COST_CAP[level] ?? 25;
-  if (level <= 15) return 25 + (level - 10) * 2;
-  if (level <= 20) return 35 + (level - 15) * 3;
-  return 50;
+  return LEVEL_COST_CAP[Math.min(level, 10)] ?? 220;
 }
 
 // ─── コストからレアリティを算出 ────────────────────────────────────────────────
@@ -78,7 +71,20 @@ export function rarityFromCost(cost: number): Rarity {
   return 'SSR';
 }
 
-// ─── 対戦報酬 ─────────────────────────────────────────────────────────────────
+// ─── ステージ報酬テーブル ─────────────────────────────────────────────────────
+
+export const STAGE_REWARDS = {
+  tutorial_1:  { exp: 30,  runes: 50  },
+  tutorial_2:  { exp: 30,  runes: 50  },
+  tutorial_3:  { exp: 90,  runes: 100 },
+  archetype_1: { exp: 60,  runes: 100 },
+  archetype_2: { exp: 70,  runes: 120 },
+  archetype_3: { exp: 90,  runes: 150 },
+  archetype_4: { exp: 110, runes: 180 },
+  archetype_5: { exp: 150, runes: 300 },
+} as const;
+
+// ─── 対戦報酬（後方互換維持）─────────────────────────────────────────────────
 
 export const BATTLE_REWARDS = {
   win:  { exp: 30, runes: 50 },
@@ -104,5 +110,5 @@ export function getMaterialPrice(materialCost: number): number {
 export const INITIAL_PROFILE = {
   level: 1,
   exp: 0,
-  runes: 500,
+  runes: 0,
 };

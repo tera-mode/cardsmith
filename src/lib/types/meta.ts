@@ -18,6 +18,10 @@ export const RARITY_LABELS: Record<Rarity, string> = {
   SSR: 'SSレア',
 };
 
+// ─── アーキタイプ（系統）────────────────────────────────────────────────────
+
+export type Archetype = 'sei' | 'mei' | 'shin' | 'en' | 'sou' | 'kou';
+
 // ─── プレイヤープロフィール ───────────────────────────────────────────────────
 
 export interface PlayerProfile {
@@ -27,6 +31,8 @@ export interface PlayerProfile {
   runes: number;
   createdAt: number;
   updatedAt: number;
+  starterArchetype?: Archetype;  // q0_3 クリア後に確定
+  schemaVersion?: number;        // データ移行用。現行 = 2
 }
 
 // ─── 所持カード ───────────────────────────────────────────────────────────────
@@ -138,7 +144,7 @@ export interface QuestDefinition {
   prologue?: DialogueScene[];
   epilogue?: DialogueScene[];
   enemyDeckId: string;
-  enemyAiLevel: 'easy' | 'normal' | 'hard';
+  enemyAiLevel: 'tutorial' | 'easy' | 'normal' | 'hard';
   specialRule?: 'use_only_militia' | 'win_in_5_turns' | null;
   reward: Reward;
   rewardReplay?: Reward;

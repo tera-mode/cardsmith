@@ -404,3 +404,13 @@ export const CARD_MAP: Record<string, Card> = Object.fromEntries(
 export function getCardsByAttribute(attr: Card['attribute']): Card[] {
   return CARDS.filter(c => c.attribute === attr);
 }
+
+// 系統の初期5枚（コスト昇順 0〜4）
+export function getStarterCardsByAttribute(attr: Card['attribute']): Card[] {
+  return getCardsByAttribute(attr).sort((a, b) => a.cost - b.cost).slice(0, 5);
+}
+
+// 系統の報酬5枚（コスト昇順 5〜9）
+export function getRewardCardsByAttribute(attr: Card['attribute']): Card[] {
+  return getCardsByAttribute(attr).sort((a, b) => a.cost - b.cost).slice(5, 10);
+}
