@@ -62,15 +62,25 @@ export default function CardDetailModal({ unit, onClose }: Props) {
   const hpPct = unit.maxHp > 0 ? (unit.currentHp / unit.maxHp) * 100 : 0;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center overlay-full"
-      style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
-      onClick={onClose}
-    >
-      {/* カード本体 */}
+    <>
+      {/* バックドロップ（タップで閉じる） */}
       <div
-        className="relative w-[272px] rounded-2xl overflow-hidden shadow-2xl"
-        style={{ border: `2px solid ${borderColor}`, boxShadow: `0 0 24px ${borderColor}40` }}
+        className="fixed inset-0 z-50"
+        style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+        onClick={onClose}
+      />
+      {/* カード本体：fixed で viewport 中央に独立配置 */}
+      <div
+        className="fixed z-50 w-[272px] rounded-2xl overflow-hidden shadow-2xl"
+        style={{
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          border: `2px solid ${borderColor}`,
+          boxShadow: `0 0 24px ${borderColor}40`,
+          maxHeight: '86dvh',
+          overflowY: 'auto',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── 上半分：キャラビジュアル ── */}
@@ -158,6 +168,6 @@ export default function CardDetailModal({ unit, onClose }: Props) {
           <p className="text-[10px] text-gray-600 text-center">タップで閉じる</p>
         </div>
       </div>
-    </div>
+    </>
   );
 }
