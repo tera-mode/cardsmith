@@ -75,10 +75,7 @@ function GameScreen() {
   const isFinished = session.phase === 'finished';
 
   return (
-    <div
-      className="fixed inset-0 flex flex-col stone-bg"
-      style={{ position: 'relative' }}
-    >
+    <div className="game-layout stone-bg">
       {/* ダンジョン ambient overlay */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
@@ -89,7 +86,8 @@ function GameScreen() {
       <div className="torch" style={{ position: 'absolute', top: 56, left: 8, zIndex: 5 }} />
       <div className="torch" style={{ position: 'absolute', top: 56, right: 8, zIndex: 5 }} />
 
-      <div className="relative z-10 flex flex-col h-full w-full max-w-[480px] mx-auto">
+      {/* 縦幅が狭い場合はスクロール可能にする */}
+      <div className="relative z-10 flex-1 overflow-y-auto flex flex-col w-full max-w-[480px] mx-auto safe-scroll">
 
         {/* AI 陣地HP */}
         <div className="px-3 pt-2 pb-1 flex-shrink-0">

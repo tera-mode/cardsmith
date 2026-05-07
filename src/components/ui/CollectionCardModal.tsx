@@ -36,21 +36,26 @@ export default function CollectionCardModal({ card, count = 0, onClose }: Props)
   const skillDef = card.skill ? getSkill(card.skill.id) : null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center overlay-full"
-      style={{ backgroundColor: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(6px)' }}
-      onClick={onClose}
-    >
-      {/* ボトムシート形式：下から95%幅で表示 */}
+    <>
+      {/* バックドロップ */}
       <div
-        className="relative rounded-t-3xl overflow-hidden shadow-2xl w-full"
+        className="fixed inset-0 z-50"
+        style={{ backgroundColor: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(6px)' }}
+        onClick={onClose}
+      />
+      {/* ボトムシート：fixed で画面下部に固定 */}
+      <div
+        className="fixed z-50 rounded-t-3xl overflow-hidden shadow-2xl"
         style={{
-          maxWidth: 480,
+          bottom: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
           width: '95%',
+          maxWidth: 480,
           border: `1.5px solid ${rarityColor}50`,
           borderBottom: 'none',
           boxShadow: `0 -4px 40px ${rarityColor}25`,
-          maxHeight: 'min(92dvh, 92vh)',
+          maxHeight: '92dvh',
           overflowY: 'auto',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -173,6 +178,6 @@ export default function CollectionCardModal({ card, count = 0, onClose }: Props)
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
