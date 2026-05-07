@@ -3,7 +3,8 @@
 import { useGame } from '@/contexts/GameContext';
 import { InteractionMode, Unit, GameSession } from '@/lib/types/game';
 import { getLegalAttacks } from '@/lib/game/rules';
-import { SKILL_RESOLVERS } from '@/lib/game/skills';
+import { getSkill } from '@/lib/game/skills/index';
+import { getEffectiveAtk, isSkillBlocked } from '@/lib/game/helpers';
 
 interface Props {
   mode: InteractionMode;
@@ -51,8 +52,12 @@ export default function ActionMenu({ mode, session }: Props) {
   const unit: Unit = mode.unit;
   const attacks = getLegalAttacks(unit, session.board);
   const skill = unit.card.skill;
-  const skillResolver = skill ? SKILL_RESOLVERS[skill.effectType] : null;
-  const canUseSkill = skillResolver ? skillResolver.canActivate(session, unit) : false;
+  const skillDef = skill ? getSkill(skill.id) : null;
+  const skillName = skillDef?.displayName ?? skill?.id ?? '';
+  const isActivated = skillDef?.triggerKind === 'activated';
+  const ctx = { remainingUses: unit.skillUsesRemaining, turnCount: session.turnCount, currentTurn: session.currentTurn as 'player' | 'ai' };
+  const canUseSkill = isActivated && !isSkillBlocked(unit) && unit.skillUsesRemaining !== 0 &&
+    (!skillDef?.canActivate || skillDef.canActivate(session, unit, ctx));
   const canMove = isUnitSelected && !session.player.hasMovedThisTurn;
   const hasAttackOptions = attacks.length > 0 || canUseSkill;
 
@@ -77,7 +82,7 @@ export default function ActionMenu({ mode, session }: Props) {
             {unit.card.name}
           </span>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#ffb44a' }}>
-            ATK {unit.card.atk + unit.buffs.atkBonus}
+            ATK {getEffectiveAtk(unit)}
           </span>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--rune-green)' }}>
             HP {unit.currentHp}/{unit.maxHp}
@@ -87,7 +92,7 @@ export default function ActionMenu({ mode, session }: Props) {
           )}
           {skill && (
             <span style={{ fontSize: 10, color: 'var(--rarity-sr)', marginLeft: 'auto' }}>
-              ★ {skill.name}
+              ★ {skillName}
               {unit.skillUsesRemaining !== 'infinite' && ` (${unit.skillUsesRemaining}回)`}
             </span>
           )}
@@ -136,8 +141,8 @@ export default function ActionMenu({ mode, session }: Props) {
             <button
               data-testid="skill-button"
               onClick={() => {
-                if (!skillResolver) return;
-                const targets = skillResolver.getValidTargets(session, unit);
+                if (!skillDef) return;
+                const targets = skillDef.getValidTargets ? skillDef.getValidTargets(session, unit) : [];
                 useSkill(targets.length > 0 ? targets[0] : undefined);
               }}
               style={{
@@ -150,7 +155,7 @@ export default function ActionMenu({ mode, session }: Props) {
                 boxShadow: '0 0 8px rgba(196,120,255,0.15)',
               }}
             >
-              ★ {skill.name}を使用
+              ★ {skillName}を使用
             </button>
           )}
 

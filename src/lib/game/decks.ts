@@ -1,34 +1,28 @@
 import { Card } from '@/lib/types/game';
-import { CARD_MAP } from '@/lib/game/cards';
-
-// デバッグ用標準デッキ（10枚・各1枚）
-// プレイヤー・AIともにこのデッキを使う（ミラーマッチ）
-const STANDARD_DECK_RECIPE: Array<{ cardId: string; count: number }> = [
-  { cardId: 'militia', count: 1 },
-  { cardId: 'light_infantry', count: 1 },
-  { cardId: 'assault_soldier', count: 1 },
-  { cardId: 'scout', count: 1 },
-  { cardId: 'spear_soldier', count: 1 },
-  { cardId: 'heavy_infantry', count: 1 },
-  { cardId: 'combat_soldier', count: 1 },
-  { cardId: 'archer', count: 1 },
-  { cardId: 'guard', count: 1 },
-  { cardId: 'healer', count: 1 },
-];
+import { CARD_MAP, getCardsByAttribute } from '@/lib/game/cards';
 
 export const INITIAL_HAND_SIZE = 3;
-export const BASE_HP = 3;
+export const BASE_HP = 5;
+
+// デバッグ用標準デッキ：属性混合10枚
+const STANDARD_DECK_RECIPE: string[] = [
+  'sei_noa', 'sei_liese', 'sei_grail',
+  'mei_cal', 'mei_vera',
+  'shin_hina', 'shin_lilia',
+  'en_koko', 'en_ron', 'en_garo',
+];
 
 export function buildStandardDeck(): Card[] {
-  const deck: Card[] = [];
-  for (const { cardId, count } of STANDARD_DECK_RECIPE) {
-    const card = CARD_MAP[cardId];
-    if (!card) throw new Error(`Unknown card: ${cardId}`);
-    for (let i = 0; i < count; i++) {
-      deck.push(card);
-    }
-  }
-  return deck;
+  return STANDARD_DECK_RECIPE.map(id => {
+    const card = CARD_MAP[id];
+    if (!card) throw new Error(`Unknown card: ${id}`);
+    return card;
+  });
+}
+
+// 属性デッキ構築
+export function buildAttributeDeck(attr: Card['attribute']): Card[] {
+  return getCardsByAttribute(attr);
 }
 
 export function shuffleDeck(deck: Card[]): Card[] {

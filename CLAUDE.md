@@ -95,27 +95,19 @@ match /users/{userId}/sessions/{sessionId} {
 
 #### 画像生成ツール
 
-**Python スクリプト方式**（MCP は使わない）
+**`mcp__gemini-image__generate_image` ツール**（`gemini-nanobanana-mcp` 経由）
 
-```bash
-# 全画像生成（既存はスキップ）
-python tools/gen_images.py
-
-# カードのみ
-python tools/gen_images.py cards
-
-# 背景のみ
-python tools/gen_images.py backgrounds
-
-# 特定カードのみ（例: militia）
-python tools/gen_images.py militia
+```
+mcp__gemini-image__generate_image(
+  prompt: "...",
+  saveToFilePath: "E:/dev/cardsmith/public/images/chars/{charId}.png"
+)
 ```
 
-- `google-genai` ライブラリで `gemini-2.5-flash-preview-05-20` モデルを呼び出す
-- API キーは `.env.local` の `GEMINI_API_KEY` から読み込む
-- **既存画像は自動スキップ**（スクリプト内でチェック済み）
-
-> **注意:** `@google/gemini-image-mcp` は npm に存在しない偽パッケージ。MCP 経由での画像生成は不可。
+- `.mcp.json` の `gemini-image` サーバーが `gemini-3.1-flash-image-preview` を呼び出す
+- API キーは `.mcp.json` の `env.GEMINI_API_KEY` に設定済み
+- 保存先は `saveToFilePath` で直接指定する（既存ファイルがある場合は `_1.png` などでサフィックスが付く）
+- **既存画像を上書きする場合はユーザーの明示的な指示が必要**
 
 #### スタイル方針
 
@@ -130,9 +122,8 @@ python tools/gen_images.py militia
 
 | 項目 | 規則 |
 |------|------|
-| 保存先（ゲーム用） | `public/images/cards/{cardId}.png` |
-| 保存先（原画） | `public/images/cards/raw/{cardId}_raw.png` |
-| 生成サイズ | **512 × 512 px**（後でリサイズ） |
+| 保存先 | `public/images/cards/{cardId}.png` |
+| 生成サイズ | **512 × 512 px** |
 | フォーマット | PNG |
 | 背景 | **白背景または透過背景**で生成 |
 
@@ -154,7 +145,16 @@ python tools/gen_images.py militia
 | `cannon` | 大砲 | 大砲を操る砲兵 |
 | `defender` | 守護兵 | 大型盾を装備した守護者 |
 
-#### 1-2. ボード背景
+#### 1-2. キャラクターイラスト
+
+| 項目 | 規則 |
+|------|------|
+| 保存先 | `public/images/chars/{charId}.png` |
+| 生成サイズ | **1024 × 1024 px**（MCP固定） |
+| フォーマット | PNG |
+| プロンプト仕様 | `docs/chars_visual.md` を参照 |
+
+#### 1-3. ボード背景
 
 | 項目 | 規則 |
 |------|------|
@@ -176,15 +176,15 @@ public/images/
 ├── cards/                   ← ゲーム用カードイラスト（512×512 PNG）
 │   ├── militia.png
 │   ├── archer.png
-│   ├── ...（13種）
-│   └── raw/                 ← 原画（変更禁止）
+│   └── ...（13種）
+├── chars/                   ← キャラクターイラスト（1024×1024 PNG）
+│   ├── sei_noa.png
+│   ├── mei_vera.png
+│   └── ...（60体）
 ├── backgrounds/             ← ボード背景
-│   ├── board.jpg
-│   └── raw/
+│   └── board.jpg
 └── ui/                      ← UIアセット（ロゴ等）
 ```
-
-**`raw/` フォルダ内のファイルは編集・削除禁止。**
 
 ### 3. プロンプト必須フレーズ
 

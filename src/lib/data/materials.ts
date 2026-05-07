@@ -45,15 +45,15 @@ export const MATERIALS: Material[] = [
 
   // ─── スキル ──────────────────────────────────────────────────────────────────
   { id: 'skill_pen_3', name: '貫通×3', category: 'skill', description: '3回まで、前方の敵を貫通して攻撃', cost: 5, icon: '✨',
-    effect: { type: 'skill', skill: { id: 'penetrate', name: '貫通', description: '前方の敵ユニットを貫通して攻撃する', effectType: 'penetrate', uses: 3 } } },
+    effect: { type: 'skill', skill: { id: 'penetrate', uses: 3 } } },
   { id: 'skill_big_pen_1', name: '大貫通×1', category: 'skill', description: '1回だけ、盤面全貫通で攻撃', cost: 5, icon: '⚡',
-    effect: { type: 'skill', skill: { id: 'big_penetrate', name: '大貫通', description: '盤面を全貫通して攻撃する', effectType: 'big_penetrate', uses: 1 } } },
+    effect: { type: 'skill', skill: { id: 'big_penetrate', uses: 1 } } },
   { id: 'skill_counter_inf', name: '反撃・無限', category: 'skill', description: '攻撃を受けるたびに反撃する', cost: 9, icon: '🔄',
-    effect: { type: 'skill', skill: { id: 'counter', name: '反撃', description: '攻撃を受けるたびに反撃する', effectType: 'counter', uses: 'infinite' } } },
+    effect: { type: 'skill', skill: { id: 'hangeki', uses: 'infinite' } } },
   { id: 'skill_buff_1', name: '強化×1', category: 'skill', description: '1回だけ、ATKを+2する', cost: 4, icon: '💪',
-    effect: { type: 'skill', skill: { id: 'buff', name: '強化', description: 'ATK を +2 する', effectType: 'buff', effectValue: 2, uses: 1 } } },
+    effect: { type: 'skill', skill: { id: 'buff', uses: 1 } } },
   { id: 'skill_heal_inf', name: '治癒・無限', category: 'skill', description: '毎ターン HP を 1 回復する', cost: 10, icon: '💚',
-    effect: { type: 'skill', skill: { id: 'heal', name: '治癒', description: '毎ターン HP を 1 回復する', effectType: 'heal', uses: 'infinite' } } },
+    effect: { type: 'skill', skill: { id: 'heal', uses: 'infinite' } } },
 ];
 
 export const MATERIAL_MAP: Record<string, Material> = Object.fromEntries(

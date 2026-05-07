@@ -1,22 +1,7 @@
 'use client';
 
 import { Unit } from '@/lib/types/game';
-
-const UNIT_EMOJI: Record<string, string> = {
-  militia:         '🪖',
-  light_infantry:  '⚔️',
-  assault_soldier: '🗡️',
-  scout:           '🏃',
-  spear_soldier:   '🔱',
-  heavy_infantry:  '🛡️',
-  combat_soldier:  '⚔️',
-  archer:          '🏹',
-  guard:           '🛡️',
-  healer:          '✨',
-  cavalry:         '🐎',
-  cannon:          '💣',
-  defender:        '🏰',
-};
+import { getEffectiveAtk } from '@/lib/game/helpers';
 
 interface Props {
   unit: Unit;
@@ -25,19 +10,19 @@ interface Props {
 
 export default function UnitToken({ unit, isSelected }: Props) {
   const isPlayer = unit.owner === 'player';
-  const emoji = UNIT_EMOJI[unit.cardId] ?? '⚔️';
-  const atk = unit.card.atk + unit.buffs.atkBonus;
-  const hpPercent = Math.max(0, (unit.currentHp / unit.maxHp) * 100);
+  const atk = getEffectiveAtk(unit);
+  const hpPercent = Math.max(0, (unit.currentHp / (unit.maxHp + unit.buffs.auraMaxHp)) * 100);
+  const imgSrc = `/images/chars/${unit.cardId}.png`;
 
   return (
     <div
       data-testid={`unit-${unit.instanceId}`}
       className={`unit-token unit-token--${isPlayer ? 'player' : 'enemy'}${unit.hasActedThisTurn ? ' unit-token--acted' : ''}`}
-      style={{ position: 'absolute', inset: 2 }}
+      style={{ position: 'absolute', inset: 2, overflow: 'hidden' }}
     >
-      {/* HP バー (上部) */}
+      {/* HP バー（上部） */}
       <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+        position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 3,
         background: 'rgba(0,0,0,0.7)', borderRadius: '2px 2px 0 0', overflow: 'hidden',
       }}>
         <div style={{
@@ -52,24 +37,49 @@ export default function UnitToken({ unit, isSelected }: Props) {
         }} />
       </div>
 
-      {/* アイコン */}
-      <span style={{ fontSize: 15, lineHeight: 1, marginTop: 3, display: 'block' }}>
-        {emoji}
-      </span>
+      {/* キャラクター画像 */}
+      <img
+        src={imgSrc}
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          top: 3,      // HPバーの下から
+          left: 0,
+          right: 0,
+          bottom: 14, // ATK/HP表示の上まで
+          width: '100%',
+          height: 'calc(100% - 17px)',
+          objectFit: 'cover',
+          objectPosition: 'center 18%', // 顔・上半身を優先表示
+          display: 'block',
+          userSelect: 'none',
+        }}
+        onError={(e) => {
+          // 画像がなければフォールバック非表示（背景色で代替）
+          (e.target as HTMLImageElement).style.display = 'none';
+        }}
+      />
 
-      {/* ATK / HP */}
-      <div style={{ display: 'flex', gap: 3, fontSize: 9, fontFamily: 'var(--font-display)', fontWeight: 700, lineHeight: 1, marginTop: 1 }}>
+      {/* ATK / HP（下部オーバーレイ） */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 3,
+        background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
+        display: 'flex', justifyContent: 'center', gap: 3,
+        fontSize: 9, fontFamily: 'var(--font-display)', fontWeight: 700,
+        lineHeight: 1, paddingBottom: 2, paddingTop: 4,
+      }}>
         <span style={{ color: '#ffb44a' }}>{atk}</span>
-        <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span>
+        <span style={{ color: 'rgba(255,255,255,0.35)' }}>/</span>
         <span style={{ color: '#6bd998' }}>{unit.currentHp}</span>
       </div>
 
       {/* スキル残数バッジ */}
       {unit.card.skill && unit.skillUsesRemaining !== 0 && (
         <div style={{
-          position: 'absolute', bottom: 1, right: 1,
-          background: 'rgba(196,120,255,0.85)',
-          borderRadius: '2px 0 2px 0',
+          position: 'absolute', top: 4, right: 1, zIndex: 4,
+          background: 'rgba(196,120,255,0.9)',
+          borderRadius: '0 2px 0 2px',
           padding: '0 2px',
           fontSize: 8,
           fontFamily: 'var(--font-display)',

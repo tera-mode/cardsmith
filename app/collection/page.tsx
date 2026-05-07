@@ -7,10 +7,12 @@ import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
 import RarityBadge from '@/components/ui/RarityBadge';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
+import CollectionCardModal from '@/components/ui/CollectionCardModal';
 import { CARDS_WITH_RARITY } from '@/lib/data/cards';
 import { PRESET_CARD_MATERIALS, getMaterial } from '@/lib/data/materials';
-import { RARITY_COLORS, OwnedCard } from '@/lib/types/meta';
+import { RARITY_COLORS, OwnedCard, Rarity } from '@/lib/types/meta';
 import { applyReward } from '@/lib/server-logic/reward';
+import { Card } from '@/lib/types/game';
 
 export default function CollectionPage() {
   const { user, loading: authLoading } = useAuth();
@@ -19,6 +21,8 @@ export default function CollectionPage() {
 
   const [extractTarget, setExtractTarget] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
+  const [detailCard, setDetailCard] = useState<(Card & { rarity: Rarity }) | null>(null);
+  const [detailCount, setDetailCount] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
@@ -91,18 +95,39 @@ export default function CollectionPage() {
               <div
                 key={card.id}
                 data-testid={`collection-card-${card.id}`}
-                className={`panel--ornate p-3 border transition-opacity ${count > 0 ? 'opacity-100' : 'opacity-40'}`}
+                className={`panel--ornate p-3 border transition-opacity cursor-pointer active:scale-95 transition-transform ${count > 0 ? 'opacity-100' : 'opacity-40'}`}
                 style={{ borderColor: `${color}40` }}
+                onClick={() => { setDetailCard(card); setDetailCount(count); }}
               >
                 <div className="flex items-start justify-between mb-1">
                   <RarityBadge rarity={card.rarity} size="xs" />
                   <span className="text-xs text-muted">×{count}</span>
                 </div>
                 <div className="text-center py-1">
-                  <div className="text-2xl mb-1">
-                    {card.id === 'archer' ? '🏹' : card.id === 'cavalry' ? '🐎' : card.id === 'cannon' ? '💣' : card.id === 'healer' ? '💚' : card.id === 'defender' ? '🛡️' : card.id === 'guard' ? '🛡️' : '⚔️'}
+                  {/* キャラクター画像サムネイル */}
+                  <div style={{
+                    width: '100%', height: 80,
+                    borderRadius: 6, overflow: 'hidden',
+                    marginBottom: 4, position: 'relative',
+                    background: 'rgba(0,0,0,0.3)',
+                  }}>
+                    <img
+                      src={`/images/chars/${card.id}.png`}
+                      alt={card.name}
+                      style={{
+                        width: '100%', height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center 20%',
+                        display: 'block',
+                        filter: count === 0 ? 'grayscale(100%)' : 'none',
+                        opacity: count === 0 ? 0.5 : 1,
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
                   </div>
-                  <div className="text-xs font-bold text-white">{card.name}</div>
+                  <div className="text-xs font-bold text-white leading-tight">{card.name}</div>
                   <div className="text-[10px] text-muted">ATK{card.atk} HP{card.hp} C{card.cost}</div>
                 </div>
                 {count > 0 && (
@@ -132,6 +157,15 @@ export default function CollectionPage() {
           </div>
         ))}
       </div>
+
+      {/* カード詳細モーダル */}
+      {detailCard && (
+        <CollectionCardModal
+          card={detailCard}
+          count={detailCount}
+          onClose={() => setDetailCard(null)}
+        />
+      )}
 
       {/* 抽出確認シート */}
       <ConfirmSheet

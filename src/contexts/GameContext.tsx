@@ -10,13 +10,25 @@ import {
 import {
   createEmptyBoard, getLegalMoves, getLegalAttacks,
   getLegalSummonPositions, createUnit, placeUnit, removeUnit, resolveAttack,
+  BOARD_ROWS, BOARD_COLS,
 } from '@/lib/game/rules';
 import { buildStandardDeck, shuffleDeck, INITIAL_HAND_SIZE, BASE_HP } from '@/lib/game/decks';
-import { applyCounterAttack, SKILL_RESOLVERS } from '@/lib/game/skills';
+import {
+  applyDamage, triggerOnSummon, triggerOnAttack,
+  triggerOnTurnStart, triggerOnTurnEnd, resolveActivatedSkill,
+  applyCounterAttack, checkWinner,
+} from '@/lib/game/events/dispatcher';
+import { getSkill } from '@/lib/game/skills/index';
+import { recalculateAuras } from '@/lib/game/aura';
+import { canAct, clearTurnStatusEffects, getEffectiveAtk, findUnit } from '@/lib/game/helpers';
+import type { GameSessionWithRevival, PendingRevival } from '@/lib/game/helpers';
 import { executeAITurn } from '@/lib/game/ai';
 import { auth } from '@/lib/firebase/config';
 
-// ─── Firestoreへのセッション保存 ─────────────────────────────────────────
+// スキル登録（全スキルを初期化）
+import '@/lib/game/skills/index';
+
+// ─── Firestore保存 ───────────────────────────────────────────────────────
 
 async function saveSession(session: GameSession) {
   try {
@@ -55,23 +67,14 @@ interface GameContextType {
   initGame: (userId: string) => void;
   selectCard: (index: number) => void;
   summonToCell: (pos: Position) => void;
-  // ユニット選択 → アクション選択メニューへ
   selectUnit: (unit: Unit) => void;
-  // 「移動する」ボタン → 移動ハイライト表示
   startMove: (unit: Unit) => void;
-  // 移動先タップ or 「その場に留まる」
   moveUnit: (pos: Position) => void;
-  // 「戻る」（移動選択をキャンセルしてアクションメニューへ戻る）
   cancelMove: () => void;
-  // 攻撃
   attackTarget: (target: AttackTarget) => void;
-  // スキル使用
   useSkill: (target?: Position) => void;
-  // 「行動終了」（移動後に攻撃もスキルも使わずに行動を終了）
   endUnitAction: (unit: Unit) => void;
-  // ターン終了
   endTurn: () => void;
-  // キャンセル（unit_selected → idle）
   cancel: () => void;
   getSkillTargets: () => Position[];
 }
@@ -99,9 +102,6 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const playerDeck = shuffleDeck(buildStandardDeck());
     const aiDeck = shuffleDeck(buildStandardDeck());
 
-    const playerHand = playerDeck.slice(0, INITIAL_HAND_SIZE);
-    const aiHand = aiDeck.slice(0, INITIAL_HAND_SIZE);
-
     const newSession: GameSession = {
       sessionId: uuidv4(),
       userId,
@@ -113,14 +113,14 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       player: {
         baseHp: BASE_HP,
         deck: playerDeck.slice(INITIAL_HAND_SIZE),
-        hand: playerHand,
+        hand: playerDeck.slice(0, INITIAL_HAND_SIZE),
         hasSummonedThisTurn: false,
         hasMovedThisTurn: false,
       },
       ai: {
         baseHp: BASE_HP,
         deck: aiDeck.slice(INITIAL_HAND_SIZE),
-        hand: aiHand,
+        hand: aiDeck.slice(0, INITIAL_HAND_SIZE),
         hasSummonedThisTurn: false,
         hasMovedThisTurn: false,
       },
@@ -132,7 +132,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     setHighlightedCells([]);
   }, [updateSession]);
 
-  // ─── カード選択 → 召喚ゾーンハイライト ──────────────────────────────────
+  // ─── カード選択 → 召喚 ──────────────────────────────────────────────────
 
   const selectCard = useCallback((index: number) => {
     const s = sessionRef.current;
@@ -152,28 +152,38 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const newBoard = placeUnit(s.board, unit, pos);
     const newHand = s.player.hand.filter((_, i) => i !== mode.cardIndex);
 
-    updateSession({
+    let nextState: GameSession = {
       ...s,
       board: newBoard,
       player: { ...s.player, hand: newHand, hasSummonedThisTurn: true },
       log: [...s.log, `${card.name} を召喚`],
-    });
+    };
+
+    // 召喚時スキル発火
+    nextState = triggerOnSummon(nextState, unit);
+
+    // 勝敗チェック
+    nextState = checkWinner(nextState);
+    if (nextState.winner) {
+      updateSession({ ...nextState, finishedAt: Date.now() });
+      saveSession({ ...nextState, finishedAt: Date.now() });
+    } else {
+      updateSession(nextState);
+    }
+
     setMode({ type: 'idle' });
     setHighlightedCells([]);
   }, [mode, updateSession]);
 
-  // ─── Step 1: ユニットタップ → アクション選択メニュー ────────────────────
+  // ─── ユニット選択 ────────────────────────────────────────────────────────
 
   const selectUnit = useCallback((unit: Unit) => {
     const s = sessionRef.current;
     if (!s || s.currentTurn !== 'player' || unit.owner !== 'player') return;
-    if (unit.hasActedThisTurn) return;
-    // アクションメニューを表示（ボードハイライトなし）
+    if (unit.hasActedThisTurn || !canAct(unit)) return;
     setMode({ type: 'unit_selected', unit });
     setHighlightedCells([]);
   }, []);
-
-  // ─── Step 2a: 「移動する」ボタン → 移動ハイライト表示 ───────────────────
 
   const startMove = useCallback((unit: Unit) => {
     const s = sessionRef.current;
@@ -183,40 +193,27 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     setHighlightedCells(moves);
   }, []);
 
-  // unit_moving 中に「戻る」→ unit_selected（アクション選択メニュー）へ
   const cancelMove = useCallback(() => {
-    const s = sessionRef.current;
-    if (!s || mode.type !== 'unit_moving') return;
+    if (mode.type !== 'unit_moving') return;
     setMode({ type: 'unit_selected', unit: mode.unit });
     setHighlightedCells([]);
   }, [mode]);
-
-  // ─── Step 2b: 移動先タップ or 「その場に留まる」 ────────────────────────
 
   const moveUnit = useCallback((pos: Position) => {
     const s = sessionRef.current;
     if (!s || mode.type !== 'unit_moving') return;
     const unit = mode.unit;
-
     const isSamePos = pos.row === unit.position.row && pos.col === unit.position.col;
     let newBoard = isSamePos ? s.board : removeUnit(s.board, unit.position);
     const moved: Unit = { ...unit, position: pos };
     newBoard = isSamePos ? s.board : placeUnit(newBoard, moved, pos);
-
     const logEntry = isSamePos ? `${unit.card.name} が待機` : `${unit.card.name} が移動`;
-
-    updateSession({
-      ...s,
-      board: newBoard,
-      player: { ...s.player, hasMovedThisTurn: true },
-      log: [...s.log, logEntry],
-    });
-    // 移動後は unit_post_move へ（ボードハイライトなし、攻撃/スキル/行動終了メニュー）
+    updateSession({ ...s, board: newBoard, player: { ...s.player, hasMovedThisTurn: true }, log: [...s.log, logEntry] });
     setMode({ type: 'unit_post_move', unit: moved });
     setHighlightedCells([]);
   }, [mode, updateSession]);
 
-  // ─── Step 3a: 「行動終了」ボタン（移動のみで攻撃しない） ─────────────────
+  // ─── 行動終了 ───────────────────────────────────────────────────────────
 
   const endUnitAction = useCallback((unit: Unit) => {
     const s = sessionRef.current;
@@ -229,55 +226,49 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     setHighlightedCells([]);
   }, [updateSession]);
 
-  // ─── Step 3b: 攻撃（unit_selected または unit_post_move から） ───────────
+  // ─── 攻撃 ────────────────────────────────────────────────────────────────
 
   const attackTarget = useCallback((target: AttackTarget) => {
     const s = sessionRef.current;
     if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move')) return;
 
     const attacker = mode.unit;
-    const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(s, attacker, target);
+    const atk = getEffectiveAtk(attacker);
 
-    let nextState: GameSession = {
-      ...s,
-      board,
-      player: { ...s.player, baseHp: playerBaseHp },
-      ai: { ...s.ai, baseHp: aiBaseHp },
-      log: [...s.log, ...log],
-    };
+    let nextState: GameSession;
 
-    // 反撃チェック
-    if (target.type === 'unit') {
+    if (target.type === 'base') {
+      // ベース攻撃（デフォルト1ダメージ）
+      const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(s, attacker, target);
+      nextState = { ...s, board, player: { ...s.player, baseHp: playerBaseHp }, ai: { ...s.ai, baseHp: aiBaseHp }, log: [...s.log, ...log] };
+    } else {
       const defender = target.unit;
-      if (defender.card.skill?.effectType === 'counter') {
-        const currentDefender = board[defender.position.row]?.[defender.position.col];
-        if (currentDefender) {
-          const { state: afterCounter } = applyCounterAttack(nextState, currentDefender, attacker);
-          nextState = afterCounter;
-        }
+      // ダメージ適用（新ディスパッチャー経由）
+      nextState = applyDamage(s, { source: attacker, target: defender, amount: atk });
+
+      // 反撃チェック（hangeki スキル）
+      const freshDefender = findUnit(nextState, defender.instanceId);
+      if (freshDefender && freshDefender.card.skill?.id === 'hangeki') {
+        nextState = applyCounterAttack(nextState, freshDefender, attacker);
+      }
+
+      // 攻撃後スキル発火（連撃・薙ぎ払い・連鎖雷撃・凍結・沈黙・吹き飛ばし）
+      const freshAttacker = findUnit(nextState, attacker.instanceId);
+      if (freshAttacker) {
+        nextState = triggerOnAttack(nextState, freshAttacker, defender, atk);
       }
     }
 
     // 行動済みフラグ
     const finalBoard = nextState.board.map((r) => [...r]);
-    const pos = attacker.position;
-    const updatedAttacker = finalBoard[pos.row]?.[pos.col];
-    if (updatedAttacker) {
-      finalBoard[pos.row][pos.col] = { ...updatedAttacker, hasActedThisTurn: true };
+    const attackerAfter = finalBoard[attacker.position.row]?.[attacker.position.col];
+    if (attackerAfter) {
+      finalBoard[attacker.position.row][attacker.position.col] = { ...attackerAfter, hasActedThisTurn: true };
     }
 
-    // 勝敗チェック
-    const winner = checkWinner(nextState.player.baseHp, nextState.ai.baseHp);
-    const finished = winner !== null;
-    const finishedAt = finished ? Date.now() : undefined;
-
-    const result: GameSession = {
-      ...nextState,
-      board: finalBoard,
-      phase: finished ? 'finished' : nextState.phase,
-      winner: winner ?? undefined,
-      finishedAt,
-    };
+    nextState = checkWinner({ ...nextState, board: finalBoard });
+    const finished = !!nextState.winner;
+    const result: GameSession = { ...nextState, board: finalBoard, finishedAt: finished ? Date.now() : undefined };
 
     updateSession(result);
     if (finished) saveSession(result);
@@ -291,42 +282,28 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const s = sessionRef.current;
     if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move')) return [];
     const unit = mode.unit;
-    const skill = unit.card.skill;
-    if (!skill) return [];
-    const resolver = SKILL_RESOLVERS[skill.effectType];
-    if (!resolver) return [];
-    return resolver.getValidTargets(s, unit);
+    const skillDef = unit.card.skill ? getSkill(unit.card.skill.id) : null;
+    if (!skillDef || skillDef.triggerKind !== 'activated') return [];
+    return skillDef.getValidTargets ? skillDef.getValidTargets(s, unit) : [];
   }, [mode]);
 
   const useSkill = useCallback((target?: Position) => {
     const s = sessionRef.current;
     if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move')) return;
     const unit = mode.unit;
-    const skill = unit.card.skill;
-    if (!skill) return;
-    const resolver = SKILL_RESOLVERS[skill.effectType];
-    if (!resolver || !resolver.canActivate(s, unit)) return;
+    const skillDef = unit.card.skill ? getSkill(unit.card.skill.id) : null;
+    if (!skillDef || skillDef.triggerKind !== 'activated') return;
 
-    const { state: afterSkill } = resolver.resolve(s, unit, target);
+    let nextState = resolveActivatedSkill(s, unit, target ?? null);
 
     // 行動済みフラグ
-    const finalBoard = afterSkill.board.map((r) => [...r]);
-    const pos = unit.position;
-    const updatedUnit = finalBoard[pos.row]?.[pos.col];
-    if (updatedUnit) {
-      finalBoard[pos.row][pos.col] = { ...updatedUnit, hasActedThisTurn: true };
-    }
+    const finalBoard = nextState.board.map((r) => [...r]);
+    const updUnit = finalBoard[unit.position.row]?.[unit.position.col];
+    if (updUnit) finalBoard[unit.position.row][unit.position.col] = { ...updUnit, hasActedThisTurn: true };
 
-    // 勝敗チェック（スキルでHPが0になる場合を考慮）
-    const winner = checkWinner(afterSkill.player.baseHp, afterSkill.ai.baseHp);
-    const finished = winner !== null;
-    const result: GameSession = {
-      ...afterSkill,
-      board: finalBoard,
-      phase: finished ? 'finished' : afterSkill.phase,
-      winner: winner ?? undefined,
-      finishedAt: finished ? Date.now() : undefined,
-    };
+    nextState = checkWinner({ ...nextState, board: finalBoard });
+    const finished = !!nextState.winner;
+    const result: GameSession = { ...nextState, board: finalBoard, finishedAt: finished ? Date.now() : undefined };
 
     updateSession(result);
     if (finished) saveSession(result);
@@ -340,63 +317,97 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const s = sessionRef.current;
     if (!s || s.currentTurn !== 'player' || s.phase === 'finished') return;
 
-    // 全ユニットのフラグリセット・AIターンへ
-    const resetBoard = s.board.map((row) =>
-      row.map((cell) => (cell ? { ...cell, hasActedThisTurn: false, hasSummonedThisTurn: false } : null))
+    // ターン終了時スキル発火
+    let stateAfterTurnEnd = triggerOnTurnEnd(s, 'player');
+
+    // 全ユニットのステータスリセット（凍結・麻痺はここで消費）
+    const resetBoard = stateAfterTurnEnd.board.map((row) =>
+      row.map((cell) => cell ? clearTurnStatusEffects(cell) : null)
     );
 
+    // 復活処理
+    let stateWithRevivals = { ...stateAfterTurnEnd, board: resetBoard };
+    const revivals = (stateAfterTurnEnd as GameSessionWithRevival).pendingRevivals ?? [];
+    for (const revival of revivals) {
+      if (!stateWithRevivals.board[revival.position.row][revival.position.col]) {
+        const revUnit = createUnit(revival.card, revival.owner, revival.position);
+        stateWithRevivals = { ...stateWithRevivals, board: placeUnit(stateWithRevivals.board, revUnit, revival.position) };
+        stateWithRevivals = { ...stateWithRevivals, log: [...stateWithRevivals.log, `${revival.card.name}：復活！`] };
+      }
+    }
+    (stateWithRevivals as GameSessionWithRevival).pendingRevivals = [];
+
     // AIドロー
-    let aiDeck = [...s.ai.deck];
-    let aiHand = [...s.ai.hand];
+    let aiDeck = [...stateWithRevivals.ai.deck];
+    let aiHand = [...stateWithRevivals.ai.hand];
     if (aiDeck.length > 0) {
       aiHand = [...aiHand, aiDeck[0]];
       aiDeck = aiDeck.slice(1);
     }
 
     const aiTurnState: GameSession = {
-      ...s,
-      board: resetBoard,
+      ...stateWithRevivals,
       currentTurn: 'ai',
       turnCount: s.turnCount + 1,
-      player: { ...s.player, hasSummonedThisTurn: false, hasMovedThisTurn: false },
-      ai: { ...s.ai, deck: aiDeck, hand: aiHand, hasSummonedThisTurn: false, hasMovedThisTurn: false },
-      log: [...s.log, `─── ターン${s.turnCount + 1} (AIのターン) ───`],
+      player: { ...stateWithRevivals.player, hasSummonedThisTurn: false, hasMovedThisTurn: false },
+      ai: { ...stateWithRevivals.ai, deck: aiDeck, hand: aiHand, hasSummonedThisTurn: false, hasMovedThisTurn: false },
+      log: [...stateWithRevivals.log, `─── ターン${s.turnCount + 1} (AIのターン) ───`],
     };
+
+    // AIターン開始スキル発火
+    let aiTurnWithStart = triggerOnTurnStart(aiTurnState, 'ai');
 
     setMode({ type: 'idle' });
     setHighlightedCells([]);
-    updateSession(aiTurnState);
+    updateSession(aiTurnWithStart);
 
     // AI実行
-    const afterAI = await executeAITurn(aiTurnState, updateSession);
+    const afterAI = await executeAITurn(aiTurnWithStart, updateSession);
+
+    // AIターン終了スキル発火
+    let stateAfterAITurnEnd = triggerOnTurnEnd(afterAI, 'ai');
+
+    // 全ユニットリセット
+    const nextBoard = stateAfterAITurnEnd.board.map((row) =>
+      row.map((cell) => cell ? clearTurnStatusEffects(cell) : null)
+    );
+
+    // 復活処理（AIターン後）
+    let stateWithAIRevivals = { ...stateAfterAITurnEnd, board: nextBoard };
+    const aiRevivals = (stateAfterAITurnEnd as GameSessionWithRevival).pendingRevivals ?? [];
+    for (const revival of aiRevivals) {
+      if (!stateWithAIRevivals.board[revival.position.row][revival.position.col]) {
+        const revUnit = createUnit(revival.card, revival.owner, revival.position);
+        stateWithAIRevivals = { ...stateWithAIRevivals, board: placeUnit(stateWithAIRevivals.board, revUnit, revival.position) };
+        stateWithAIRevivals = { ...stateWithAIRevivals, log: [...stateWithAIRevivals.log, `${revival.card.name}：復活！`] };
+      }
+    }
+    (stateWithAIRevivals as GameSessionWithRevival).pendingRevivals = [];
 
     // プレイヤードロー
-    let playerDeck = [...afterAI.player.deck];
-    let playerHand = [...afterAI.player.hand];
+    let playerDeck = [...stateWithAIRevivals.player.deck];
+    let playerHand = [...stateWithAIRevivals.player.hand];
     if (playerDeck.length > 0) {
       playerHand = [...playerHand, playerDeck[0]];
       playerDeck = playerDeck.slice(1);
     }
 
-    // 全ユニットのhasActedThisTurnリセット
-    const nextBoard = afterAI.board.map((row) =>
-      row.map((cell) => (cell ? { ...cell, hasActedThisTurn: false, hasSummonedThisTurn: false } : null))
-    );
+    // プレイヤーターン開始スキル発火
+    const playerTurnBase: GameSession = {
+      ...stateWithAIRevivals,
+      currentTurn: 'player' as const,
+      player: { ...stateWithAIRevivals.player, deck: playerDeck, hand: playerHand, hasSummonedThisTurn: false, hasMovedThisTurn: false },
+      log: [...stateWithAIRevivals.log, `─── ターン${afterAI.turnCount} (プレイヤーのターン) ───`],
+    };
 
-    // 勝敗チェック
-    const winner = checkWinner(afterAI.player.baseHp, afterAI.ai.baseHp);
-    const finished = winner !== null;
-    const finishedAt = finished ? Date.now() : undefined;
+    let finalState = triggerOnTurnStart(playerTurnBase, 'player');
+    finalState = checkWinner(finalState);
+    const finished = !!finalState.winner;
 
     const finalSession: GameSession = {
-      ...afterAI,
-      board: nextBoard,
-      currentTurn: 'player' as const,
-      player: { ...afterAI.player, deck: playerDeck, hand: playerHand, hasSummonedThisTurn: false, hasMovedThisTurn: false },
-      phase: finished ? ('finished' as const) : ('main' as const),
-      winner: winner ?? undefined,
-      finishedAt,
-      log: [...afterAI.log, `─── ターン${afterAI.turnCount} (プレイヤーのターン) ───`],
+      ...finalState,
+      phase: finished ? 'finished' : 'main',
+      finishedAt: finished ? Date.now() : undefined,
     };
 
     updateSession(finalSession);
@@ -420,12 +431,3 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     </GameContext.Provider>
   );
 };
-
-// ─── 勝敗チェック ─────────────────────────────────────────────────────────
-
-function checkWinner(playerBaseHp: number, aiBaseHp: number): 'player' | 'ai' | 'draw' | null {
-  if (playerBaseHp <= 0 && aiBaseHp <= 0) return 'draw';
-  if (playerBaseHp <= 0) return 'ai';
-  if (aiBaseHp <= 0) return 'player';
-  return null;
-}

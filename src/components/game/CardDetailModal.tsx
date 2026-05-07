@@ -2,28 +2,33 @@
 
 import { Unit } from '@/lib/types/game';
 import RangeDiagram from './RangeDiagram';
+import { getSkill } from '@/lib/game/skills/index';
 
-const CARD_EMOJI: Record<string, string> = {
-  militia: '🪖', light_infantry: '⚔️', assault_soldier: '🗡️',
-  scout: '🏃', spear_soldier: '🔱', heavy_infantry: '🛡️',
-  combat_soldier: '⚔️', archer: '🏹', guard: '🛡️',
-  healer: '✨', cavalry: '🐴', cannon: '💣', defender: '🏰',
-};
+function SkillDisplay({ skillId, uses }: { skillId: string; uses: number | 'infinite' }) {
+  const skillDef = getSkill(skillId);
+  const name = skillDef?.displayName ?? skillId;
+  const desc = skillDef?.description ?? '';
+  return (
+    <div className="bg-[#0f1a2e] rounded-xl px-3 py-2 space-y-1">
+      <div className="flex items-center gap-2">
+        <span className="text-purple-400 text-xs font-bold">★ {name}</span>
+        <span className="text-[10px] text-gray-500 ml-auto">
+          {uses === 'infinite' ? '∞ 無限' : `残${uses}回`}
+        </span>
+      </div>
+      {desc && <p className="text-[11px] text-gray-400 leading-relaxed">{desc}</p>}
+    </div>
+  );
+}
 
-const CARD_GRADIENT: Record<string, string> = {
-  militia: '#4a3510,#7c5a1e',
-  light_infantry: '#1a2f5f,#2563a0',
-  assault_soldier: '#5a1a1a,#9b2525',
-  scout: '#1a3a1a,#2d7a30',
-  spear_soldier: '#4a3a10,#8a6a20',
-  heavy_infantry: '#2a2a2a,#5a5a5a',
-  combat_soldier: '#3a1f0a,#8b4513',
-  archer: '#0f3a2a,#1a6a4a',
-  guard: '#0a2a3a,#1a5a7a',
-  healer: '#3a1a3a,#7a3a7a',
-  cavalry: '#3a2a0a,#7a5a0a',
-  cannon: '#1a1a2a,#3a3a5a',
-  defender: '#1a1a4a,#2a2a8a',
+// 属性グラデーション
+const ATTR_GRADIENT: Record<string, [string, string]> = {
+  sei:  ['#2a2010', '#5a4a1a'],  // 金・生成り
+  mei:  ['#1a0a2e', '#3a1a3a'],  // 深紫黒
+  shin: ['#0a2a10', '#1a4a1a'],  // 深緑
+  en:   ['#2a0a0a', '#5a1a1a'],  // 深紅
+  sou:  ['#0a1a3a', '#1a3a6a'],  // 深青
+  kou:  ['#1a1a2a', '#2a2a4a'],  // 鉄黒
 };
 
 const FLAVOR: Record<string, string> = {
@@ -50,9 +55,8 @@ interface Props {
 export default function CardDetailModal({ unit, onClose }: Props) {
   const { card } = unit;
   const isPlayer = unit.owner === 'player';
-  const atk = card.atk + unit.buffs.atkBonus;
-  const emoji = CARD_EMOJI[card.id] ?? '⚔️';
-  const [gradFrom, gradTo] = (CARD_GRADIENT[card.id] ?? '#1a1a2e,#2a2a4e').split(',');
+  const atk = card.atk + unit.buffs.atkBonus + unit.buffs.auraAtk;
+  const [gradFrom, gradTo] = ATTR_GRADIENT[card.attribute ?? ''] ?? ['#1a1a2e', '#2a2a4e'];
   const flavor = FLAVOR[card.id] ?? '';
   const borderColor = isPlayer ? '#3b82f6' : '#ef4444';
   const hpPct = unit.maxHp > 0 ? (unit.currentHp / unit.maxHp) * 100 : 0;
@@ -83,18 +87,14 @@ export default function CardDetailModal({ unit, onClose }: Props) {
             }}
           />
 
-          {/* キャラ画像（存在する場合） */}
+          {/* キャラクター画像 */}
           <img
-            src={`/images/cards/${card.id}.png`}
+            src={`/images/chars/${card.id}.png`}
             alt={card.name}
-            className="absolute inset-0 w-full h-full object-cover object-top"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: 'center 15%' }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
-
-          {/* フォールバック絵文字（画像がない場合のみ見える） */}
-          <span className="text-[72px] drop-shadow-2xl relative z-10 select-none leading-none">
-            {emoji}
-          </span>
 
           {/* コストバッジ */}
           <div
@@ -142,15 +142,7 @@ export default function CardDetailModal({ unit, onClose }: Props) {
 
           {/* スキル */}
           {card.skill ? (
-            <div className="bg-[#0f1a2e] rounded-xl px-3 py-2 space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-purple-400 text-xs font-bold">★ {card.skill.name}</span>
-                <span className="text-[10px] text-gray-500 ml-auto">
-                  {unit.skillUsesRemaining === 'infinite' ? '∞ 無限' : `残${unit.skillUsesRemaining}回`}
-                </span>
-              </div>
-              <p className="text-[11px] text-gray-400 leading-relaxed">{card.skill.description}</p>
-            </div>
+            <SkillDisplay skillId={card.skill.id} uses={unit.skillUsesRemaining} />
           ) : (
             <p className="text-[11px] text-gray-600 text-center py-1">スキルなし</p>
           )}

@@ -5,14 +5,18 @@ import { useLongPress } from '@/hooks/useLongPress';
 import { getCardRarity } from '@/lib/data/cards';
 import { RARITY_COLORS } from '@/lib/types/meta';
 
-const CARD_EMOJI: Record<string, string> = {
-  militia: '🪖', light_infantry: '⚔️', assault_soldier: '🗡️', scout: '🏃',
-  spear_soldier: '🔱', heavy_infantry: '🛡️', combat_soldier: '⚔️',
-  archer: '🏹', guard: '🛡️', healer: '✨', cavalry: '🐎', cannon: '💣', defender: '🏰',
-};
-
 const RARITY_CSS: Record<string, string> = {
   C: 'var(--rarity-c)', R: 'var(--rarity-r)', SR: 'var(--rarity-sr)', SSR: 'var(--rarity-ssr)',
+};
+
+// 属性ごとのカラーオーバーレイ
+const ATTR_TINT: Record<string, string> = {
+  sei:  'rgba(212,175,55,0.25)',
+  mei:  'rgba(74,26,74,0.35)',
+  shin: 'rgba(58,122,58,0.30)',
+  en:   'rgba(138,32,32,0.35)',
+  sou:  'rgba(42,90,138,0.30)',
+  kou:  'rgba(46,230,255,0.20)',
 };
 
 interface Props {
@@ -25,9 +29,9 @@ interface Props {
 }
 
 export default function CardInHand({ card, index, isSelected, disabled, onClick, onLongPress }: Props) {
-  const emoji = CARD_EMOJI[card.id] ?? '⚔️';
   const rarity = getCardRarity(card.id);
   const rarityColor = RARITY_CSS[rarity] ?? 'var(--rarity-c)';
+  const tint = ATTR_TINT[card.attribute ?? ''] ?? 'rgba(0,0,0,0.2)';
 
   const { start, cancel, didFire } = useLongPress(() => {
     if (onLongPress) onLongPress(card);
@@ -54,9 +58,33 @@ export default function CardInHand({ card, index, isSelected, disabled, onClick,
         {rarity}
       </div>
 
-      {/* アートエリア */}
-      <div className="dungeon-card__art" style={{ width: '100%' }}>
-        <span style={{ fontSize: 26 }}>{emoji}</span>
+      {/* アートエリア — キャラクター画像 */}
+      <div className="dungeon-card__art" style={{ width: '100%', position: 'relative', overflow: 'hidden' }}>
+        {/* 属性カラーオーバーレイ */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          background: tint,
+          pointerEvents: 'none',
+        }} />
+        {/* キャラクター画像 */}
+        <img
+          src={`/images/chars/${card.id}.png`}
+          alt={card.name}
+          draggable={false}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center 18%',
+            display: 'block',
+            userSelect: 'none',
+          }}
+          onError={(e) => {
+            const el = e.target as HTMLImageElement;
+            el.style.display = 'none';
+            // フォールバック: 背景色表示のみ
+          }}
+        />
       </div>
 
       {/* カード名 */}

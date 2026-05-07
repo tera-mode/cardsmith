@@ -37,7 +37,8 @@ function GameScreen() {
       skillUsesRemaining: card.skill ? card.skill.uses : 0,
       hasActedThisTurn: false,
       hasSummonedThisTurn: false,
-      buffs: { atkBonus: 0 },
+      buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
+      statusEffects: { frozen: false, paralyzed: false, silenced: false },
     });
   };
 

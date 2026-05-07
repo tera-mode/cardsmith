@@ -13,32 +13,16 @@ export type AttackRange =
   | { type: 'aoe'; pattern: DirectionVector[] }
   | { type: 'none' };
 
-export type SkillEffectType =
-  | 'penetrate'
-  | 'big_penetrate'
-  | 'counter'
-  | 'reduce'
-  | 'self_destruct'
-  | 'heal'
-  | 'buff'
-  | 'teleport'
-  | 'aoe_attack'
-  | 'paralyze'
-  | 'invincible';
-
+// スキルはIDと使用回数のみ保持。効果はレジストリで解決する。
 export interface Skill {
   id: string;
-  name: string;
-  description: string;
-  effectType: SkillEffectType;
-  effectValue?: number;
   uses: number | 'infinite';
-  range?: AttackRange;
 }
 
 export interface Card {
   id: string;
   name: string;
+  attribute?: 'sei' | 'mei' | 'shin' | 'en' | 'sou' | 'kou';
   cost: number;
   movement: MovementPattern;
   attackRange: AttackRange;
@@ -54,6 +38,18 @@ export interface Position {
   col: number;
 }
 
+export interface UnitBuffs {
+  atkBonus: number;    // 永続バフ (buff スキル、怒り、凱旋など)
+  auraAtk: number;     // オーラ由来の ATK ボーナス (戦旗など、毎ターン再計算)
+  auraMaxHp: number;   // オーラ由来の maxHP ボーナス (聖なる加護など、毎ターン再計算)
+}
+
+export interface StatusEffects {
+  frozen: boolean;     // 凍結：次ターン行動不可
+  paralyzed: boolean;  // 麻痺：次ターン行動不可
+  silenced: boolean;   // 沈黙：スキル封印
+}
+
 export interface Unit {
   instanceId: string;
   cardId: string;
@@ -64,8 +60,11 @@ export interface Unit {
   maxHp: number;
   skillUsesRemaining: number | 'infinite';
   hasActedThisTurn: boolean;
-  hasSummonedThisTurn: boolean; // 召喚されたターン（召喚酔いなし。フラグとして記録のみ）
-  buffs: { atkBonus: number };
+  hasSummonedThisTurn: boolean;
+  buffs: UnitBuffs;
+  statusEffects: StatusEffects;
+  isToken?: boolean;           // トークンユニット（残骸・召集など）
+  pendingRevival?: boolean;    // 復活スケジュール済み
 }
 
 export type BoardState = (Unit | null)[][];
@@ -75,7 +74,7 @@ export interface PlayerState {
   deck: Card[];
   hand: Card[];
   hasSummonedThisTurn: boolean;
-  hasMovedThisTurn: boolean; // このターンにいずれかのユニットが移動済み
+  hasMovedThisTurn: boolean;
 }
 
 export type GamePhase = 'draw' | 'main' | 'end_turn' | 'finished';
@@ -93,19 +92,20 @@ export interface GameSession {
   ai: PlayerState;
   winner?: 'player' | 'ai' | 'draw';
   log: string[];
+  // スキルエンジン用
+  eventDepth?: number;
+  eventCount?: number;
 }
 
 // ─── UI操作用の型 ─────────────────────────────────────────────────────────
 
-// unit_selected: ユニットタップ → アクション選択メニュー（ボードハイライトなし）
-// unit_moving:   「移動する」選択 → 移動先ハイライト表示中
-// unit_post_move: 移動完了 → 攻撃/スキル/行動終了メニュー
 export type InteractionMode =
   | { type: 'idle' }
   | { type: 'card_selected'; cardIndex: number }
   | { type: 'unit_selected'; unit: Unit }
   | { type: 'unit_moving'; unit: Unit }
-  | { type: 'unit_post_move'; unit: Unit };
+  | { type: 'unit_post_move'; unit: Unit }
+  | { type: 'skill_targeting'; unit: Unit; skillId: string };
 
 export type AttackTarget =
   | { type: 'unit'; unit: Unit }
