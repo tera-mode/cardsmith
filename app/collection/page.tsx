@@ -7,7 +7,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
 import RarityBadge from '@/components/ui/RarityBadge';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
-import CollectionCardModal from '@/components/ui/CollectionCardModal';
+import CardModal from '@/components/ui/CardModal';
 import { CARDS_WITH_RARITY } from '@/lib/data/cards';
 import { PRESET_CARD_MATERIALS, getMaterial } from '@/lib/data/materials';
 import { RARITY_COLORS, OwnedCard, Rarity } from '@/lib/types/meta';
@@ -160,7 +160,7 @@ export default function CollectionPage() {
 
       {/* カード詳細モーダル */}
       {detailCard && (
-        <CollectionCardModal
+        <CardModal
           card={detailCard}
           count={detailCount}
           onClose={() => setDetailCard(null)}

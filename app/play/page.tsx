@@ -14,7 +14,7 @@ import TurnStepBar from '@/components/game/TurnStepBar';
 import ActionMenu, { SkipMoveButton } from '@/components/game/ActionMenu';
 import HintPanel from '@/components/game/HintPanel';
 import GameLog from '@/components/game/GameLog';
-import CardDetailModal from '@/components/game/CardDetailModal';
+import CardModal from '@/components/ui/CardModal';
 
 function GameScreen() {
   const { user, loading } = useAuth();
@@ -173,7 +173,7 @@ function GameScreen() {
 
       {/* カード詳細モーダル（長押し） */}
       {detailUnit && (
-        <CardDetailModal unit={detailUnit} onClose={() => setDetailUnit(null)} />
+        <CardModal card={detailUnit.card} unit={detailUnit} onClose={() => setDetailUnit(null)} />
       )}
     </div>
   );
