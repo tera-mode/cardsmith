@@ -55,10 +55,10 @@ function GameScreen() {
 
   useEffect(() => {
     if (!user || session) return;
-    // q0_3: 系統選択まではゲームを開始しない
-    if (isQ03 && !selectedArchetype) return;
-    initGame(user.uid, questId, selectedArchetype ?? undefined);
-  }, [user, session, initGame, isQ03, selectedArchetype]);
+    // q0_3: 系統選択モーダルの onSelect で明示的に initGame を呼ぶ
+    if (isQ03) return;
+    initGame(user.uid, questId, undefined);
+  }, [user, session, initGame, isQ03, questId]);
 
   useEffect(() => {
     if (session?.phase === 'finished') {
@@ -74,10 +74,15 @@ function GameScreen() {
     }
   }, [session?.phase, session?.winner, session?.turnCount, session?.player.baseHp, session?.ai.baseHp, router]);
 
-  // q0_3: 系統選択モーダル
+  // q0_3: 系統選択モーダル（選択直後に initGame を呼んで確実に該当流派デッキを反映する）
   if (isQ03 && !selectedArchetype) {
     return (
-      <ArchetypeSelectModal onSelect={arch => setSelectedArchetype(arch)} />
+      <ArchetypeSelectModal
+        onSelect={arch => {
+          setSelectedArchetype(arch);
+          if (user) initGame(user.uid, questId, arch);
+        }}
+      />
     );
   }
 

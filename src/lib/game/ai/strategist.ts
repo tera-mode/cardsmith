@@ -116,6 +116,7 @@ export function bestUnitAction1Ply(
   skillBonus = 0
 ): UnitActionResult {
   const moveCandidates: (Position | null)[] = [null, ...getLegalMoves(unit, state.board)];
+  const canAttack = !state.ai.hasAttackedThisTurn;
 
   let best: UnitActionResult = { movePos: null, attack: null };
   let bestScore = -Infinity;
@@ -138,14 +139,16 @@ export function bestUnitAction1Ply(
       best = { movePos, attack: null };
     }
 
-    // 攻撃候補を評価
-    const attacks = getLegalAttacks(u, s.board);
-    for (const atk of attacks) {
-      const afterAtk = simulateAttack(s, u, atk);
-      const score = evaluateBoard(afterAtk, 'ai', weights);
-      if (score > bestScore) {
-        bestScore = score;
-        best = { movePos, attack: atk };
+    // 攻撃候補を評価（このターンに既に攻撃済みならスキップ）
+    if (canAttack) {
+      const attacks = getLegalAttacks(u, s.board);
+      for (const atk of attacks) {
+        const afterAtk = simulateAttack(s, u, atk);
+        const score = evaluateBoard(afterAtk, 'ai', weights);
+        if (score > bestScore) {
+          bestScore = score;
+          best = { movePos, attack: atk };
+        }
       }
     }
 
@@ -279,6 +282,7 @@ export function applyUnitAction(
 
   if (action.attack) {
     s = simulateAttack(s, u, action.attack);
+    s = { ...s, ai: { ...s.ai, hasAttackedThisTurn: true } };
     const freshU = findUnit(s, u.instanceId);
     if (freshU) u = freshU;
   }

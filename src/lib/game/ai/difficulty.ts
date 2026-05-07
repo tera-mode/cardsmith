@@ -70,16 +70,20 @@ async function executeTutorial(
     const fresh2 = findUnit(s, unit.instanceId);
     if (!fresh2) continue;
 
-    const attacks = getLegalAttacks(fresh2, s.board);
-    if (attacks.length > 0) {
-      const target = attacks[0];
-      if (target.type === 'base') {
-        const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(s, fresh2, target);
-        s = checkWinner({ ...s, board, player: { ...s.player, baseHp: playerBaseHp }, ai: { ...s.ai, baseHp: aiBaseHp }, log: [...s.log, ...log] });
-      } else if (target.type === 'unit') {
-        const atk = getEffectiveAtk(fresh2);
-        s = applyDamage(s, { source: fresh2, target: target.unit, amount: atk });
-        s = checkWinner(s);
+    // 攻撃は1ターン1回まで（プレイヤー側と同じルール）
+    if (!s.ai.hasAttackedThisTurn) {
+      const attacks = getLegalAttacks(fresh2, s.board);
+      if (attacks.length > 0) {
+        const target = attacks[0];
+        if (target.type === 'base') {
+          const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(s, fresh2, target);
+          s = checkWinner({ ...s, board, player: { ...s.player, baseHp: playerBaseHp }, ai: { ...s.ai, baseHp: aiBaseHp }, log: [...s.log, ...log] });
+        } else if (target.type === 'unit') {
+          const atk = getEffectiveAtk(fresh2);
+          s = applyDamage(s, { source: fresh2, target: target.unit, amount: atk });
+          s = checkWinner(s);
+        }
+        s = { ...s, ai: { ...s.ai, hasAttackedThisTurn: true } };
       }
     }
 
@@ -158,7 +162,9 @@ async function executeEasy(
         tempS = { ...tempS, board: placeUnit(cleared, tempU, movePos) };
       }
 
-      const attacks = getLegalAttacks(tempU, tempS.board);
+      // 攻撃は1ターン1回まで
+      const canAttack = !s.ai.hasAttackedThisTurn;
+      const attacks = canAttack ? getLegalAttacks(tempU, tempS.board) : [];
       const attack = attacks.length > 0 && Math.random() < 0.7 ? pickRandom(attacks) : null;
       action = { movePos, attack };
     } else {
