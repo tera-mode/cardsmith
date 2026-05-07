@@ -18,7 +18,10 @@ export default function StoryPage() {
   const { user, loading: authLoading } = useAuth();
   const { questProgress, loading } = useProfile();
   const router = useRouter();
-  const [chapter, setChapter] = useState(1);
+  const initialChapter = typeof window !== 'undefined'
+    ? parseInt(new URLSearchParams(window.location.search).get('chapter') ?? '0') || 0
+    : 0;
+  const [chapter, setChapter] = useState(initialChapter);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
