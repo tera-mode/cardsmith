@@ -102,17 +102,17 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
         style={{
           flexShrink: 0,
           padding: '6px 12px',
-          background: 'linear-gradient(180deg, #6b4414 0%, #321f08 100%)',
-          border: '1px solid #c08840',
+          background: 'linear-gradient(180deg, rgba(40,28,12,0.95) 0%, rgba(20,14,6,0.95) 100%)',
+          border: '1px solid var(--theme-color, #c08840)',
           borderRadius: 6,
-          color: '#fde68a',
+          color: 'var(--theme-color, #fde68a)',
           fontFamily: 'var(--font-display)',
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: '0.04em',
           cursor: 'pointer',
           whiteSpace: 'nowrap',
-          boxShadow: '0 0 10px rgba(192,136,64,0.35)',
+          boxShadow: '0 0 10px var(--theme-glow, rgba(192,136,64,0.3))',
           minHeight: 36,
         }}
       >

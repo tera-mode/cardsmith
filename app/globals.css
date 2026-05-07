@@ -49,6 +49,18 @@
 }
 
 /* ============================================================
+   系統テーマ変数 (data-theme="sei" 等でボディに適用)
+   ============================================================ */
+:root { --theme-color: #d4af37; --theme-glow: rgba(212,175,55,0.35); --theme-dim: rgba(212,175,55,0.12); }
+
+[data-theme='sei']  { --theme-color: #d4af37; --theme-glow: rgba(212,175,55,0.4);  --theme-dim: rgba(212,175,55,0.12); }
+[data-theme='mei']  { --theme-color: #9333ea; --theme-glow: rgba(147,51,234,0.4);  --theme-dim: rgba(147,51,234,0.12); }
+[data-theme='shin'] { --theme-color: #22c55e; --theme-glow: rgba(34,197,94,0.4);   --theme-dim: rgba(34,197,94,0.12);  }
+[data-theme='en']   { --theme-color: #ef4444; --theme-glow: rgba(239,68,68,0.4);   --theme-dim: rgba(239,68,68,0.12);  }
+[data-theme='sou']  { --theme-color: #3b82f6; --theme-glow: rgba(59,130,246,0.4);  --theme-dim: rgba(59,130,246,0.12); }
+[data-theme='kou']  { --theme-color: #64748b; --theme-glow: rgba(100,116,139,0.4); --theme-dim: rgba(100,116,139,0.12);}
+
+/* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes flicker {
@@ -74,6 +86,11 @@
   0%   { transform: scale(1);    opacity: 1; }
   50%  { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1);    opacity: 1; }
+}
+@keyframes card-forge {
+  0%   { opacity: 0; transform: scale(0.6) rotateY(90deg); }
+  60%  { opacity: 1; transform: scale(1.08) rotateY(0deg); }
+  100% { opacity: 1; transform: scale(1) rotateY(0deg); }
 }
 
 /* ============================================================

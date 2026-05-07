@@ -15,6 +15,7 @@ import GameLog from '@/components/game/GameLog';
 import CardModal from '@/components/ui/CardModal';
 import ArchetypeSelectModal from '@/components/game/ArchetypeSelectModal';
 import type { Archetype } from '@/lib/game/decks';
+import { getArchetypeFromQuestId, getBattleBgUrl } from '@/lib/utils/archetype';
 
 function GameScreen() {
   const { user, loading } = useAuth();
@@ -28,6 +29,8 @@ function GameScreen() {
 
   const questId = searchParams.get('questId') ?? undefined;
   const isQ03 = questId === 'q0_3';
+  const questArchetype = getArchetypeFromQuestId(questId) ?? (selectedArchetype ?? undefined);
+  const bgUrl = getBattleBgUrl(questArchetype ?? null);
 
   const openCardPreview = (card: Card) => {
     setDetailUnit({
@@ -90,11 +93,18 @@ function GameScreen() {
   const isFinished = session.phase === 'finished';
 
   return (
-    <div className="game-layout stone-bg">
-      {/* ダンジョン ambient overlay */}
+    <div className="game-layout stone-bg" data-theme={questArchetype ?? undefined}>
+      {/* バトル背景画像（系統別。存在しない場合は非表示） */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: 'radial-gradient(ellipse at 20% 10%, rgba(255,180,80,0.07), transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
+        backgroundImage: `url('${bgUrl}'), url('/images/backgrounds/board.jpg')`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        opacity: 0.18,
+      }} />
+      {/* ambient overlay */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: 'radial-gradient(ellipse at 20% 10%, var(--theme-glow, rgba(255,180,80,0.07)), transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
       }} />
 
       {/* 松明装飾 */}

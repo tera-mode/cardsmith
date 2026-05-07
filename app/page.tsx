@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useMemo } from 'react';
 import { QUEST_MAP } from '@/lib/data/quests';
+import { getArchetypeFromQuestId } from '@/lib/utils/archetype';
 
 const MENU_ITEMS = [
   { key: 'regions',    label: '六領域',     icon: '🗺️',  href: '/regions',    accent: '#d4af37' },
@@ -110,8 +111,9 @@ export default function HomePage() {
   }
 
   // ─── ログイン済み：ホームメニュー ─────────────────────────────────────────────
+  const homeTheme = profile?.starterArchetype ?? undefined;
   return (
-    <div className="game-layout stone-bg flex-col" style={{ position: 'relative' }}>
+    <div className="game-layout stone-bg flex-col" style={{ position: 'relative' }} data-theme={homeTheme}>
       {/* プレイヤーバー */}
       <div style={{
         flexShrink: 0,
