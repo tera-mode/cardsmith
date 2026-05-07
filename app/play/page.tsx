@@ -15,15 +15,21 @@ import ActionMenu, { SkipMoveButton } from '@/components/game/ActionMenu';
 import HintPanel from '@/components/game/HintPanel';
 import GameLog from '@/components/game/GameLog';
 import CardModal from '@/components/ui/CardModal';
+import ArchetypeSelectModal from '@/components/game/ArchetypeSelectModal';
+import type { Archetype } from '@/lib/game/decks';
 
 function GameScreen() {
   const { user, loading } = useAuth();
   const { session, mode, highlightedCells, initGame, endTurn } = useGame();
   const router = useRouter();
   const [detailUnit, setDetailUnit] = useState<Unit | null>(null);
+  const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null);
   const searchParams = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search)
     : new URLSearchParams();
+
+  const questId = searchParams.get('questId') ?? undefined;
+  const isQ03 = questId === 'q0_3';
 
   const openCardPreview = (card: Card) => {
     setDetailUnit({
@@ -47,11 +53,11 @@ function GameScreen() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user && !session) {
-      const questId = searchParams.get('questId') ?? undefined;
-      initGame(user.uid, questId);
-    }
-  }, [user, session, initGame]);
+    if (!user || session) return;
+    // q0_3: 系統選択まではゲームを開始しない
+    if (isQ03 && !selectedArchetype) return;
+    initGame(user.uid, questId, selectedArchetype ?? undefined);
+  }, [user, session, initGame, isQ03, selectedArchetype]);
 
   useEffect(() => {
     if (session?.phase === 'finished') {
@@ -60,11 +66,19 @@ function GameScreen() {
         turns: String(session.turnCount),
         playerHp: String(session.player.baseHp),
         aiHp: String(session.ai.baseHp),
-        ...(searchParams.get('questId') ? { questId: searchParams.get('questId')! } : {}),
+        ...(questId ? { questId } : {}),
+        ...(isQ03 && selectedArchetype ? { archetype: selectedArchetype } : {}),
       });
       setTimeout(() => router.push(`/result?${params}`), 1500);
     }
   }, [session?.phase, session?.winner, session?.turnCount, session?.player.baseHp, session?.ai.baseHp, router]);
+
+  // q0_3: 系統選択モーダル
+  if (isQ03 && !selectedArchetype) {
+    return (
+      <ArchetypeSelectModal onSelect={arch => setSelectedArchetype(arch)} />
+    );
+  }
 
   if (loading || !session) {
     return (

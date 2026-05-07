@@ -13,7 +13,7 @@ import {
   BOARD_ROWS, BOARD_COLS,
 } from '@/lib/game/rules';
 import {
-  buildStandardDeck, buildEnemyDeck, shuffleDeck, INITIAL_HAND_SIZE, BASE_HP,
+  buildStandardDeck, buildStarterDeck, buildEnemyDeck, shuffleDeck, INITIAL_HAND_SIZE, BASE_HP,
   Archetype,
 } from '@/lib/game/decks';
 import {
@@ -68,7 +68,7 @@ interface GameContextType {
   session: GameSession | null;
   mode: InteractionMode;
   highlightedCells: Position[];
-  initGame: (userId: string, questId?: string) => void;
+  initGame: (userId: string, questId?: string, playerArchetype?: Archetype) => void;
   selectCard: (index: number) => void;
   summonToCell: (pos: Position) => void;
   selectUnit: (unit: Unit) => void;
@@ -132,11 +132,13 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ─── ゲーム初期化 ───────────────────────────────────────────────────────
 
-  const initGame = useCallback((userId: string, questId?: string) => {
+  const initGame = useCallback((userId: string, questId?: string, playerArchetype?: Archetype) => {
     const { difficulty: qDiff, enemyDeck, enemyBaseHp } = resolveEnemyConfig(questId);
     setDifficulty(qDiff);
 
-    const playerDeck = shuffleDeck(buildStandardDeck());
+    const playerDeck = playerArchetype
+      ? shuffleDeck(buildStarterDeck(playerArchetype))
+      : shuffleDeck(buildStandardDeck());
 
     const newSession: GameSession = {
       sessionId: uuidv4(),

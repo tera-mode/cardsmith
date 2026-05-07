@@ -7,18 +7,21 @@ import RewardModal from '@/components/ui/RewardModal';
 import { applyReward } from '@/lib/server-logic/reward';
 import { BATTLE_REWARDS } from '@/lib/data/economy';
 import { QUEST_MAP } from '@/lib/data/quests';
-import { Reward } from '@/lib/types/meta';
+import { Reward, Deck } from '@/lib/types/meta';
+import { buildStarterDeck } from '@/lib/game/decks';
+import type { Archetype } from '@/lib/game/decks';
 
 function ResultContent() {
   const params = useSearchParams();
   const router = useRouter();
-  const { profile, ownedCards, ownedMaterials, updateProfile, updateCards, updateMaterials, markQuestCleared } = useProfile();
+  const { profile, ownedCards, ownedMaterials, decks, updateProfile, updateCards, updateMaterials, markQuestCleared, saveOrUpdateDeck } = useProfile();
 
   const winner = params.get('winner') as 'player' | 'ai' | 'draw' | null;
   const turns = params.get('turns');
   const playerHp = params.get('playerHp');
   const aiHp = params.get('aiHp');
   const questId = params.get('questId');
+  const archetypeParam = params.get('archetype') as Archetype | null;
 
   const [rewardApplied, setRewardApplied] = useState(false);
   const [showReward, setShowReward] = useState(false);
@@ -41,8 +44,37 @@ function ResultContent() {
       }
 
       const result = applyReward(profile, { ownedCards, ownedMaterials }, reward);
-      await updateProfile(result.profile);
-      await updateCards(result.inventory.ownedCards);
+      let finalProfile = result.profile;
+
+      // q0_3 クリア: 系統確定 + 初期デッキ構築
+      if (isWin && questId === 'q0_3' && archetypeParam) {
+        finalProfile = { ...finalProfile, starterArchetype: archetypeParam, schemaVersion: 2 };
+        const starterCards = buildStarterDeck(archetypeParam);
+        const now = Date.now();
+        // 手持ちカードに初期5種 × 2枚を追加
+        const updatedCards = [...result.inventory.ownedCards];
+        const cardCounts: Record<string, number> = {};
+        for (const c of starterCards) cardCounts[c.id] = (cardCounts[c.id] ?? 0) + 1;
+        for (const [cardId, count] of Object.entries(cardCounts)) {
+          const existing = updatedCards.find(c => c.cardId === cardId && !c.isCrafted);
+          if (existing) existing.count = Math.max(existing.count, count);
+          else updatedCards.push({ cardId, count, isCrafted: false, acquiredAt: now });
+        }
+        await updateCards(updatedCards);
+        // 初期デッキを保存
+        const starterDeck: Deck = {
+          deckId: 'starter',
+          name: `${archetypeParam}の流派デッキ`,
+          entries: Object.entries(cardCounts).map(([cardId, count]) => ({ cardId, count, isCrafted: false })),
+          createdAt: now,
+          updatedAt: now,
+        };
+        await saveOrUpdateDeck(starterDeck);
+      } else {
+        await updateCards(result.inventory.ownedCards);
+      }
+
+      await updateProfile(finalProfile);
       await updateMaterials(result.inventory.ownedMaterials);
 
       if (isWin && questId) await markQuestCleared(questId);
