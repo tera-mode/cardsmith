@@ -1,21 +1,18 @@
 import { CARDS as BASE_CARDS } from '@/lib/game/cards';
 import { Rarity } from '@/lib/types/meta';
 
-export const CARD_RARITIES: Record<string, Rarity> = {
-  militia: 'C',
-  light_infantry: 'C',
-  assault_soldier: 'C',
-  scout: 'C',
-  spear_soldier: 'C',
-  heavy_infantry: 'R',
-  combat_soldier: 'R',
-  archer: 'R',
-  guard: 'SR',
-  healer: 'SR',
-  cavalry: 'SR',
-  cannon: 'SR',
-  defender: 'SSR',
-};
+// コスト帯でレアリティを自動決定
+// 低 (4-6): C / 中 (7-13): R / 高 (14-21): SR / 極 (22+): SSR
+function rarityFromCost(cost: number): Rarity {
+  if (cost >= 22) return 'SSR';
+  if (cost >= 14) return 'SR';
+  if (cost >= 7)  return 'R';
+  return 'C';
+}
+
+export const CARD_RARITIES: Record<string, Rarity> = Object.fromEntries(
+  BASE_CARDS.map(card => [card.id, rarityFromCost(card.cost)])
+);
 
 export const CARDS_WITH_RARITY = BASE_CARDS.map(card => ({
   ...card,

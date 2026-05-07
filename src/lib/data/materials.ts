@@ -1,4 +1,6 @@
 import { Material } from '@/lib/types/meta';
+import { CARDS } from '@/lib/game/cards';
+import { Card } from '@/lib/types/game';
 
 export const MATERIALS: Material[] = [
   // ─── ステータス：HP ──────────────────────────────────────────────────────────
@@ -64,19 +66,62 @@ export function getMaterial(id: string): Material | undefined {
   return MATERIAL_MAP[id];
 }
 
+// ─── カードからマテリアルを自動生成 ──────────────────────────────────────────
+
+function moveMaterial(card: Card): string {
+  const m = card.movement;
+  if (m.type === 'jump') return 'move_jump_2';
+  if (m.type === 'step' && m.directions.length >= 4) return 'move_omni_1';
+  return 'move_forward_1';
+}
+
+function rangeMaterial(card: Card): string {
+  const r = card.attackRange;
+  if (r.type === 'none') return '';
+  if (r.type === 'ranged') return r.maxDistance >= 4 ? 'range_shoot_4' : 'range_shoot_2';
+  if (r.type === 'aoe')    return 'range_around_1';
+  if (r.type === 'step' && r.directions.length >= 4) return 'range_omni_1';
+  return 'range_melee_1';
+}
+
+function atkMaterials(atk: number): string[] {
+  if (atk <= 0) return [];
+  if (atk <= 1) return ['stat_atk_1'];
+  if (atk <= 2) return ['stat_atk_2'];
+  if (atk <= 4) return ['stat_atk_3'];
+  return ['stat_atk_3', 'stat_atk_2'];
+}
+
+function hpMaterials(hp: number): string[] {
+  if (hp <= 1) return ['stat_hp_1'];
+  if (hp <= 2) return ['stat_hp_2'];
+  if (hp <= 3) return ['stat_hp_3'];
+  if (hp <= 5) return ['stat_hp_3', 'stat_hp_2'];
+  return ['stat_hp_5', 'stat_hp_2'];
+}
+
+function skillMaterial(card: Card): string {
+  if (!card.skill) return '';
+  const id = card.skill.id;
+  if (id === 'penetrate')     return 'skill_pen_3';
+  if (id === 'big_penetrate') return 'skill_big_pen_1';
+  if (id === 'hangeki')       return 'skill_counter_inf';
+  if (id === 'buff')          return 'skill_buff_1';
+  if (id === 'heal')          return 'skill_heal_inf';
+  return '';
+}
+
+function cardToMaterials(card: Card): string[] {
+  return [
+    moveMaterial(card),
+    rangeMaterial(card),
+    ...atkMaterials(card.atk),
+    ...hpMaterials(card.hp),
+    skillMaterial(card),
+  ].filter(Boolean);
+}
+
 // preset カードの構成マテリアルマップ（抽出時に返すマテリアル）
-export const PRESET_CARD_MATERIALS: Record<string, string[]> = {
-  militia:         ['move_forward_1', 'range_melee_1', 'stat_atk_1', 'stat_hp_1'],
-  light_infantry:  ['move_forward_1', 'range_melee_1', 'stat_atk_1', 'stat_hp_2'],
-  assault_soldier: ['move_forward_1', 'range_melee_1', 'stat_atk_2', 'stat_hp_1'],
-  scout:           ['move_jump_2',    'range_melee_1', 'stat_atk_1', 'stat_hp_1'],
-  spear_soldier:   ['move_forward_1', 'range_melee_1', 'stat_atk_2', 'stat_hp_2'],
-  heavy_infantry:  ['move_forward_1', 'range_melee_1', 'stat_atk_1', 'stat_hp_3', 'stat_hp_2'],
-  combat_soldier:  ['move_forward_1', 'range_melee_1', 'stat_atk_3', 'stat_hp_3'],
-  archer:          ['move_forward_1', 'range_shoot_2', 'stat_atk_2', 'stat_hp_1', 'skill_pen_3'],
-  guard:           ['move_omni_1',    'range_omni_1',  'stat_atk_2', 'stat_hp_3'],
-  healer:          ['move_forward_1', 'range_melee_1', 'stat_atk_1', 'stat_hp_3', 'skill_heal_inf'],
-  cavalry:         ['move_jump_2',    'range_omni_1',  'stat_atk_3', 'stat_hp_3'],
-  cannon:          ['move_forward_1', 'range_shoot_4', 'stat_atk_3', 'stat_hp_3', 'skill_big_pen_1'],
-  defender:        ['move_omni_1',    'range_around_1','stat_atk_3', 'stat_hp_5', 'stat_hp_3', 'skill_counter_inf'],
-};
+export const PRESET_CARD_MATERIALS: Record<string, string[]> = Object.fromEntries(
+  CARDS.map(card => [card.id, cardToMaterials(card)])
+);
