@@ -10,17 +10,26 @@ interface Props {
 }
 
 function Step({ label, done, active }: { label: string; done: boolean; active: boolean }) {
-  const color = done ? '#22c55e' : active ? '#f8d878' : 'rgba(255,255,255,0.28)';
+  const color = done ? '#4ade80' : active ? '#fde047' : '#e2d5b0';
   const icon  = done ? '✓' : active ? '◆' : '◇';
+  const bg    = done
+    ? 'rgba(34,197,94,0.12)'
+    : active
+    ? 'rgba(253,224,71,0.14)'
+    : 'rgba(226,213,176,0.08)';
 
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 4,
-      fontFamily: 'var(--font-display)', fontSize: 11,
-      letterSpacing: '0.06em', fontWeight: 700,
+      fontFamily: 'var(--font-display)', fontSize: 12,
+      letterSpacing: '0.05em', fontWeight: 700,
       color,
-      transition: 'color 0.2s',
-      filter: active ? 'drop-shadow(0 0 4px rgba(248,216,120,0.6))' : 'none',
+      background: bg,
+      border: `1px solid ${done ? 'rgba(74,222,128,0.3)' : active ? 'rgba(253,224,71,0.4)' : 'rgba(226,213,176,0.2)'}`,
+      borderRadius: 5,
+      padding: '3px 8px',
+      transition: 'all 0.2s',
+      filter: active ? 'drop-shadow(0 0 5px rgba(253,224,71,0.5))' : 'none',
     }}>
       <span style={{ fontSize: 10 }}>{icon}</span>
       <span>{label}</span>
@@ -39,18 +48,17 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
   const activeMove   = mode.type === 'unit_moving';
   const activeAttack = mode.type === 'unit_selected' || mode.type === 'unit_post_move';
 
-  // 終了状態・AIターン中はシンプルな1行のみ
   if (!isPlayerTurn || isFinished) {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '6px 12px',
-        background: 'rgba(8,6,4,0.75)',
+        padding: '8px 12px',
+        background: 'rgba(8,6,4,0.8)',
         borderTop: '1px solid var(--border-rune)',
       }}>
         <span style={{
           fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700,
-          color: 'var(--text-dim)', letterSpacing: '0.06em',
+          color: 'var(--text-secondary)', letterSpacing: '0.06em',
         }}>
           {isFinished
             ? (session.winner === 'player' ? '🏆 勝利！' : session.winner === 'ai' ? '💀 敗北...' : '⚖ 引き分け')
@@ -63,42 +71,42 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
   return (
     <div style={{
       display: 'flex', alignItems: 'center',
-      padding: '5px 10px',
+      padding: '6px 10px',
       gap: 6,
-      background: 'rgba(8,6,4,0.75)',
+      background: 'rgba(8,6,4,0.8)',
       borderTop: '1px solid var(--border-rune)',
     }}>
       {/* ステップインジケーター */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flex: 1 }}>
         <Step label="召喚" done={summoned} active={activeSummon && !summoned} />
-        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>—</span>
+        <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9 }}>›</span>
         <Step label="移動" done={moved}    active={activeMove} />
-        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>—</span>
+        <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9 }}>›</span>
         <Step label="攻撃" done={attacked} active={activeAttack && !attacked} />
       </div>
 
-      {/* ターン終了ボタン（コンパクト） */}
+      {/* ターン終了ボタン */}
       <button
         data-testid="end-turn-button"
         onClick={onEndTurn}
         style={{
           flexShrink: 0,
-          padding: '6px 14px',
-          background: 'linear-gradient(180deg, #5a3a10 0%, #2a1a06 100%)',
-          border: '1px solid #a07030',
+          padding: '6px 12px',
+          background: 'linear-gradient(180deg, #6b4414 0%, #321f08 100%)',
+          border: '1px solid #c08840',
           borderRadius: 6,
-          color: '#f8d878',
+          color: '#fde68a',
           fontFamily: 'var(--font-display)',
           fontSize: 11,
           fontWeight: 700,
-          letterSpacing: '0.06em',
+          letterSpacing: '0.04em',
           cursor: 'pointer',
           whiteSpace: 'nowrap',
-          boxShadow: '0 0 8px rgba(160,112,48,0.3)',
+          boxShadow: '0 0 10px rgba(192,136,64,0.35)',
           minHeight: 36,
         }}
       >
-        ⚔ 終了
+        ターン終了
       </button>
     </div>
   );
