@@ -82,7 +82,7 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         getMaterialInventory(uid),
         getDecks(uid),
         getQuestProgress(uid),
-        listUserImages(uid),
+        listUserImages(uid).catch(() => [] as UserImage[]), // 失敗しても他のロードを止めない
       ]);
 
       // スキーマバージョンチェック — 古いデータは強制リセット
