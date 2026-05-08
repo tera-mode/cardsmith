@@ -3,28 +3,38 @@
 import { useProfile } from '@/contexts/ProfileContext';
 import { CARD_MAP } from '@/lib/game/cards';
 import { buildStandardDeck, buildStarterDeck } from '@/lib/game/decks';
+import { craftedToGameCard } from '@/lib/server-logic/forge';
 import type { Archetype } from '@/lib/game/decks';
 import type { Card } from '@/lib/types/game';
-import type { Deck } from '@/lib/types/meta';
+import type { Deck, OwnedCard } from '@/lib/types/meta';
 
 interface Props {
   starterArchetype?: Archetype;
   onSelect: (deck: Card[]) => void;
 }
 
-function deckToCards(deck: Deck): Card[] {
+function deckToCards(deck: Deck, ownedCards: OwnedCard[]): Card[] {
   const result: Card[] = [];
   for (const entry of deck.entries) {
-    const card = CARD_MAP[entry.cardId];
-    if (card) {
-      for (let i = 0; i < entry.count; i++) result.push(card);
+    if (entry.isCrafted) {
+      // 鍛造カード：ownedCards から craftedData を参照
+      const owned = ownedCards.find(c => c.cardId === entry.cardId && c.isCrafted);
+      if (owned?.craftedData) {
+        const gameCard = craftedToGameCard(owned.craftedData);
+        for (let i = 0; i < entry.count; i++) result.push(gameCard);
+      }
+    } else {
+      const card = CARD_MAP[entry.cardId];
+      if (card) {
+        for (let i = 0; i < entry.count; i++) result.push(card);
+      }
     }
   }
   return result;
 }
 
 export default function DeckSelectModal({ starterArchetype, onSelect }: Props) {
-  const { decks } = useProfile();
+  const { decks, ownedCards } = useProfile();
 
   // starterArchetype が指定されている場合はその系統のスターターデッキを使う
   const defaultCards = starterArchetype ? buildStarterDeck(starterArchetype) : buildStandardDeck();
@@ -84,7 +94,7 @@ export default function DeckSelectModal({ starterArchetype, onSelect }: Props) {
 
           {/* カスタムデッキ一覧 */}
           {decks.map(deck => {
-            const cards = deckToCards(deck);
+            const cards = deckToCards(deck, ownedCards);
             if (cards.length === 0) return null;
             return (
               <button

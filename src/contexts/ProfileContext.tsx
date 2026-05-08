@@ -95,10 +95,14 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         const resetProfile: PlayerProfile = {
           ...profileRest, ...INITIAL_PROFILE, updatedAt: now, schemaVersion: CURRENT_SCHEMA_VERSION,
         };
-        const resetCards: OwnedCard[] = (await import('@/lib/game/cards')).CARDS.map(card => ({
-          cardId: card.id, count: 1, isCrafted: false, acquiredAt: now,
-        }));
+        // スターターデッキのカードのみ所持（全カード一括ではなく）
         const { buildStandardDeck } = await import('@/lib/game/decks');
+        const _starterCards = buildStandardDeck();
+        const _starterCounts: Record<string, number> = {};
+        for (const card of _starterCards) _starterCounts[card.id] = (_starterCounts[card.id] ?? 0) + 1;
+        const resetCards: OwnedCard[] = Object.entries(_starterCounts).map(([cardId, count]) => ({
+          cardId, count, isCrafted: false, acquiredAt: now,
+        }));
         const standardCards = buildStandardDeck();
         const cardCounts: Record<string, number> = {};
         for (const card of standardCards) cardCounts[card.id] = (cardCounts[card.id] ?? 0) + 1;
@@ -242,17 +246,15 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       ...INITIAL_PROFILE,
       updatedAt: now,
     };
-    const resetCards: OwnedCard[] = CARDS.map(card => ({
-      cardId: card.id,
-      count: 1,
-      isCrafted: false,
-      acquiredAt: now,
-    }));
+    // スターターデッキのカードのみ所持（debugReset）
     const standardCards = buildStandardDeck();
     const cardCounts: Record<string, number> = {};
     for (const card of standardCards) {
       cardCounts[card.id] = (cardCounts[card.id] ?? 0) + 1;
     }
+    const resetCards: OwnedCard[] = Object.entries(cardCounts).map(([cardId, count]) => ({
+      cardId, count, isCrafted: false, acquiredAt: now,
+    }));
     const defaultDeck: Deck = {
       deckId: 'default',
       name: '標準デッキ',

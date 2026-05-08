@@ -10,47 +10,124 @@ import ConfirmSheet from '@/components/ui/ConfirmSheet';
 import CardModal from '@/components/ui/CardModal';
 import { CARDS_WITH_RARITY } from '@/lib/data/cards';
 import { PRESET_CARD_MATERIALS, getMaterial } from '@/lib/data/materials';
-import { RARITY_COLORS, OwnedCard, Rarity } from '@/lib/types/meta';
+import { RARITY_COLORS, OwnedCard, Rarity, CraftedCard } from '@/lib/types/meta';
 import { applyReward } from '@/lib/server-logic/reward';
+import { craftedToGameCard } from '@/lib/server-logic/forge';
 import { Card } from '@/lib/types/game';
+
+// ─── 統合カードエントリー型 ──────────────────────────────────────────────────
+
+type CollectionEntry = {
+  key: string;
+  type: 'preset' | 'crafted';
+  count: number;
+  acquiredAt: number;
+  // 表示用
+  name: string;
+  rarity: Rarity;
+  color: string;
+  imageId: string;        // preset: cardId / crafted: instanceId (for fallback)
+  imageUrl?: string;      // crafted 専用カスタム画像URL
+  iconKey?: string;       // crafted 専用絵文字フォールバック
+  atk: number;
+  hp: number;
+  cost: number;
+  // カード詳細用
+  gameCard: Card & { rarity: Rarity };
+  craftedData?: CraftedCard;
+  // 抽出素材
+  extractMaterialIds: string[];
+};
 
 export default function CollectionPage() {
   const { user, loading: authLoading } = useAuth();
   const { profile, ownedCards, ownedMaterials, loading, updateProfile, updateCards, updateMaterials } = useProfile();
   const router = useRouter();
 
-  const [extractTarget, setExtractTarget] = useState<string | null>(null);
+  const [extractTarget, setExtractTarget] = useState<CollectionEntry | null>(null);
   const [extracting, setExtracting] = useState(false);
-  const [detailCard, setDetailCard] = useState<(Card & { rarity: Rarity }) | null>(null);
-  const [detailCount, setDetailCount] = useState(0);
+  const [detailEntry, setDetailEntry] = useState<CollectionEntry | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
   }, [user, authLoading, router]);
 
-  const getOwned = (cardId: string) =>
-    ownedCards.find(c => c.cardId === cardId && !c.isCrafted);
+  // ─── カードエントリーを組み立て ────────────────────────────────────────────
 
-  const extractMaterialIds = extractTarget
-    ? (PRESET_CARD_MATERIALS[extractTarget] ?? [])
-    : [];
+  const presetEntries: CollectionEntry[] = CARDS_WITH_RARITY.map(card => {
+    const owned = ownedCards.find(c => c.cardId === card.id && !c.isCrafted);
+    const count = owned?.count ?? 0;
+    const matIds = PRESET_CARD_MATERIALS[card.id] ?? [];
+    return {
+      key: card.id,
+      type: 'preset',
+      count,
+      acquiredAt: owned?.acquiredAt ?? 0,
+      name: card.name,
+      rarity: card.rarity,
+      color: RARITY_COLORS[card.rarity],
+      imageId: card.id,
+      atk: card.atk,
+      hp: card.hp,
+      cost: card.cost,
+      gameCard: card,
+      extractMaterialIds: matIds,
+    };
+  });
+
+  const craftedEntries: CollectionEntry[] = ownedCards
+    .filter(c => c.isCrafted && c.craftedData)
+    .map(c => {
+      const cd = c.craftedData!;
+      const gameCard = { ...craftedToGameCard(cd), rarity: cd.rarity };
+      const matCounts: Record<string, number> = {};
+      for (const id of cd.craftedFrom) matCounts[id] = (matCounts[id] ?? 0) + 1;
+      return {
+        key: c.cardId,
+        type: 'crafted' as const,
+        count: c.count,
+        acquiredAt: c.acquiredAt,
+        name: cd.name,
+        rarity: cd.rarity,
+        color: RARITY_COLORS[cd.rarity],
+        imageId: cd.instanceId,
+        imageUrl: cd.imageUrl,
+        iconKey: cd.iconKey,
+        atk: cd.atk,
+        hp: cd.hp,
+        cost: cd.cost,
+        gameCard,
+        craftedData: cd,
+        extractMaterialIds: cd.craftedFrom,
+      };
+    });
+
+  // 所持→未所持の順。所持内は acquiredAt 降順（新着優先）
+  const sortedEntries: CollectionEntry[] = [
+    ...craftedEntries.sort((a, b) => b.acquiredAt - a.acquiredAt),
+    ...presetEntries.filter(e => e.count > 0).sort((a, b) => b.acquiredAt - a.acquiredAt),
+    ...presetEntries.filter(e => e.count === 0),
+  ];
+
+  // ─── 抽出処理 ─────────────────────────────────────────────────────────────
 
   const handleExtract = async () => {
     if (!extractTarget || !profile) return;
     setExtracting(true);
     try {
-      const owned = getOwned(extractTarget);
-      if (!owned || owned.count < 1) return;
+      const { key, type } = extractTarget;
 
       // カードを1枚減らす
-      const newCards = ownedCards.map(c =>
-        c.cardId === extractTarget && !c.isCrafted
-          ? { ...c, count: c.count - 1 }
-          : c
-      ).filter(c => c.count > 0);
+      const newCards = ownedCards
+        .map(c => c.cardId === key ? { ...c, count: c.count - 1 } : c)
+        .filter(c => c.count > 0);
 
-      // マテリアルを付与
-      const matReward = extractMaterialIds.map(id => ({ materialId: id, count: 1 }));
+      // 抽出マテリアル（crafted: craftedFrom から、preset: PRESET_CARD_MATERIALS）
+      const matIds = extractTarget.extractMaterialIds;
+      const matCounts: Record<string, number> = {};
+      for (const id of matIds) matCounts[id] = (matCounts[id] ?? 0) + 1;
+      const matReward = Object.entries(matCounts).map(([materialId, count]) => ({ materialId, count }));
+
       const { inventory } = applyReward(
         profile,
         { ownedCards: newCards, ownedMaterials },
@@ -65,6 +142,8 @@ export default function CollectionPage() {
     }
   };
 
+  // ─── ローディング ─────────────────────────────────────────────────────────
+
   if (loading || !profile) {
     return (
       <div className="game-layout stone-bg flex-col">
@@ -76,64 +155,88 @@ export default function CollectionPage() {
     );
   }
 
+  const ownedCount = ownedCards.filter(c => !c.isCrafted).reduce((s, c) => s + c.count, 0);
+  const craftedCount = ownedCards.filter(c => c.isCrafted).length;
+
+  // ─── 描画 ─────────────────────────────────────────────────────────────────
+
   return (
     <div className="game-layout stone-bg flex-col">
       <AppHeader backHref="/" title="コレクション" />
 
       <div className="flex-1 overflow-y-auto p-3 safe-scroll">
         <p className="text-xs text-muted mb-3">
-          所持 {ownedCards.reduce((s, c) => s + c.count, 0)} 枚 / 全{CARDS_WITH_RARITY.length} 種
+          所持 {ownedCount} 枚 / 全{CARDS_WITH_RARITY.length} 種
+          {craftedCount > 0 && <span className="ml-2 text-gold">＋鍛造 {craftedCount} 枚</span>}
         </p>
 
         <div className="grid grid-cols-2 gap-2">
-          {CARDS_WITH_RARITY.map(card => {
-            const owned = getOwned(card.id);
-            const count = owned?.count ?? 0;
-            const color = RARITY_COLORS[card.rarity];
+          {sortedEntries.map(entry => {
+            const { key, count, color, rarity, name, atk, hp, cost, type } = entry;
+            const isOwned = count > 0;
 
             return (
               <div
-                key={card.id}
-                data-testid={`collection-card-${card.id}`}
-                className={`panel--ornate p-3 border transition-opacity cursor-pointer active:scale-95 transition-transform ${count > 0 ? 'opacity-100' : 'opacity-40'}`}
-                style={{ borderColor: `${color}40` }}
-                onClick={() => { setDetailCard(card); setDetailCount(count); }}
+                key={key}
+                data-testid={`collection-card-${key}`}
+                className="panel--ornate p-3 border transition-opacity cursor-pointer active:scale-95"
+                style={{
+                  borderColor: isOwned ? `${color}40` : 'rgba(90,79,61,0.2)',
+                  opacity: isOwned ? 1 : 0.45,
+                }}
+                onClick={() => setDetailEntry(entry)}
               >
                 <div className="flex items-start justify-between mb-1">
-                  <RarityBadge rarity={card.rarity} size="xs" />
-                  <span className="text-xs text-muted">×{count}</span>
+                  <RarityBadge rarity={rarity} size="xs" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {type === 'crafted' && (
+                      <span style={{ fontSize: 9, color: 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>鍛</span>
+                    )}
+                    <span className="text-xs text-muted">×{count}</span>
+                  </div>
                 </div>
-                <div className="text-center py-1">
-                  {/* キャラクター画像サムネイル */}
-                  <div style={{
-                    width: '100%', height: 80,
-                    borderRadius: 6, overflow: 'hidden',
-                    marginBottom: 4, position: 'relative',
-                    background: 'rgba(0,0,0,0.3)',
-                  }}>
+
+                {/* カード画像エリア */}
+                <div style={{
+                  width: '100%', height: 80,
+                  borderRadius: 6, overflow: 'hidden',
+                  marginBottom: 4, position: 'relative',
+                  background: 'rgba(0,0,0,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {type === 'crafted' && entry.imageUrl ? (
                     <img
-                      src={`/images/chars/${card.id}.png`}
-                      alt={card.name}
+                      src={entry.imageUrl}
+                      alt={name}
                       style={{
                         width: '100%', height: '100%',
-                        objectFit: 'cover',
-                        objectPosition: 'center 20%',
-                        display: 'block',
-                        filter: count === 0 ? 'grayscale(100%)' : 'none',
-                        opacity: count === 0 ? 0.5 : 1,
-                      }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
+                        objectFit: 'cover', objectPosition: 'center 20%', display: 'block',
                       }}
                     />
-                  </div>
-                  <div className="text-xs font-bold text-white leading-tight">{card.name}</div>
-                  <div className="text-[10px] text-muted">ATK{card.atk} HP{card.hp} C{card.cost}</div>
+                  ) : type === 'crafted' && entry.iconKey ? (
+                    <span style={{ fontSize: 32 }}>{entry.iconKey}</span>
+                  ) : (
+                    <img
+                      src={`/images/chars/${key}.png`}
+                      alt={name}
+                      style={{
+                        width: '100%', height: '100%',
+                        objectFit: 'cover', objectPosition: 'center 20%', display: 'block',
+                        filter: !isOwned ? 'grayscale(100%)' : 'none',
+                        opacity: !isOwned ? 0.5 : 1,
+                      }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
                 </div>
-                {count > 0 && (
+
+                <div className="text-xs font-bold text-white leading-tight truncate">{name}</div>
+                <div className="text-[10px] text-muted">ATK{atk} HP{hp} C{cost}</div>
+
+                {isOwned && (
                   <button
                     data-testid="collection-extract-button"
-                    onClick={() => setExtractTarget(card.id)}
+                    onClick={(e) => { e.stopPropagation(); setExtractTarget(entry); }}
                     className="w-full mt-2 py-1.5 rounded-lg bg-[#0d2137] border border-[#1e3a5f] text-secondary text-xs font-bold"
                   >
                     抽出
@@ -143,27 +246,15 @@ export default function CollectionPage() {
             );
           })}
         </div>
-
-        {/* 生成カード */}
-        {ownedCards.filter(c => c.isCrafted).map(c => (
-          <div key={c.cardId} className="mt-2 panel--ornate p-3 border border-[#fbbf24]/30">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-gold">{c.craftedData?.name ?? '生成カード'}</span>
-              <span className="text-xs text-muted">×{c.count}</span>
-            </div>
-            <div className="text-[10px] text-muted mt-0.5">
-              ATK{c.craftedData?.atk} HP{c.craftedData?.hp} C{c.craftedData?.cost}
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* カード詳細モーダル */}
-      {detailCard && (
+      {detailEntry && (
         <CardModal
-          card={detailCard}
-          count={detailCount}
-          onClose={() => setDetailCard(null)}
+          card={detailEntry.gameCard}
+          count={detailEntry.count}
+          customImage={detailEntry.imageUrl}
+          onClose={() => setDetailEntry(null)}
         />
       )}
 
@@ -182,17 +273,22 @@ export default function CollectionPage() {
             <div className="flex gap-4 justify-center text-sm">
               <div className="text-center">
                 <p className="text-secondary text-xs mb-1">失うもの</p>
-                <p className="text-white font-bold">
-                  {CARDS_WITH_RARITY.find(c => c.id === extractTarget)?.name} ×1
-                </p>
+                <p className="text-white font-bold">{extractTarget.name} ×1</p>
               </div>
               <div className="text-muted self-center text-lg">→</div>
               <div className="text-center">
                 <p className="text-secondary text-xs mb-1">得るもの</p>
                 <div className="space-y-0.5">
-                  {extractMaterialIds.map((id, i) => (
-                    <p key={i} className="text-[#22d3ee] text-xs">{getMaterial(id)?.name ?? id}</p>
-                  ))}
+                  {(() => {
+                    const matCounts: Record<string, number> = {};
+                    for (const id of extractTarget.extractMaterialIds) matCounts[id] = (matCounts[id] ?? 0) + 1;
+                    return Object.entries(matCounts).map(([id, cnt], i) => (
+                      <p key={i} className="text-[#22d3ee] text-xs">
+                        {getMaterial(id)?.name ?? id}
+                        {cnt > 1 ? ` ×${cnt}` : ''}
+                      </p>
+                    ));
+                  })()}
                 </div>
               </div>
             </div>

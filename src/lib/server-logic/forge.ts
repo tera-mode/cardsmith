@@ -1,7 +1,7 @@
 import { OwnedCard, OwnedMaterial, CraftedCard } from '@/lib/types/meta';
 import { rarityFromCost, getCostCapForLevel } from '@/lib/data/economy';
 import { MATERIAL_MAP } from '@/lib/data/materials';
-import { MovementPattern, AttackRange, Skill } from '@/lib/types/game';
+import { Card, MovementPattern, AttackRange, Skill } from '@/lib/types/game';
 
 export interface ForgeSpec {
   name: string;
@@ -108,6 +108,21 @@ export function buildCraftedCard(
   };
   if (spec.imageUrl) card.imageUrl = spec.imageUrl;
   if (skill) card.skill = skill;
+  return card;
+}
+
+// CraftedCard → ゲーム内 Card 型に変換
+export function craftedToGameCard(crafted: CraftedCard): Card {
+  const card: Card = {
+    id: crafted.instanceId,
+    name: crafted.name,
+    cost: crafted.cost,
+    movement: crafted.movement,
+    attackRange: crafted.attackRange,
+    atk: crafted.atk,
+    hp: crafted.hp,
+  };
+  if (crafted.skill) card.skill = crafted.skill;
   return card;
 }
 

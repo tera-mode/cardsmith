@@ -38,12 +38,14 @@ export interface CardModalProps {
   unit?: Unit;
   /** コレクション画面：所持枚数 */
   count?: number;
+  /** 鍛造カード等のカスタム画像URL（/images/chars/{id}.png より優先） */
+  customImage?: string;
   onClose: () => void;
 }
 
 // ─── コンポーネント ───────────────────────────────────────────────────────────
 
-export default function CardModal({ card, unit, count, onClose }: CardModalProps) {
+export default function CardModal({ card, unit, count, customImage, onClose }: CardModalProps) {
   const [gradFrom, gradTo] = ATTR_GRADIENT[card.attribute ?? ''] ?? ['#1a1a2e', '#2a2a4e'];
   const attrColor  = ATTR_COLOR[card.attribute ?? ''] ?? '#4b5563';
   const attrLabel  = ATTR_LABEL[card.attribute ?? ''] ?? '';
@@ -70,6 +72,10 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
   const borderColor = unit
     ? (unit.owner === 'player' ? '#3b82f6' : '#ef4444')
     : rarityColor;
+
+  // 未所持（count=0）はイラストをグレーアウト
+  const isUnowned = count !== undefined && count === 0;
+  const imageSrc = customImage ?? `/images/chars/${card.id}.png`;
 
   return (
     <>
@@ -112,12 +118,16 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
             }}
           />
 
-          {/* キャラクター画像 */}
+          {/* キャラクター画像（未所持時はグレーアウト） */}
           <img
-            src={`/images/chars/${card.id}.png`}
+            src={imageSrc}
             alt={card.name}
             className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: 'center 15%' }}
+            style={{
+              objectPosition: 'center 15%',
+              filter: isUnowned ? 'grayscale(100%)' : undefined,
+              opacity: isUnowned ? 0.5 : 1,
+            }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
 
