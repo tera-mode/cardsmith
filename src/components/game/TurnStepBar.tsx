@@ -69,21 +69,24 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
   }
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center',
-      padding: '6px 10px',
-      gap: 6,
-      background: 'rgba(8,6,4,0.8)',
-      borderTop: '1px solid var(--border-rune)',
-    }}>
-      {/* ▶ あなたのターン */}
+    <div
+      data-testid="turn-indicator"
+      style={{
+        display: 'flex', alignItems: 'center',
+        padding: '6px 10px',
+        gap: 6,
+        background: 'rgba(8,6,4,0.8)',
+        borderTop: '1px solid var(--border-rune)',
+      }}
+    >
+      {/* ▶ あなたのターン + ターン数 */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0,
         fontFamily: 'var(--font-display)', fontSize: 9, fontWeight: 700,
         color: '#f8d878', letterSpacing: '0.04em',
       }}>
         <span style={{ fontSize: 8 }}>▶</span>
-        <span style={{ whiteSpace: 'nowrap' }}>あなたのターン</span>
+        <span style={{ whiteSpace: 'nowrap' }}>T{session.turnCount}&nbsp;あなたのターン</span>
       </div>
 
       {/* ステップインジケーター */}

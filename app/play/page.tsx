@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGame } from '@/contexts/GameContext';
@@ -12,17 +12,26 @@ import BaseHpBar from '@/components/game/BaseHpBar';
 import TurnStepBar from '@/components/game/TurnStepBar';
 import ActionMenu, { SkipMoveButton } from '@/components/game/ActionMenu';
 import GameLog from '@/components/game/GameLog';
+import HintPanel from '@/components/game/HintPanel';
+import QuestDialogue from '@/components/game/QuestDialogue';
 import CardModal from '@/components/ui/CardModal';
 import ArchetypeSelectModal from '@/components/game/ArchetypeSelectModal';
 import type { Archetype } from '@/lib/game/decks';
 import { getArchetypeFromQuestId, getBattleBgUrl } from '@/lib/utils/archetype';
+import { QUEST_MAP } from '@/lib/data/quests';
 
 function GameScreen() {
   const { user, loading } = useAuth();
-  const { session, mode, highlightedCells, initGame, endTurn } = useGame();
+  const { session, mode, highlightedCells, initGame, endTurn, cancel } = useGame();
   const router = useRouter();
   const [detailUnit, setDetailUnit] = useState<Unit | null>(null);
   const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null);
+  const [prologueDone, setPrologueDone] = useState(false);
+  const [showEpilogue, setShowEpilogue] = useState(false);
+  const initialAiHpRef = useRef<number | null>(null);
+  const initialPlayerHpRef = useRef<number | null>(null);
+  const finishHandledRef = useRef(false);
+
   const searchParams = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search)
     : new URLSearchParams();
@@ -31,6 +40,8 @@ function GameScreen() {
   const isQ03 = questId === 'q0_3';
   const questArchetype = getArchetypeFromQuestId(questId) ?? (selectedArchetype ?? undefined);
   const bgUrl = getBattleBgUrl(questArchetype ?? null);
+  const questDef = questId ? QUEST_MAP[questId] : undefined;
+  const hasPrologue = !!(questDef?.prologue?.length);
 
   const openCardPreview = (card: Card) => {
     setDetailUnit({
@@ -53,28 +64,74 @@ function GameScreen() {
     if (!loading && !user) router.push('/');
   }, [user, loading, router]);
 
+  // 初期HP記録（BaseHpBar の maxHp 表示正確化）
+  useEffect(() => {
+    if (session && !initialAiHpRef.current) {
+      initialAiHpRef.current = session.ai.baseHp;
+      initialPlayerHpRef.current = session.player.baseHp;
+    }
+  }, [session]);
+
+  // ゲーム初期化（q0_3 は onSelect で直接呼ぶ。それ以外はプロローグ完了後）
   useEffect(() => {
     if (!user || session) return;
-    // q0_3: 系統選択モーダルの onSelect で明示的に initGame を呼ぶ
-    if (isQ03) return;
+    if (isQ03) return; // q0_3 は ArchetypeSelectModal の onSelect で initGame を呼ぶ
+    if (hasPrologue && !prologueDone) return;
     initGame(user.uid, questId, undefined);
-  }, [user, session, initGame, isQ03, questId]);
+  }, [user, session, initGame, isQ03, questId, hasPrologue, prologueDone]);
 
+  // リザルトURLパラメータ構築（session ref 経由でstale closure回避）
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+
+  const buildResultParams = useCallback(() => {
+    const s = sessionRef.current;
+    if (!s) return '';
+    return new URLSearchParams({
+      winner: s.winner ?? 'draw',
+      turns: String(s.turnCount),
+      playerHp: String(s.player.baseHp),
+      aiHp: String(s.ai.baseHp),
+      ...(questId ? { questId } : {}),
+      ...(isQ03 && selectedArchetype ? { archetype: selectedArchetype } : {}),
+    }).toString();
+  }, [questId, isQ03, selectedArchetype]);
+
+  // ゲーム終了 → エピローグ or リザルト遷移
   useEffect(() => {
-    if (session?.phase === 'finished') {
-      const params = new URLSearchParams({
-        winner: session.winner ?? 'draw',
-        turns: String(session.turnCount),
-        playerHp: String(session.player.baseHp),
-        aiHp: String(session.ai.baseHp),
-        ...(questId ? { questId } : {}),
-        ...(isQ03 && selectedArchetype ? { archetype: selectedArchetype } : {}),
-      });
-      setTimeout(() => router.push(`/result?${params}`), 1500);
+    if (session?.phase === 'finished' && !finishHandledRef.current) {
+      finishHandledRef.current = true;
+      if (questDef?.epilogue?.length) {
+        const t = setTimeout(() => setShowEpilogue(true), 900);
+        return () => clearTimeout(t);
+      } else {
+        const params = buildResultParams();
+        const t = setTimeout(() => router.push(`/result?${params}`), 1500);
+        return () => clearTimeout(t);
+      }
     }
-  }, [session?.phase, session?.winner, session?.turnCount, session?.player.baseHp, session?.ai.baseHp, router]);
+  }, [session?.phase, session?.winner, session?.turnCount, session?.player.baseHp, session?.ai.baseHp, router, buildResultParams]);
 
-  // q0_3: 系統選択モーダル（選択直後に initGame を呼んで確実に該当流派デッキを反映する）
+  const handleEpilogueDone = useCallback(() => {
+    setShowEpilogue(false);
+    const params = buildResultParams();
+    router.push(`/result?${params}`);
+  }, [buildResultParams, router]);
+
+  // プロローグ（ゲーム開始前、系統選択より先に表示）
+  if (hasPrologue && !prologueDone) {
+    return (
+      <div className="game-layout stone-bg" style={{ position: 'relative' }}>
+        <QuestDialogue
+          scenes={questDef!.prologue!}
+          onDone={() => setPrologueDone(true)}
+          label="プロローグ"
+        />
+      </div>
+    );
+  }
+
+  // q0_3: 系統選択（プロローグ後。onSelect で initGame を直接呼んで流派デッキを確実に反映）
   if (isQ03 && !selectedArchetype) {
     return (
       <ArchetypeSelectModal
@@ -99,14 +156,13 @@ function GameScreen() {
 
   return (
     <div className="game-layout stone-bg" data-theme={questArchetype ?? undefined}>
-      {/* バトル背景画像（系統別。存在しない場合は非表示） */}
+      {/* バトル背景画像 */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         backgroundImage: `url('${bgUrl}'), url('/images/backgrounds/board.jpg')`,
         backgroundSize: 'cover', backgroundPosition: 'center',
         opacity: 0.18,
       }} />
-      {/* ambient overlay */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: 'radial-gradient(ellipse at 20% 10%, var(--theme-glow, rgba(255,180,80,0.07)), transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
@@ -116,12 +172,15 @@ function GameScreen() {
       <div className="torch" style={{ position: 'absolute', top: 56, left: 8, zIndex: 5 }} />
       <div className="torch" style={{ position: 'absolute', top: 56, right: 8, zIndex: 5 }} />
 
-      {/* 縦幅が狭い場合はスクロール可能にする */}
       <div className="relative z-10 flex-1 overflow-y-auto flex flex-col w-full max-w-[480px] mx-auto safe-scroll">
 
         {/* AI 陣地HP */}
         <div className="px-3 pt-2 pb-1 flex-shrink-0">
-          <BaseHpBar owner="ai" hp={session.ai.baseHp} />
+          <BaseHpBar
+            owner="ai"
+            hp={session.ai.baseHp}
+            maxHp={initialAiHpRef.current ?? undefined}
+          />
         </div>
 
         {/* 盤面 */}
@@ -136,11 +195,31 @@ function GameScreen() {
 
         {/* プレイヤー陣地HP */}
         <div className="px-3 py-1 flex-shrink-0">
-          <BaseHpBar owner="player" hp={session.player.baseHp} />
+          <BaseHpBar
+            owner="player"
+            hp={session.player.baseHp}
+            maxHp={initialPlayerHpRef.current ?? undefined}
+          />
         </div>
 
-        {/* 移動モード中：その場に留まる / 戻る（インライン表示） */}
+        {/* ヒントパネル（状況に応じたガイド） */}
+        <HintPanel session={session} mode={mode} />
+
+        {/* 移動モード中：その場に留まる / 戻る */}
         <SkipMoveButton mode={mode} />
+
+        {/* スキルターゲット選択中：キャンセルボタン */}
+        {mode.type === 'skill_targeting' && (
+          <div style={{ padding: '4px 12px', flexShrink: 0 }}>
+            <button
+              onClick={cancel}
+              className="btn--ghost tap-target"
+              style={{ width: '100%', fontSize: 12 }}
+            >
+              ✕ キャンセル
+            </button>
+          </div>
+        )}
 
         {/* ゲームログ */}
         <div style={{ flexShrink: 0, height: 52, overflow: 'hidden', borderTop: '1px solid var(--border-rune)' }}>
@@ -158,7 +237,7 @@ function GameScreen() {
           />
         </div>
 
-        {/* 召喚・移動・攻撃 + ターン終了（一体化バー） */}
+        {/* ターン終了バー */}
         <div className="flex-shrink-0 safe-bottom">
           <TurnStepBar
             session={session}
@@ -169,8 +248,6 @@ function GameScreen() {
         </div>
       </div>
 
-      {/* SkipMoveButton は layout 内に移動済み */}
-
       {/* アクション選択メニュー */}
       {(mode.type === 'unit_selected' || mode.type === 'unit_post_move') && (
         <ActionMenu mode={mode} session={session} />
@@ -179,6 +256,15 @@ function GameScreen() {
       {/* カード詳細モーダル（長押し） */}
       {detailUnit && (
         <CardModal card={detailUnit.card} unit={detailUnit} onClose={() => setDetailUnit(null)} />
+      )}
+
+      {/* エピローグ（ゲーム終了後） */}
+      {showEpilogue && questDef?.epilogue?.length && (
+        <QuestDialogue
+          scenes={questDef.epilogue}
+          onDone={handleEpilogueDone}
+          label="エピローグ"
+        />
       )}
     </div>
   );

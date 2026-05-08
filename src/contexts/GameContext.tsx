@@ -77,6 +77,7 @@ interface GameContextType {
   moveUnit: (pos: Position) => void;
   cancelMove: () => void;
   attackTarget: (target: AttackTarget) => void;
+  enterSkillTargeting: (unit: Unit) => void;
   useSkill: (target?: Position) => void;
   endUnitAction: (unit: Unit) => void;
   endTurn: () => void;
@@ -371,9 +372,20 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     return skillDef.getValidTargets ? skillDef.getValidTargets(s, unit) : [];
   }, [mode]);
 
+  // スキルターゲット選択モードに入る（複数ターゲットがある場合）
+  const enterSkillTargeting = useCallback((unit: Unit) => {
+    const s = sessionRef.current;
+    if (!s) return;
+    const skillDef = unit.card.skill ? getSkill(unit.card.skill.id) : null;
+    if (!skillDef || skillDef.triggerKind !== 'activated') return;
+    const targets = skillDef.getValidTargets ? skillDef.getValidTargets(s, unit) : [];
+    setMode({ type: 'skill_targeting', unit, skillId: unit.card.skill!.id });
+    setHighlightedCells(targets);
+  }, []);
+
   const useSkill = useCallback((target?: Position) => {
     const s = sessionRef.current;
-    if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move')) return;
+    if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move' && mode.type !== 'skill_targeting')) return;
     const unit = mode.unit;
     const skillDef = unit.card.skill ? getSkill(unit.card.skill.id) : null;
     if (!skillDef || skillDef.triggerKind !== 'activated') return;
@@ -508,7 +520,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       session, mode, highlightedCells,
       initGame, selectCard, summonToCell,
       selectUnit, startMove, cancelMove, moveUnit,
-      attackTarget, useSkill, endUnitAction,
+      attackTarget, enterSkillTargeting, useSkill, endUnitAction,
       endTurn, cancel, getSkillTargets,
     }}>
       {children}

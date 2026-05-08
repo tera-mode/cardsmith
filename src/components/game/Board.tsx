@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function Board({ board, mode, highlightedCells, onUnitLongPress }: Props) {
-  const { selectUnit, moveUnit, summonToCell, cancel } = useGame();
+  const { selectUnit, moveUnit, summonToCell, useSkill, cancel } = useGame();
 
   const isHighlighted = (row: number, col: number) =>
     highlightedCells.some((p) => p.row === row && p.col === col);
@@ -62,6 +62,13 @@ export default function Board({ board, mode, highlightedCells, onUnitLongPress }
 
     // unit_post_move：移動後のメニュー表示中はボードへの操作を受け付けない
     if (mode.type === 'unit_post_move') return;
+
+    // skill_targeting：ハイライトされたマスにタップ → スキル発動
+    if (mode.type === 'skill_targeting') {
+      if (isHighlighted(pos.row, pos.col)) useSkill(pos);
+      else cancel();
+      return;
+    }
 
     // idle：プレイヤーのユニットを選択
     if (unit && unit.owner === 'player' && !unit.hasActedThisTurn) {

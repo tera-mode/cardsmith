@@ -13,10 +13,11 @@ export default function HintPanel({ session, mode }: Props) {
 
   let hint = '';
   switch (mode.type) {
-    case 'unit_moving':     hint = '🚶 移動先を選んでタップ'; break;
-    case 'unit_selected':   hint = '移動・攻撃・スキルから選択'; break;
-    case 'unit_post_move':  hint = '⚔ 攻撃か「行動終了」を選択'; break;
-    case 'card_selected':   hint = '光ったマスにユニットを召喚！'; break;
+    case 'unit_moving':       hint = '🚶 移動先を選んでタップ'; break;
+    case 'unit_selected':     hint = '移動・攻撃・スキルから選択'; break;
+    case 'unit_post_move':    hint = '⚔ 攻撃か「行動終了」を選択'; break;
+    case 'card_selected':     hint = '光ったマスにユニットを召喚！'; break;
+    case 'skill_targeting':   hint = '✨ 対象マスをタップ（他のマスでキャンセル）'; break;
     case 'idle': {
       const hasFront = Array.from({ length: BOARD_COLS }, (_, c) => session.board[0]?.[c])
         .some(u => u?.owner === 'player' && !u.hasActedThisTurn);

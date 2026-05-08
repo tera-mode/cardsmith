@@ -43,7 +43,7 @@ export function SkipMoveButton({ mode }: { mode: InteractionMode }) {
 }
 
 export default function ActionMenu({ mode, session }: Props) {
-  const { attackTarget, useSkill, startMove, endUnitAction, cancel } = useGame();
+  const { attackTarget, useSkill, enterSkillTargeting, startMove, endUnitAction, cancel } = useGame();
 
   const isUnitSelected = mode.type === 'unit_selected';
   const isPostMove = mode.type === 'unit_post_move';
@@ -56,8 +56,11 @@ export default function ActionMenu({ mode, session }: Props) {
   const skillName = skillDef?.displayName ?? skill?.id ?? '';
   const isActivated = skillDef?.triggerKind === 'activated';
   const ctx = { remainingUses: unit.skillUsesRemaining, turnCount: session.turnCount, currentTurn: session.currentTurn as 'player' | 'ai' };
+  // スキルのターゲット計算（canActivate チェック + ターゲット有無チェック）
+  const skillTargets = isActivated && skillDef?.getValidTargets ? skillDef.getValidTargets(session, unit) : null;
+  const hasRequiredTargets = skillDef?.getValidTargets ? (skillTargets?.length ?? 0) > 0 : true;
   const canUseSkill = isActivated && !isSkillBlocked(unit) && unit.skillUsesRemaining !== 0 &&
-    (!skillDef?.canActivate || skillDef.canActivate(session, unit, ctx));
+    (!skillDef?.canActivate || skillDef.canActivate(session, unit, ctx)) && hasRequiredTargets;
   const canMove = isUnitSelected && !session.player.hasMovedThisTurn;
   const alreadyAttacked = session.player.hasAttackedThisTurn;
   const hasAttackOptions = (attacks.length > 0 || canUseSkill) && !alreadyAttacked;
@@ -148,7 +151,13 @@ export default function ActionMenu({ mode, session }: Props) {
               onClick={() => {
                 if (!skillDef) return;
                 const targets = skillDef.getValidTargets ? skillDef.getValidTargets(session, unit) : [];
-                useSkill(targets.length > 0 ? targets[0] : undefined);
+                if (targets.length > 1) {
+                  // 複数ターゲット → ターゲット選択モードへ
+                  enterSkillTargeting(unit);
+                } else {
+                  // 0〜1ターゲット → 即時発動
+                  useSkill(targets[0]);
+                }
               }}
               style={{
                 minHeight: 44, width: '100%', borderRadius: 4,
@@ -160,7 +169,7 @@ export default function ActionMenu({ mode, session }: Props) {
                 boxShadow: '0 0 8px rgba(196,120,255,0.15)',
               }}
             >
-              ★ {skillName}を使用
+              ★ {skillName}を使用{(skillTargets?.length ?? 0) > 1 ? '（対象選択）' : ''}
             </button>
           )}
 
