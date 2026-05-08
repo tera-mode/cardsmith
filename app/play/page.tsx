@@ -109,7 +109,7 @@ function GameScreen() {
   useEffect(() => {
     if (session?.phase === 'finished' && !finishHandledRef.current) {
       finishHandledRef.current = true;
-      if (questDef?.epilogue?.length) {
+      if (questDef?.epilogue?.length && session?.winner === 'player') {
         const t = setTimeout(() => setShowEpilogue(true), 900);
         return () => clearTimeout(t);
       } else {
