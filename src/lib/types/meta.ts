@@ -56,9 +56,16 @@ export interface CraftedCard {
   skill?: Skill;
   rarity: Rarity;
   iconKey: string;
+  imageUrl?: string;  // ユーザーアップロード画像URL（あればiconKeyより優先表示）
   craftedBy: string;
   craftedFrom: string[];
   craftedAt: number;
+}
+
+export interface UserImage {
+  id: string;
+  url: string;
+  createdAt: number;
 }
 
 // ─── マテリアル ───────────────────────────────────────────────────────────────

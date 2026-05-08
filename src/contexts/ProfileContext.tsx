@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { PlayerProfile, OwnedCard, OwnedMaterial, Deck } from '@/lib/types/meta';
+import { PlayerProfile, OwnedCard, OwnedMaterial, Deck, UserImage } from '@/lib/types/meta';
 import { getOrCreateProfile, saveProfile, getCardInventory, saveCardInventory, getMaterialInventory, saveMaterialInventory, getDecks, saveDeck, deleteDeck } from '@/lib/firebase/profile';
+import { listUserImages } from '@/lib/firebase/imageStorage';
 import { getQuestProgress, saveQuestProgress, computeQuestStatuses } from '@/lib/firebase/quests';
 import { getExpProgress } from '@/lib/server-logic/profile';
 import { QuestProgress } from '@/lib/types/meta';
@@ -19,6 +20,7 @@ interface ProfileContextType {
   ownedMaterials: OwnedMaterial[];
   decks: Deck[];
   questProgress: QuestProgress[];
+  userImages: UserImage[];
   loading: boolean;
   expProgress: { current: number; required: number; pct: number };
   refreshProfile: () => Promise<void>;
@@ -28,6 +30,8 @@ interface ProfileContextType {
   saveOrUpdateDeck: (deck: Deck) => Promise<void>;
   removeDeck: (deckId: string) => Promise<void>;
   markQuestCleared: (questId: string) => Promise<void>;
+  addUserImage: (img: UserImage) => void;
+  removeUserImage: (imageId: string) => void;
   debugMaxOut: () => Promise<void>;
   debugReset: () => Promise<void>;
 }
@@ -38,6 +42,7 @@ const ProfileContext = createContext<ProfileContextType>({
   ownedMaterials: [],
   decks: [],
   questProgress: [],
+  userImages: [],
   loading: true,
   expProgress: { current: 0, required: 100, pct: 0 },
   refreshProfile: async () => {},
@@ -47,6 +52,8 @@ const ProfileContext = createContext<ProfileContextType>({
   saveOrUpdateDeck: async () => {},
   removeDeck: async () => {},
   markQuestCleared: async () => {},
+  addUserImage: () => {},
+  removeUserImage: () => {},
   debugMaxOut: async () => {},
   debugReset: async () => {},
 });
@@ -62,18 +69,20 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
   const [ownedMaterials, setOwnedMaterials] = useState<OwnedMaterial[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [questProgress, setQuestProgress] = useState<QuestProgress[]>([]);
+  const [userImages, setUserImages] = useState<UserImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showMigrationModal, setShowMigrationModal] = useState(false);
 
   const load = useCallback(async (uid: string) => {
     setLoading(true);
     try {
-      const [p, cards, mats, d, qp] = await Promise.all([
+      const [p, cards, mats, d, qp, imgs] = await Promise.all([
         getOrCreateProfile(uid),
         getCardInventory(uid),
         getMaterialInventory(uid),
         getDecks(uid),
         getQuestProgress(uid),
+        listUserImages(uid),
       ]);
 
       // スキーマバージョンチェック — 古いデータは強制リセット
@@ -121,6 +130,7 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       setOwnedMaterials(mats);
       setDecks(d);
       setQuestProgress(qp);
+      setUserImages(imgs);
     } finally {
       setLoading(false);
     }
@@ -185,6 +195,14 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       await saveQuestProgress(user.uid, p);
     }
   }, [user, questProgress]);
+
+  const addUserImage = useCallback((img: UserImage) => {
+    setUserImages(prev => [img, ...prev]);
+  }, []);
+
+  const removeUserImage = useCallback((imageId: string) => {
+    setUserImages(prev => prev.filter(i => i.id !== imageId));
+  }, []);
 
   const debugMaxOut = useCallback(async () => {
     if (!user || !profile) return;
@@ -269,9 +287,10 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
 
   return (
     <ProfileContext.Provider value={{
-      profile, ownedCards, ownedMaterials, decks, questProgress, loading, expProgress,
+      profile, ownedCards, ownedMaterials, decks, questProgress, userImages, loading, expProgress,
       refreshProfile, updateProfile, updateCards, updateMaterials,
       saveOrUpdateDeck, removeDeck, markQuestCleared,
+      addUserImage, removeUserImage,
       debugMaxOut, debugReset,
     }}>
       {children}

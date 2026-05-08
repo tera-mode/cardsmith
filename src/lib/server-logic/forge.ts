@@ -6,6 +6,7 @@ import { MovementPattern, AttackRange, Skill } from '@/lib/types/game';
 export interface ForgeSpec {
   name: string;
   iconKey: string;
+  imageUrl?: string;  // ユーザーアップロード画像URL
   movementMaterialId: string;
   attackRangeMaterialId: string;
   atkMaterialIds: string[];
@@ -105,6 +106,7 @@ export function buildCraftedCard(
     craftedFrom,
     craftedAt: now,
   };
+  if (spec.imageUrl) card.imageUrl = spec.imageUrl;
   if (skill) card.skill = skill;
   return card;
 }

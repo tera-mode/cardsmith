@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
 import RarityBadge from '@/components/ui/RarityBadge';
+import ImageCropModal from '@/components/ui/ImageCropModal';
+import ImageLibraryModal from '@/components/ui/ImageLibraryModal';
 import { MATERIALS } from '@/lib/data/materials';
 import { getCostCapForLevel, rarityFromCost } from '@/lib/data/economy';
 import { ForgeSpec, validateForge, buildCraftedCard, consumeMaterialsForForge } from '@/lib/server-logic/forge';
-import { MaterialCategory, OwnedCard, RARITY_COLORS } from '@/lib/types/meta';
+import { MaterialCategory, OwnedCard, RARITY_COLORS, UserImage } from '@/lib/types/meta';
+import { uploadUserImage } from '@/lib/firebase/imageStorage';
 
 const ICONS = ['⚔️','🛡️','🏹','🐎','💣','🔱','🗡️','💀','🌟','🔥','❄️','⚡','🌊','🌿','💎','🦅','🐉','🎯','🔮','🏰'];
 
@@ -30,14 +33,20 @@ const slotStyle = {
 
 export default function ForgePage() {
   const { user, loading: authLoading } = useAuth();
-  const { profile, ownedMaterials, ownedCards, loading, updateCards, updateMaterials } = useProfile();
+  const { profile, ownedMaterials, ownedCards, userImages, loading, updateCards, updateMaterials, addUserImage, removeUserImage } = useProfile();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [spec, setSpec] = useState<Partial<ForgeSpec>>({ atkMaterialIds: [], hpMaterialIds: [] });
   const [selectingSlot, setSelectingSlot] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [forging, setForging] = useState(false);
   const [forgedCard, setForgedCard] = useState<ReturnType<typeof buildCraftedCard> | null>(null);
+
+  // 画像関連
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
@@ -78,7 +87,37 @@ export default function ForgePage() {
     }
   };
 
-  // ローディング
+  // ─── 画像アップロード処理 ────────────────────────────────────────────────────
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setCropFile(f);
+    e.target.value = '';
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    if (!user) return;
+    setCropFile(null);
+    setUploadingImage(true);
+    try {
+      const img = await uploadUserImage(user.uid, blob);
+      addUserImage(img);
+      setSpec(s => ({ ...s, imageUrl: img.url }));
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleLibrarySelect = (img: UserImage) => {
+    setShowLibrary(false);
+    setSpec(s => ({ ...s, imageUrl: img.url }));
+  };
+
+  // プレビュー表示（imageUrl > iconKey の優先順）
+  const previewImage = spec.imageUrl;
+  const previewIcon = spec.iconKey ?? '❓';
+
+  // ── ローディング ──────────────────────────────────────────────────────────────
   if (loading || !profile) {
     return (
       <div className="game-layout stone-bg flex-col">
@@ -99,14 +138,19 @@ export default function ForgePage() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 24 }}>
           <div style={{ fontSize: 48 }}>🔨</div>
 
-          {/* 完成カード表示 */}
           <div className="panel--ornate" style={{
             width: 180, padding: '16px 14px', textAlign: 'center',
             borderColor: `${color}70`,
             background: `linear-gradient(180deg, rgba(50,36,22,0.97) 0%, rgba(28,20,12,0.97) 100%)`,
           }}>
             <div style={{ marginBottom: 8 }}><RarityBadge rarity={forgedCard.rarity} /></div>
-            <div style={{ fontSize: 40, marginBottom: 8, filter: `drop-shadow(0 0 12px ${color}80)` }}>{forgedCard.iconKey}</div>
+            {forgedCard.imageUrl ? (
+              <div style={{ width: 80, height: 80, borderRadius: 8, overflow: 'hidden', margin: '0 auto 8px', border: `1px solid ${color}50` }}>
+                <img src={forgedCard.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            ) : (
+              <div style={{ fontSize: 40, marginBottom: 8, filter: `drop-shadow(0 0 12px ${color}80)` }}>{forgedCard.iconKey}</div>
+            )}
             <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 6 }}>
               {forgedCard.name}
             </div>
@@ -194,7 +238,7 @@ export default function ForgePage() {
 
   return (
     <div className="game-layout stone-bg flex-col">
-      {/* カスタムヘッダー（Lv/上限表示込み） */}
+      {/* ヘッダー */}
       <header style={{
         flexShrink: 0, height: 56, display: 'flex', alignItems: 'center', gap: 8,
         padding: '0 14px',
@@ -223,9 +267,15 @@ export default function ForgePage() {
             }}
           >
             {rarity && <div style={{ marginBottom: 6 }}><RarityBadge rarity={rarity} /></div>}
-            <div style={{ fontSize: 32, marginBottom: 6, filter: rarity ? `drop-shadow(0 0 8px ${RARITY_COLORS[rarity]}80)` : 'none' }}>
-              {spec.iconKey ?? '❓'}
-            </div>
+            {previewImage ? (
+              <div style={{ width: 80, height: 80, borderRadius: 6, overflow: 'hidden', margin: '0 auto 6px', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <img src={previewImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            ) : (
+              <div style={{ fontSize: 32, marginBottom: 6, filter: rarity ? `drop-shadow(0 0 8px ${RARITY_COLORS[rarity]}80)` : 'none' }}>
+                {previewIcon}
+              </div>
+            )}
             <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 12, color: 'var(--text-primary)', marginBottom: 4 }}>
               {spec.name?.trim() || <span style={{ color: 'var(--text-dim)' }}>(名前未入力)</span>}
             </div>
@@ -241,7 +291,7 @@ export default function ForgePage() {
           </div>
         </div>
 
-        {/* カード名・アイコン */}
+        {/* カード名・絵文字アイコン */}
         <div style={{ display: 'flex', gap: 8 }}>
           <input
             data-testid="forge-card-name-input"
@@ -263,6 +313,7 @@ export default function ForgePage() {
               const idx = ICONS.indexOf(spec.iconKey ?? '');
               setSpec(s => ({ ...s, iconKey: ICONS[(idx + 1) % ICONS.length] }));
             }}
+            title="絵文字アイコンを切り替え"
             style={{
               width: 44, height: 44,
               background: 'rgba(14,10,6,0.8)',
@@ -275,9 +326,78 @@ export default function ForgePage() {
           </button>
         </div>
 
+        {/* カードイラスト */}
+        <div style={{
+          background: 'rgba(20,14,8,0.7)',
+          border: '1px solid var(--border-rune)',
+          borderRadius: 4, padding: '10px 12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+              カードイラスト（任意）
+            </span>
+            {spec.imageUrl && (
+              <button
+                onClick={() => setSpec(s => ({ ...s, imageUrl: undefined }))}
+                style={{ fontSize: 10, color: 'var(--text-dim)', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                ✕ 削除
+              </button>
+            )}
+          </div>
+
+          {spec.imageUrl ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border-rune)' }}>
+                <img src={spec.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>画像が設定されています</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8 }}>
+              {/* アップロードボタン */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImage}
+                style={{
+                  flex: 1, minHeight: 40,
+                  background: 'rgba(20,14,8,0.8)',
+                  border: '1px dashed var(--border-rune)',
+                  borderRadius: 6,
+                  color: uploadingImage ? 'var(--text-dim)' : 'var(--text-muted)',
+                  fontSize: 11, cursor: uploadingImage ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--font-display)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                {uploadingImage ? '⏳ アップロード中...' : '📷 アップロード'}
+              </button>
+
+              {/* ライブラリボタン */}
+              {userImages.length > 0 && (
+                <button
+                  onClick={() => setShowLibrary(true)}
+                  style={{
+                    flex: 1, minHeight: 40,
+                    background: 'rgba(20,14,8,0.8)',
+                    border: '1px solid var(--border-rune)',
+                    borderRadius: 6,
+                    color: 'var(--text-muted)',
+                    fontSize: 11, cursor: 'pointer',
+                    fontFamily: 'var(--font-display)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  }}
+                >
+                  🖼 ライブラリ ({userImages.length})
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* スロット群 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {/* 移動 */}
+          {/* 移動・攻撃範囲 */}
           {(['movement', 'attack_range'] as const).map(key => {
             const label = key === 'movement' ? '移動' : '攻撃範囲';
             const mat = getMat(key === 'movement' ? spec.movementMaterialId : spec.attackRangeMaterialId);
@@ -386,6 +506,7 @@ export default function ForgePage() {
         </button>
       </div>
 
+      {/* 確認ダイアログ */}
       <ConfirmSheet
         open={showConfirm}
         title="カードを鍛造しますか？"
@@ -406,6 +527,34 @@ export default function ForgePage() {
           </div>
         </div>
       </ConfirmSheet>
+
+      {/* 非表示ファイル入力 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
+      {/* 画像クロップモーダル */}
+      {cropFile && (
+        <ImageCropModal
+          file={cropFile}
+          onConfirm={handleCropConfirm}
+          onCancel={() => setCropFile(null)}
+        />
+      )}
+
+      {/* 画像ライブラリモーダル */}
+      {showLibrary && (
+        <ImageLibraryModal
+          images={userImages}
+          onSelect={handleLibrarySelect}
+          onDeleted={removeUserImage}
+          onClose={() => setShowLibrary(false)}
+        />
+      )}
     </div>
   );
 }
