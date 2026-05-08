@@ -146,13 +146,22 @@ export default function CardModal({ card, unit, count, onClose }: CardModalProps
             )}
           </div>
 
-          {/* コストバッジ */}
-          <div
-            className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center text-base font-bold shadow-lg"
-            style={{ backgroundColor: '#f59e0b', color: '#000' }}
-          >
-            {card.cost}
-          </div>
+          {/* コストバッジ：バトル中（unit あり）は小さく目立たなく */}
+          {unit ? (
+            <div
+              className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-xs"
+              style={{ background: 'rgba(0,0,0,0.55)', color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-display)' }}
+            >
+              {card.cost}
+            </div>
+          ) : (
+            <div
+              className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center text-base font-bold shadow-lg"
+              style={{ backgroundColor: '#f59e0b', color: '#000' }}
+            >
+              {card.cost}
+            </div>
+          )}
 
           {/* 所持枚数（コレクション画面） */}
           {count !== undefined && (

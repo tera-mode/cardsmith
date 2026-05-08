@@ -16,16 +16,20 @@ import HintPanel from '@/components/game/HintPanel';
 import QuestDialogue from '@/components/game/QuestDialogue';
 import CardModal from '@/components/ui/CardModal';
 import ArchetypeSelectModal from '@/components/game/ArchetypeSelectModal';
+import DeckSelectModal from '@/components/game/DeckSelectModal';
 import type { Archetype } from '@/lib/game/decks';
 import { getArchetypeFromQuestId, getBattleBgUrl } from '@/lib/utils/archetype';
 import { QUEST_MAP } from '@/lib/data/quests';
+import { useProfile } from '@/contexts/ProfileContext';
 
 function GameScreen() {
   const { user, loading } = useAuth();
+  const { decks } = useProfile();
   const { session, mode, highlightedCells, initGame, endTurn, cancel } = useGame();
   const router = useRouter();
   const [detailUnit, setDetailUnit] = useState<Unit | null>(null);
   const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null);
+  const [selectedDeck, setSelectedDeck] = useState<Card[] | null>(null);
   const [prologueDone, setPrologueDone] = useState(false);
   const [showEpilogue, setShowEpilogue] = useState(false);
   const initialAiHpRef = useRef<number | null>(null);
@@ -42,6 +46,9 @@ function GameScreen() {
   const bgUrl = getBattleBgUrl(questArchetype ?? null);
   const questDef = questId ? QUEST_MAP[questId] : undefined;
   const hasPrologue = !!(questDef?.prologue?.length);
+  // カスタムデッキが1つ以上あればデッキ選択を挟む（q0_3のアーキタイプ選択後も含む）
+  const hasSavedDecks = decks.length > 0;
+  const needsDeckSelect = hasSavedDecks && selectedDeck === null;
 
   const openCardPreview = (card: Card) => {
     setDetailUnit({
@@ -72,13 +79,14 @@ function GameScreen() {
     }
   }, [session]);
 
-  // ゲーム初期化（q0_3 は onSelect で直接呼ぶ。それ以外はプロローグ完了後）
+  // ゲーム初期化（q0_3 は onSelect で直接呼ぶ。それ以外はプロローグ+デッキ選択完了後）
   useEffect(() => {
     if (!user || session) return;
     if (isQ03) return; // q0_3 は ArchetypeSelectModal の onSelect で initGame を呼ぶ
     if (hasPrologue && !prologueDone) return;
-    initGame(user.uid, questId, undefined);
-  }, [user, session, initGame, isQ03, questId, hasPrologue, prologueDone]);
+    if (needsDeckSelect) return; // デッキ選択待ち
+    initGame(user.uid, questId, undefined, selectedDeck ?? undefined);
+  }, [user, session, initGame, isQ03, questId, hasPrologue, prologueDone, needsDeckSelect, selectedDeck]);
 
   // リザルトURLパラメータ構築（session ref 経由でstale closure回避）
   const sessionRef = useRef(session);
@@ -131,13 +139,26 @@ function GameScreen() {
     );
   }
 
-  // q0_3: 系統選択（プロローグ後。onSelect で initGame を直接呼んで流派デッキを確実に反映）
+  // q0_3: 系統選択（プロローグ後）
   if (isQ03 && !selectedArchetype) {
     return (
       <ArchetypeSelectModal
-        onSelect={arch => {
-          setSelectedArchetype(arch);
-          if (user) initGame(user.uid, questId, arch);
+        onSelect={arch => setSelectedArchetype(arch)}
+      />
+    );
+  }
+
+  // デッキ選択（カスタムデッキがある場合）
+  if (needsDeckSelect) {
+    return (
+      <DeckSelectModal
+        starterArchetype={selectedArchetype ?? undefined}
+        onSelect={deck => {
+          setSelectedDeck(deck);
+          // q0_3 は選択アーキタイプ+カスタムデッキで initGame
+          if (isQ03 && selectedArchetype && user) {
+            initGame(user.uid, questId, selectedArchetype, deck);
+          }
         }}
       />
     );
@@ -167,10 +188,6 @@ function GameScreen() {
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
         background: 'radial-gradient(ellipse at 20% 10%, var(--theme-glow, rgba(255,180,80,0.07)), transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
       }} />
-
-      {/* 松明装飾 */}
-      <div className="torch" style={{ position: 'absolute', top: 56, left: 8, zIndex: 5 }} />
-      <div className="torch" style={{ position: 'absolute', top: 56, right: 8, zIndex: 5 }} />
 
       <div className="relative z-10 flex-1 overflow-y-auto flex flex-col w-full max-w-[480px] mx-auto safe-scroll">
 

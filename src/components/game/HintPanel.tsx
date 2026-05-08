@@ -20,13 +20,15 @@ export default function HintPanel({ session, mode }: Props) {
     case 'skill_targeting':   hint = '✨ 対象マスをタップ（他のマスでキャンセル）'; break;
     case 'idle': {
       const hasFront = Array.from({ length: BOARD_COLS }, (_, c) => session.board[0]?.[c])
-        .some(u => u?.owner === 'player' && !u.hasActedThisTurn);
-      if (hasFront) hint = '⚔ 最前線からベース攻撃できます';
+        .some(u => u?.owner === 'player');
+      const canMove = !session.player.hasMovedThisTurn;
+      const canAttack = !session.player.hasAttackedThisTurn;
+      if (hasFront && canAttack) hint = '⚔ 最前線からベース攻撃できます';
       else if (session.player.hand.length > 0 && !session.player.hasSummonedThisTurn)
         hint = '手札のカードをタップして召喚';
-      else {
-        const hasUnacted = session.board.some(row => row.some(c => c?.owner === 'player' && !c.hasActedThisTurn));
-        if (hasUnacted) hint = '盤面のユニットをタップして行動';
+      else if (canMove || canAttack) {
+        const hasUnits = session.board.some(row => row.some(c => c?.owner === 'player'));
+        if (hasUnits) hint = '盤面のユニットをタップして行動';
       }
       if (session.turnCount === 1 && !hint) hint = '手札のカードをタップして召喚しよう';
       break;

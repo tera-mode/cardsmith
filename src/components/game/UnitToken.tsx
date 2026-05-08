@@ -44,19 +44,21 @@ export default function UnitToken({ unit, isSelected }: Props) {
         draggable={false}
         style={{
           position: 'absolute',
-          top: 3,      // HPバーの下から
+          top: 3,
           left: 0,
           right: 0,
-          bottom: 14, // ATK/HP表示の上まで
+          bottom: 14,
           width: '100%',
           height: 'calc(100% - 17px)',
           objectFit: 'cover',
-          objectPosition: 'center 18%', // 顔・上半身を優先表示
+          objectPosition: 'center 18%',
           display: 'block',
           userSelect: 'none',
-        }}
+          WebkitTouchCallout: 'none',
+          pointerEvents: 'none',
+        } as React.CSSProperties}
+        onContextMenu={(e) => e.preventDefault()}
         onError={(e) => {
-          // 画像がなければフォールバック非表示（背景色で代替）
           (e.target as HTMLImageElement).style.display = 'none';
         }}
       />

@@ -69,7 +69,7 @@ interface GameContextType {
   session: GameSession | null;
   mode: InteractionMode;
   highlightedCells: Position[];
-  initGame: (userId: string, questId?: string, playerArchetype?: Archetype) => void;
+  initGame: (userId: string, questId?: string, playerArchetype?: Archetype, customDeck?: Card[]) => void;
   selectCard: (index: number) => void;
   summonToCell: (pos: Position) => void;
   selectUnit: (unit: Unit) => void;
@@ -168,13 +168,15 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ─── ゲーム初期化 ───────────────────────────────────────────────────────
 
-  const initGame = useCallback((userId: string, questId?: string, playerArchetype?: Archetype) => {
+  const initGame = useCallback((userId: string, questId?: string, playerArchetype?: Archetype, customDeck?: Card[]) => {
     const { difficulty: qDiff, enemyDeck, enemyBaseHp } = resolveEnemyConfig(questId);
     setDifficulty(qDiff);
 
-    const playerDeck = playerArchetype
-      ? shuffleDeck(buildStarterDeck(playerArchetype))
-      : shuffleDeck(buildStandardDeck());
+    const playerDeck = customDeck
+      ? shuffleDeck(customDeck)
+      : playerArchetype
+        ? shuffleDeck(buildStarterDeck(playerArchetype))
+        : shuffleDeck(buildStandardDeck());
 
     const newSession: GameSession = {
       sessionId: uuidv4(),
@@ -256,7 +258,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const selectUnit = useCallback((unit: Unit) => {
     const s = sessionRef.current;
     if (!s || s.currentTurn !== 'player' || unit.owner !== 'player') return;
-    if (unit.hasActedThisTurn || !canAct(unit)) return;
+    if (!canAct(unit)) return;
+    // 移動・攻撃どちらも残っていない場合は選択不可
+    if (s.player.hasMovedThisTurn && s.player.hasAttackedThisTurn) return;
     // 移動先を即時ハイライト（移動済みの場合は空）
     const moves = !s.player.hasMovedThisTurn ? getLegalMoves(unit, s.board) : [];
     setMode({ type: 'unit_selected', unit });
@@ -287,23 +291,24 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const moved: Unit = { ...unit, position: pos };
     newBoard = isSamePos ? s.board : placeUnit(newBoard, moved, pos);
     const logEntry = isSamePos ? `${unit.card.name} が待機` : `${unit.card.name} が移動`;
-    updateSession({ ...s, board: newBoard, player: { ...s.player, hasMovedThisTurn: true }, log: [...s.log, logEntry] });
-    setMode({ type: 'unit_post_move', unit: moved });
+    const newState = { ...s, board: newBoard, player: { ...s.player, hasMovedThisTurn: true }, log: [...s.log, logEntry] };
+    updateSession(newState);
+    // 攻撃済みor攻撃対象なし → 即 idle（「行動終了」不要）
+    const hasAttackOptions = !s.player.hasAttackedThisTurn && getLegalAttacks(moved, newBoard).length > 0;
+    if (hasAttackOptions) {
+      setMode({ type: 'unit_post_move', unit: moved });
+    } else {
+      setMode({ type: 'idle' });
+    }
     setHighlightedCells([]);
   }, [mode, updateSession]);
 
-  // ─── 行動終了 ───────────────────────────────────────────────────────────
+  // ─── 行動終了（post-move 中にパスして idle へ戻る） ──────────────────────
 
-  const endUnitAction = useCallback((unit: Unit) => {
-    const s = sessionRef.current;
-    if (!s) return;
-    const finalBoard = s.board.map((r) => [...r]);
-    const u = finalBoard[unit.position.row]?.[unit.position.col];
-    if (u) finalBoard[unit.position.row][unit.position.col] = { ...u, hasActedThisTurn: true };
-    updateSession({ ...s, board: finalBoard, log: [...s.log, `${unit.card.name} が行動終了`] });
+  const endUnitAction = useCallback((_unit: Unit) => {
     setMode({ type: 'idle' });
     setHighlightedCells([]);
-  }, [updateSession]);
+  }, []);
 
   // ─── 攻撃 ────────────────────────────────────────────────────────────────
 
@@ -338,19 +343,12 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    // 行動済みフラグ
-    const finalBoard = nextState.board.map((r) => [...r]);
-    const attackerAfter = finalBoard[attacker.position.row]?.[attacker.position.col];
-    if (attackerAfter) {
-      finalBoard[attacker.position.row][attacker.position.col] = { ...attackerAfter, hasActedThisTurn: true };
-    }
-
-    // 攻撃は1ターン1回
+    // 攻撃は1ターン1回（hasActedThisTurn はセッションフラグで管理）
     nextState = { ...nextState, player: { ...nextState.player, hasAttackedThisTurn: true } };
 
-    nextState = checkWinner({ ...nextState, board: finalBoard });
+    nextState = checkWinner(nextState);
     const finished = !!nextState.winner;
-    const result: GameSession = { ...nextState, board: finalBoard, finishedAt: finished ? Date.now() : undefined };
+    const result: GameSession = { ...nextState, finishedAt: finished ? Date.now() : undefined };
 
     updateSession(result);
     if (finished) saveSession(result);
@@ -389,14 +387,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
     let nextState = resolveActivatedSkill(s, unit, target ?? null);
 
-    // 行動済みフラグ
-    const finalBoard = nextState.board.map((r) => [...r]);
-    const updUnit = finalBoard[unit.position.row]?.[unit.position.col];
-    if (updUnit) finalBoard[unit.position.row][unit.position.col] = { ...updUnit, hasActedThisTurn: true };
-
-    nextState = checkWinner({ ...nextState, board: finalBoard });
+    nextState = checkWinner(nextState);
     const finished = !!nextState.winner;
-    const result: GameSession = { ...nextState, board: finalBoard, finishedAt: finished ? Date.now() : undefined };
+    const result: GameSession = { ...nextState, finishedAt: finished ? Date.now() : undefined };
 
     updateSession(result);
     if (finished) saveSession(result);

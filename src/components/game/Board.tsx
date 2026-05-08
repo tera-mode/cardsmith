@@ -70,8 +70,8 @@ export default function Board({ board, mode, highlightedCells, onUnitLongPress }
       return;
     }
 
-    // idle：プレイヤーのユニットを選択
-    if (unit && unit.owner === 'player' && !unit.hasActedThisTurn) {
+    // idle：プレイヤーのユニットを選択（バリデーションは selectUnit 内で行う）
+    if (unit && unit.owner === 'player') {
       selectUnit(unit);
     }
   };

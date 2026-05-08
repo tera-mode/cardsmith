@@ -227,8 +227,9 @@ export function triggerOnAttack(
   let workingState = enterDispatch(state);
   const freshAttacker = findUnit(workingState, attacker.instanceId) ?? attacker;
   const freshTarget = findUnit(workingState, target.instanceId);
+  // 攻撃対象が死亡してボードから除去済みでも、位置情報のために元のUnit参照を渡す
   const ctx = makeCtx(freshAttacker, workingState, {
-    attackTarget: freshTarget ?? undefined,
+    attackTarget: freshTarget ?? target,
     damageAmount: damageDealt,
   });
 

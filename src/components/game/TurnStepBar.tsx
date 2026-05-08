@@ -42,7 +42,7 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
 
   const summoned = session.player.hasSummonedThisTurn;
   const moved    = session.player.hasMovedThisTurn;
-  const attacked = session.board.some(row => row.some(cell => cell?.owner === 'player' && cell.hasActedThisTurn));
+  const attacked = session.player.hasAttackedThisTurn;
 
   const activeSummon = mode.type === 'card_selected';
   const activeMove   = mode.type === 'unit_moving';

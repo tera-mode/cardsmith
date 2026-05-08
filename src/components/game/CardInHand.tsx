@@ -49,9 +49,8 @@ export default function CardInHand({ card, index, isSelected, disabled, onClick,
       disabled={disabled}
       className={`dungeon-card${isSelected ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''}`}
       style={{ width: 80, height: 112, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+      onContextMenu={(e) => e.preventDefault()}
     >
-      {/* コストバッジ */}
-      <div className="dungeon-card__cost">{card.cost}</div>
 
       {/* レアリティバッジ */}
       <div className="dungeon-card__rarity" style={{ color: rarityColor, borderColor: rarityColor }}>
@@ -78,11 +77,11 @@ export default function CardInHand({ card, index, isSelected, disabled, onClick,
             objectPosition: 'center 18%',
             display: 'block',
             userSelect: 'none',
-          }}
+            WebkitTouchCallout: 'none',
+          } as React.CSSProperties}
+          onContextMenu={(e) => e.preventDefault()}
           onError={(e) => {
-            const el = e.target as HTMLImageElement;
-            el.style.display = 'none';
-            // フォールバック: 背景色表示のみ
+            (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
       </div>
