@@ -79,14 +79,14 @@ function GameScreen() {
     }
   }, [session]);
 
-  // ゲーム初期化（q0_3 は onSelect で直接呼ぶ。それ以外はプロローグ+デッキ選択完了後）
+  // ゲーム初期化（プロローグ・系統選択・デッキ選択をすべて通過後に起動）
   useEffect(() => {
     if (!user || session) return;
-    if (isQ03) return; // q0_3 は ArchetypeSelectModal の onSelect で initGame を呼ぶ
+    if (isQ03 && !selectedArchetype) return; // q0_3 は系統選択待ち
     if (hasPrologue && !prologueDone) return;
     if (needsDeckSelect) return; // デッキ選択待ち
-    initGame(user.uid, questId, undefined, selectedDeck ?? undefined);
-  }, [user, session, initGame, isQ03, questId, hasPrologue, prologueDone, needsDeckSelect, selectedDeck]);
+    initGame(user.uid, questId, selectedArchetype ?? undefined, selectedDeck ?? undefined);
+  }, [user, session, initGame, isQ03, selectedArchetype, questId, hasPrologue, prologueDone, needsDeckSelect, selectedDeck]);
 
   // リザルトURLパラメータ構築（session ref 経由でstale closure回避）
   const sessionRef = useRef(session);
@@ -153,13 +153,7 @@ function GameScreen() {
     return (
       <DeckSelectModal
         starterArchetype={selectedArchetype ?? undefined}
-        onSelect={deck => {
-          setSelectedDeck(deck);
-          // q0_3 は選択アーキタイプ+カスタムデッキで initGame
-          if (isQ03 && selectedArchetype && user) {
-            initGame(user.uid, questId, selectedArchetype, deck);
-          }
-        }}
+        onSelect={deck => setSelectedDeck(deck)}
       />
     );
   }

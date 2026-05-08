@@ -259,6 +259,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const s = sessionRef.current;
     if (!s || s.currentTurn !== 'player' || unit.owner !== 'player') return;
     if (!canAct(unit)) return;
+    // 召喚ターンに行動不可なトークン・クローンは除外
+    if (unit.hasActedThisTurn) return;
     // 移動・攻撃どちらも残っていない場合は選択不可
     if (s.player.hasMovedThisTurn && s.player.hasAttackedThisTurn) return;
     // 移動先を即時ハイライト（移動済みの場合は空）

@@ -2,7 +2,7 @@
 
 import { useProfile } from '@/contexts/ProfileContext';
 import { CARD_MAP } from '@/lib/game/cards';
-import { buildStandardDeck } from '@/lib/game/decks';
+import { buildStandardDeck, buildStarterDeck } from '@/lib/game/decks';
 import type { Archetype } from '@/lib/game/decks';
 import type { Card } from '@/lib/types/game';
 import type { Deck } from '@/lib/types/meta';
@@ -26,7 +26,8 @@ function deckToCards(deck: Deck): Card[] {
 export default function DeckSelectModal({ starterArchetype, onSelect }: Props) {
   const { decks } = useProfile();
 
-  const defaultCards = buildStandardDeck();
+  // starterArchetype が指定されている場合はその系統のスターターデッキを使う
+  const defaultCards = starterArchetype ? buildStarterDeck(starterArchetype) : buildStandardDeck();
 
   return (
     <>

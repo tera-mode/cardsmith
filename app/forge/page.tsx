@@ -103,6 +103,9 @@ export default function ForgePage() {
       const img = await uploadUserImage(user.uid, blob);
       addUserImage(img);
       setSpec(s => ({ ...s, imageUrl: img.url }));
+    } catch (err) {
+      console.error('画像アップロード失敗:', err);
+      alert('画像のアップロードに失敗しました。Storage のルールが設定されているか確認してください。');
     } finally {
       setUploadingImage(false);
     }
