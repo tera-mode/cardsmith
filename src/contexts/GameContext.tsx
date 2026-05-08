@@ -16,7 +16,7 @@ import {
   buildStandardDeck, buildStarterDeck, buildEnemyDeck, shuffleDeck, INITIAL_HAND_SIZE, BASE_HP,
   Archetype,
 } from '@/lib/game/decks';
-import { CARD_MAP } from '@/lib/game/cards';
+import { CARD_MAP, getStarterCardsByAttribute } from '@/lib/game/cards';
 import {
   applyDamage, triggerOnSummon, triggerOnAttack,
   triggerOnTurnStart, triggerOnTurnEnd, resolveActivatedSkill,
@@ -132,14 +132,11 @@ function resolveEnemyConfig(questId?: string): {
     return { difficulty, enemyDeck: shuffleDeck(deck), enemyBaseHp };
   }
   if (quest.enemyDeckId === 'tutorial_militia') {
-    // q0_2: 最安 8枚 + 2番目コストを 2枚
-    const deck = [
-      c('sei_noa'), c('sei_noa'),
-      c('mei_cal'), c('mei_cal'),
-      c('shin_hina'), c('shin_hina'),
-      c('kou_mk01'), c('kou_mk01'),
-      c('sei_eluna'), c('shin_lil'),
-    ];
+    // q0_2: 6系統の最安×1 + 2番目コスト×1 = 12枚（全系統の弱ユニットのみ）
+    const deck = ARCHETYPE_IDS.flatMap(attr => {
+      const sorted = getStarterCardsByAttribute(attr);
+      return [sorted[0], sorted[1]].filter(Boolean) as Card[];
+    });
     return { difficulty, enemyDeck: shuffleDeck(deck), enemyBaseHp };
   }
   if (quest.enemyDeckId === 'tutorial_mentor') {
