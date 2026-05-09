@@ -22,6 +22,18 @@ export default function DeckPage() {
   const [editing, setEditing] = useState<Deck | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showUnsaved, setShowUnsaved] = useState(false);
+
+  // 編集中のブラウザバック／リロード防止
+  useEffect(() => {
+    if (!editing) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [editing]);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
@@ -107,7 +119,7 @@ export default function DeckPage() {
     return (
       <div className="game-layout stone-bg flex-col">
         <header className="flex-shrink-0 h-14 flex items-center px-3 gap-2 border-b  bg-[#0a0e27]/90">
-          <button onClick={() => setEditing(null)} className="text-secondary text-xl">←</button>
+          <button onClick={() => setShowUnsaved(true)} className="text-secondary text-xl">←</button>
           <input
             value={editing.name}
             onChange={e => setEditing({ ...editing, name: e.target.value })}
@@ -181,6 +193,20 @@ export default function DeckPage() {
             );
           })}
         </div>
+
+        {/* 未保存警告ダイアログ */}
+        <ConfirmSheet
+          open={showUnsaved}
+          title="未保存の変更があります"
+          confirmLabel="破棄して戻る"
+          onConfirm={() => { setShowUnsaved(false); setEditing(null); }}
+          onCancel={() => setShowUnsaved(false)}
+          danger
+        >
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>
+            編集内容が保存されていません。<br />破棄して一覧に戻りますか？
+          </p>
+        </ConfirmSheet>
       </div>
     );
   }

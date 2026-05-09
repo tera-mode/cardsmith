@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
@@ -17,15 +17,20 @@ const STATUS_ICON: Record<string, string> = {
   cleared: '✅',
 };
 
-export default function StoryPage() {
+function StoryContent() {
   const { user, loading: authLoading } = useAuth();
   const { questProgress, loading } = useProfile();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [q03ArchSelect, setQ03ArchSelect] = useState(false);
-  const initialChapter = typeof window !== 'undefined'
-    ? parseInt(new URLSearchParams(window.location.search).get('chapter') ?? '0') || 0
-    : 0;
+  const initialChapter = parseInt(searchParams.get('chapter') ?? '0') || 0;
   const [chapter, setChapter] = useState(initialChapter);
+
+  // URLパラメータが変わったら章を更新
+  useEffect(() => {
+    const c = parseInt(searchParams.get('chapter') ?? '0') || 0;
+    setChapter(c);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/');
@@ -148,5 +153,17 @@ export default function StoryPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function StoryPage() {
+  return (
+    <Suspense fallback={
+      <div className="game-layout stone-bg flex-col items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <StoryContent />
+    </Suspense>
   );
 }

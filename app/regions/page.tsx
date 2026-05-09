@@ -55,7 +55,7 @@ export default function RegionsPage() {
   if (loading || authLoading) {
     return (
       <div className="game-layout stone-bg flex-col">
-        <AppHeader backHref="/" title="六領域" />
+        <AppHeader backHref="/" title="クエスト" />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
         </div>
@@ -65,7 +65,7 @@ export default function RegionsPage() {
 
   return (
     <div className="game-layout stone-bg flex-col" data-testid="region-map">
-      <AppHeader backHref="/" title="六領域" />
+      <AppHeader backHref="/" title="クエスト" />
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 24px' }}>
 
@@ -117,7 +117,7 @@ export default function RegionsPage() {
           </div>
           {!q03Cleared && (
             <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 12, fontStyle: 'italic' }}>
-              チュートリアルをクリアすると六領域が解放される
+              チュートリアルをクリアするとクエストが解放される
             </p>
           )}
         </div>

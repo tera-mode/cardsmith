@@ -2,14 +2,11 @@
 
 import { useProfile } from '@/contexts/ProfileContext';
 import { CARD_MAP } from '@/lib/game/cards';
-import { buildStandardDeck, buildStarterDeck } from '@/lib/game/decks';
 import { craftedToGameCard } from '@/lib/server-logic/forge';
-import type { Archetype } from '@/lib/game/decks';
 import type { Card } from '@/lib/types/game';
 import type { Deck, OwnedCard } from '@/lib/types/meta';
 
 interface Props {
-  starterArchetype?: Archetype;
   onSelect: (deck: Card[]) => void;
 }
 
@@ -33,11 +30,8 @@ function deckToCards(deck: Deck, ownedCards: OwnedCard[]): Card[] {
   return result;
 }
 
-export default function DeckSelectModal({ starterArchetype, onSelect }: Props) {
+export default function DeckSelectModal({ onSelect }: Props) {
   const { decks, ownedCards } = useProfile();
-
-  // starterArchetype が指定されている場合はその系統のスターターデッキを使う
-  const defaultCards = starterArchetype ? buildStarterDeck(starterArchetype) : buildStandardDeck();
 
   return (
     <>
@@ -69,29 +63,6 @@ export default function DeckSelectModal({ starterArchetype, onSelect }: Props) {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {/* スターターデッキ */}
-          <button
-            onClick={() => onSelect(defaultCards)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              background: 'rgba(30,22,14,0.9)',
-              border: '1px solid var(--gold-deep)',
-              borderRadius: 10, padding: '12px 14px',
-              cursor: 'pointer', textAlign: 'left',
-            }}
-          >
-            <span style={{ fontSize: 24 }}>📖</span>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}>
-                スターターデッキ
-              </p>
-              <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-                {defaultCards.length}枚
-              </p>
-            </div>
-            <span style={{ color: 'var(--gold)', fontSize: 18 }}>›</span>
-          </button>
-
           {/* カスタムデッキ一覧（更新日時の新しい順） */}
           {[...decks].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0)).map(deck => {
             const cards = deckToCards(deck, ownedCards);

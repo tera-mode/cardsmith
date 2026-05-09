@@ -137,8 +137,8 @@ export function getLegalAttacks(unit: Unit, board: BoardState): AttackTarget[] {
         col: unit.position.col + abs.dx,
       };
       if (!isInBounds(to)) {
-        // 盤外かつ前方向 → 最前線からのベース攻撃
-        if (isAtFront && abs.dy === (owner === 'player' ? -1 : 1)) {
+        // 盤外かつ前方向 → 最前線からのベース攻撃（重複防止で1つだけ追加）
+        if (isAtFront && abs.dy === (owner === 'player' ? -1 : 1) && !targets.some(t => t.type === 'base')) {
           targets.push({ type: 'base' });
         }
         continue;

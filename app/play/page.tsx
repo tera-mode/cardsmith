@@ -159,7 +159,6 @@ function GameScreen() {
   if (needsDeckSelect) {
     return (
       <DeckSelectModal
-        starterArchetype={selectedArchetype ?? undefined}
         onSelect={deck => setSelectedDeck(deck)}
       />
     );
