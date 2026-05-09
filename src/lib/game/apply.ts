@@ -8,8 +8,9 @@ import { createUnit, placeUnit, removeUnit, resolveAttack, BOARD_ROWS } from '@/
 import {
   applyDamage, triggerOnSummon, triggerOnAttack,
   applyCounterAttack, checkWinner, resolveActivatedSkill,
+  triggerOnMove, triggerOnSummonAlly, triggerOnBaseDamaged,
 } from '@/lib/game/events/dispatcher';
-import { getEffectiveAtk, findUnit } from '@/lib/game/helpers';
+import { getEffectiveAtk, findUnit, consumeAtkBonusOnce } from '@/lib/game/helpers';
 import type { AIAction, Owner } from '@/lib/game/ai/types';
 
 // ─── 内部ユーティリティ ────────────────────────────────────────────────────
@@ -45,6 +46,7 @@ export function applySummon(
   }
 
   s = triggerOnSummon(s, unit);
+  s = triggerOnSummonAlly(s, unit);
   return checkWinner(s);
 }
 
@@ -56,10 +58,13 @@ export function applyMove(
   const unit = findUnit(state, unitId);
   if (!unit) return state;
 
-  const cleared = removeUnit(state.board, unit.position);
+  const fromPos = unit.position;
+  const cleared = removeUnit(state.board, fromPos);
   const moved: Unit = { ...unit, position: pos, hasMovedThisTurn: true };
   const board = placeUnit(cleared, moved, pos);
-  return { ...state, board, log: [...state.log, `${unit.card.name} が移動`] };
+  let s: GameSession = { ...state, board, log: [...state.log, `${unit.card.name} が移動`] };
+  s = triggerOnMove(s, moved, fromPos, pos);
+  return s;
 }
 
 export function applyAttack(
@@ -75,12 +80,15 @@ export function applyAttack(
 
   if (target.type === 'base') {
     const { board, log, playerBaseHp, aiBaseHp } = resolveAttack(state, attacker, target);
+    const atk = getEffectiveAtk(attacker);
+    const damagedOwner: 'player' | 'ai' = owner === 'player' ? 'ai' : 'player';
     s = {
       ...state, board,
       player: { ...state.player, baseHp: playerBaseHp },
       ai: { ...state.ai, baseHp: aiBaseHp },
       log: [...state.log, ...log],
     };
+    s = triggerOnBaseDamaged(s, damagedOwner, atk);
   } else {
     const defender = target.unit;
     const atk = getEffectiveAtk(attacker);
@@ -93,6 +101,9 @@ export function applyAttack(
     const freshAtk = findUnit(s, attacker.instanceId);
     if (freshAtk) s = triggerOnAttack(s, freshAtk, defender, atk);
   }
+
+  // atkBonusOnce リセット（風読み・追跡用の1回限りボーナス）
+  s = consumeAtkBonusOnce(s, attackerId);
 
   // 攻撃者を行動済みにマーク（hasAttackedThisTurn=true で移動も封印）
   const freshAtk = findUnit(s, attackerId);

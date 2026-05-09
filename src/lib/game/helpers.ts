@@ -298,7 +298,33 @@ export function applyBaseDamage(state: GameSession, attacker: 'player' | 'ai', a
 // ─── 計算 ─────────────────────────────────────────────────────────────────
 
 export function getEffectiveAtk(unit: Unit): number {
-  return unit.card.atk + unit.buffs.atkBonus + unit.buffs.auraAtk;
+  return unit.card.atk + unit.buffs.atkBonus + unit.buffs.auraAtk + (unit.buffs.atkBonusOnce ?? 0);
+}
+
+export function consumeAtkBonusOnce(state: GameSession, unitId: string): GameSession {
+  const u = findUnit(state, unitId);
+  if (!u || !u.buffs.atkBonusOnce) return state;
+  const board = state.board.map(r => [...r]);
+  board[u.position.row][u.position.col] = { ...u, buffs: { ...u.buffs, atkBonusOnce: 0 } };
+  return { ...state, board };
+}
+
+export function healBase(state: GameSession, owner: 'player' | 'ai', amount: number): GameSession {
+  if (owner === 'player') {
+    return { ...state, player: { ...state.player, baseHp: state.player.baseHp + amount } };
+  } else {
+    return { ...state, ai: { ...state.ai, baseHp: state.ai.baseHp + amount } };
+  }
+}
+
+export function getNearestEnemy(state: GameSession, fromPos: Position, owner: 'player' | 'ai'): Unit | null {
+  const enemies = getEnemiesOnBoard(state, owner);
+  if (!enemies.length) return null;
+  return enemies.reduce((closest, u) => {
+    const d = Math.abs(u.position.row - fromPos.row) + Math.abs(u.position.col - fromPos.col);
+    const cd = Math.abs(closest.position.row - fromPos.row) + Math.abs(closest.position.col - fromPos.col);
+    return d < cd ? u : closest;
+  });
 }
 
 export function isUnitAlive(unit: Unit, state: GameSession): boolean {
@@ -391,7 +417,7 @@ export function createTokenUnit(owner: 'player' | 'ai', position: Position): Uni
     hasAttackedThisTurn: false,
     hasMovedThisTurn: false,
     hasSummonedThisTurn: true,
-    buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
+    buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0, atkBonusOnce: 0 },
     statusEffects: { frozen: false, paralyzed: false, silenced: false },
     isToken: true,
   };
@@ -411,7 +437,7 @@ export function createCloneUnit(source: Unit, position: Position): Unit {
     hasAttackedThisTurn: false,
     hasMovedThisTurn: false,
     hasSummonedThisTurn: true,
-    buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
+    buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0, atkBonusOnce: 0 },
     statusEffects: { frozen: false, paralyzed: false, silenced: false },
     isToken: true,
   };

@@ -143,6 +143,106 @@ export const MATERIALS: Material[] = [
     effect: { type: 'skill', skill: { id: 'tenkei', uses: 1 } } },
   { id: 'skill_daishinkan_1', name: '大震撼×1', category: 'skill', description: '全敵に1ダメージ（1回）', cost: 5, icon: '⚡',
     effect: { type: 'skill', skill: { id: 'daishinkan', uses: 1 } } },
+
+  // ── 攻撃時スキル (v2) ──────────────────────────────────────────────────
+  { id: 'skill_shinshoku_inf', name: '侵食・無限', category: 'skill', description: '攻撃で敵を倒すたびにATK+1', cost: 7, icon: '🌑',
+    effect: { type: 'skill', skill: { id: 'shinshoku', uses: 'infinite' } } },
+  { id: 'skill_chodan_inf', name: '跳弾・無限', category: 'skill', description: '攻撃時、ATK/3のダメージをランダムな別の敵に与える', cost: 6, icon: '🎯',
+    effect: { type: 'skill', skill: { id: 'chodan', uses: 'infinite' } } },
+  { id: 'skill_mujihi_inf', name: '無慈悲・無限', category: 'skill', description: 'HP50%以下の敵を攻撃したとき即死させる', cost: 8, icon: '💀',
+    effect: { type: 'skill', skill: { id: 'mujihi', uses: 'infinite' } } },
+  { id: 'skill_buki_hakai_inf', name: '武器破壊・無限', category: 'skill', description: '攻撃命中時、対象のATK-1（永続）', cost: 6, icon: '🔨',
+    effect: { type: 'skill', skill: { id: 'buki_hakai', uses: 'infinite' } } },
+
+  // ── 被ダメージ時スキル (v2) ────────────────────────────────────────────
+  { id: 'skill_teni_3', name: '転移×3', category: 'skill', description: 'ダメージを受けたとき、ランダムな空きマスに移動（3回）', cost: 5, icon: '🌀',
+    effect: { type: 'skill', skill: { id: 'teni', uses: 3 } } },
+  { id: 'skill_touketsu_hansha_inf', name: '凍結反射・無限', category: 'skill', description: 'ダメージを受けたとき、攻撃者を凍結させる', cost: 7, icon: '🧊',
+    effect: { type: 'skill', skill: { id: 'touketsu_hansha', uses: 'infinite' } } },
+  { id: 'skill_bankai_1', name: '万解×1', category: 'skill', description: '初めてHP50%以下になった時にHP+2（1回）', cost: 5, icon: '🛡️',
+    effect: { type: 'skill', skill: { id: 'bankai', uses: 1 } } },
+
+  // ── 死亡時スキル (v2) ──────────────────────────────────────────────────
+  { id: 'skill_eiyou_1', name: '英雄・無限', category: 'skill', description: '死亡時、味方全員のATK+1（1回）', cost: 7, icon: '🦅',
+    effect: { type: 'skill', skill: { id: 'eiyou', uses: 1 } } },
+  { id: 'skill_daishou_1', name: '代償の魂×1', category: 'skill', description: '死亡時、自陣HP+2（1回）', cost: 5, icon: '💎',
+    effect: { type: 'skill', skill: { id: 'daishou_no_tamashii', uses: 1 } } },
+  { id: 'skill_saikouchiku_1', name: '再構築×1', category: 'skill', description: '死亡時、手札の最低コストカードを即召喚（1回）', cost: 7, icon: '🔁',
+    effect: { type: 'skill', skill: { id: 'saikouchiku', uses: 1 } } },
+  { id: 'skill_hatsuga_1', name: '発芽×1', category: 'skill', description: '死亡時、そのマスに1/1の苗トークンを生成（1回）', cost: 4, icon: '🌱',
+    effect: { type: 'skill', skill: { id: 'hatsuga', uses: 1 } } },
+
+  // ── ターン終了/開始スキル (v2) ─────────────────────────────────────────
+  { id: 'skill_dokumu_inf', name: '毒霧・無限', category: 'skill', description: '自ターン終了時、隣接全敵に1ダメージ', cost: 7, icon: '☁️',
+    effect: { type: 'skill', skill: { id: 'dokumu', uses: 'infinite' } } },
+  { id: 'skill_kunren_inf', name: '訓練・無限', category: 'skill', description: '自ターン開始時、隣接する味方1体のATK+1', cost: 7, icon: '⚒️',
+    effect: { type: 'skill', skill: { id: 'kunren', uses: 'infinite' } } },
+
+  // ── オーラスキル (v2) ──────────────────────────────────────────────────
+  { id: 'skill_shireijutsu_inf', name: '死霊術・無限', category: 'skill', description: '味方が死ぬたびにATK+1（蓄積）', cost: 8, icon: '💀',
+    effect: { type: 'skill', skill: { id: 'shireijutsu', uses: 'infinite' } } },
+  { id: 'skill_mure_inf', name: '群れ・無限', category: 'skill', description: '同系統の味方が3体以上の時、ATK+2', cost: 6, icon: '🐺',
+    effect: { type: 'skill', skill: { id: 'mure', uses: 'infinite' } } },
+  { id: 'skill_kokou_inf', name: '孤高・無限', category: 'skill', description: '周囲8方向に味方がいない時、ATK+3', cost: 7, icon: '🦁',
+    effect: { type: 'skill', skill: { id: 'kokou', uses: 'infinite' } } },
+
+  // ── 起動型スキル (v2) ──────────────────────────────────────────────────
+  { id: 'skill_ansatsu_1', name: '暗殺×1', category: 'skill', description: '背後にいる敵を即死させる（1回）', cost: 8, icon: '🗡️',
+    effect: { type: 'skill', skill: { id: 'ansatsu', uses: 1 } } },
+  { id: 'skill_kakusei_1', name: '覚醒×1', category: 'skill', description: '味方1体のATK+2、HP+2（1回）', cost: 6, icon: '✨',
+    effect: { type: 'skill', skill: { id: 'kakusei', uses: 1 } } },
+  { id: 'skill_abekobe_1', name: 'あべこべ×1', category: 'skill', description: '自分のATKと現在HPを入れ替える（1回）', cost: 5, icon: '🔄',
+    effect: { type: 'skill', skill: { id: 'abekobe', uses: 1 } } },
+  { id: 'skill_soukan_1', name: '送還×1', category: 'skill', description: '隣接する敵を手札に戻す（1回）', cost: 6, icon: '↩️',
+    effect: { type: 'skill', skill: { id: 'soukan', uses: 1 } } },
+
+  // ── on_move スキル ─────────────────────────────────────────────────────
+  { id: 'skill_shissou_3', name: '疾走×3', category: 'skill', description: '移動するたびにATK+1（最大3回）', cost: 5, icon: '💨',
+    effect: { type: 'skill', skill: { id: 'shissou', uses: 3 } } },
+  { id: 'skill_zankyou_inf', name: '残響・無限', category: 'skill', description: '移動するたびに元のマスに1/1トークン', cost: 6, icon: '🌊',
+    effect: { type: 'skill', skill: { id: 'zankyou', uses: 'infinite' } } },
+  { id: 'skill_junrei_inf', name: '巡礼・無限', category: 'skill', description: '前衛列に到達するたびに自陣HP+1', cost: 5, icon: '⛩️',
+    effect: { type: 'skill', skill: { id: 'junrei', uses: 'infinite' } } },
+  { id: 'skill_kazeyomi_inf', name: '風読み・無限', category: 'skill', description: '移動するたびに次の攻撃ATK+1（蓄積）', cost: 5, icon: '🌬️',
+    effect: { type: 'skill', skill: { id: 'kazeyomi', uses: 'infinite' } } },
+  { id: 'skill_tsuiseki_inf', name: '追跡・無限', category: 'skill', description: '移動後、最近接敵との距離分だけ次攻撃ATKボーナス', cost: 5, icon: '🎯',
+    effect: { type: 'skill', skill: { id: 'tsuiseki', uses: 'infinite' } } },
+
+  // ── on_skill_used スキル ───────────────────────────────────────────────
+  { id: 'skill_maryoku_inf', name: '魔力増幅・無限', category: 'skill', description: 'スキル使用を観測するたびにATK+1', cost: 7, icon: '🔮',
+    effect: { type: 'skill', skill: { id: 'maryoku_zoufuku', uses: 'infinite' } } },
+  { id: 'skill_rendou_5', name: '連動×5', category: 'skill', description: '味方スキル使用時、そのユニットのスキル回数+1（5回）', cost: 6, icon: '⛓️',
+    effect: { type: 'skill', skill: { id: 'rendou', uses: 5 } } },
+  { id: 'skill_shokubai_inf', name: '触媒・無限', category: 'skill', description: '味方スキル使用時に自陣HP+1', cost: 7, icon: '🧪',
+    effect: { type: 'skill', skill: { id: 'shokubai', uses: 'infinite' } } },
+  { id: 'skill_kyuushuu_inf', name: '吸収・無限', category: 'skill', description: '敵スキル使用時にHP+1', cost: 5, icon: '🔋',
+    effect: { type: 'skill', skill: { id: 'kyuushuu', uses: 'infinite' } } },
+  { id: 'skill_rensajumon_inf', name: '連鎖呪文・無限', category: 'skill', description: '味方スキル使用時にランダムな敵に1ダメージ', cost: 7, icon: '⚡',
+    effect: { type: 'skill', skill: { id: 'rensajumon', uses: 'infinite' } } },
+
+  // ── on_summon_ally スキル ──────────────────────────────────────────────
+  { id: 'skill_shukufuku_inf', name: '祝福・無限', category: 'skill', description: '味方召喚時、その味方のHP+1', cost: 6, icon: '🌟',
+    effect: { type: 'skill', skill: { id: 'shukufuku', uses: 'infinite' } } },
+  { id: 'skill_kobu_summon_inf', name: '鼓舞召喚・無限', category: 'skill', description: '味方召喚時、その味方のATK+1', cost: 6, icon: '📯',
+    effect: { type: 'skill', skill: { id: 'kobu_summon', uses: 'infinite' } } },
+  { id: 'skill_kangei_inf', name: '歓迎の儀・無限', category: 'skill', description: '味方召喚時に自陣HP+1', cost: 5, icon: '🎊',
+    effect: { type: 'skill', skill: { id: 'kangei_no_gi', uses: 'infinite' } } },
+  { id: 'skill_kyoumei_inf', name: '共鳴・無限', category: 'skill', description: '味方召喚時に自分のATK+1', cost: 6, icon: '🎵',
+    effect: { type: 'skill', skill: { id: 'kyoumei', uses: 'infinite' } } },
+  { id: 'skill_summon_chain_3', name: '召喚連鎖×3', category: 'skill', description: '味方召喚時、その味方が即座に行動可能（3回）', cost: 7, icon: '🔗',
+    effect: { type: 'skill', skill: { id: 'summon_chain', uses: 3 } } },
+
+  // ── on_base_damaged スキル ─────────────────────────────────────────────
+  { id: 'skill_chuusei_inf', name: '忠誠・無限', category: 'skill', description: '自陣がダメージを受けるたびにATK+2', cost: 7, icon: '🛡️',
+    effect: { type: 'skill', skill: { id: 'chuusei', uses: 'infinite' } } },
+  { id: 'skill_houfuku_inf', name: '報復の刃・無限', category: 'skill', description: '自陣ダメージ時に最近接の敵に1ダメージ', cost: 6, icon: '⚔️',
+    effect: { type: 'skill', skill: { id: 'houfuku_no_yaiba', uses: 'infinite' } } },
+  { id: 'skill_douin_inf', name: '動員・無限', category: 'skill', description: '自陣ダメージ時にカード1枚ドロー', cost: 7, icon: '📜',
+    effect: { type: 'skill', skill: { id: 'douin', uses: 'infinite' } } },
+  { id: 'skill_dohatsu_inf', name: '怒髪・無限', category: 'skill', description: '自陣ダメージ時にHP+1・ATK+1', cost: 7, icon: '😤',
+    effect: { type: 'skill', skill: { id: 'dohatsu', uses: 'infinite' } } },
+  { id: 'skill_gekibun_inf', name: '檄文・無限', category: 'skill', description: '自陣ダメージ時に味方全員のATK+1', cost: 9, icon: '📣',
+    effect: { type: 'skill', skill: { id: 'gekibun', uses: 'infinite' } } },
 ];
 
 export const MATERIAL_MAP: Record<string, Material> = Object.fromEntries(

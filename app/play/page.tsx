@@ -67,7 +67,7 @@ function GameScreen() {
       hasAttackedThisTurn: false,
       hasMovedThisTurn: false,
       hasSummonedThisTurn: false,
-      buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
+      buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0, atkBonusOnce: 0 },
       statusEffects: { frozen: false, paralyzed: false, silenced: false },
     });
   };

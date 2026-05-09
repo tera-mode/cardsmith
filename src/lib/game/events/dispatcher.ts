@@ -9,6 +9,7 @@ import {
   appendLog,
   healUnit,
   isSkillBlocked,
+  incrementAtkBuff,
 } from '@/lib/game/helpers';
 import {
   getSkill,
@@ -80,6 +81,17 @@ function processDeath(state: GameSession, deadUnit: Unit): GameSession {
       const result = skill.onTrigger!(ctx, deadUnit, workingState);
       workingState = result.state;
       workingState = appendLog(workingState, ...result.log);
+    }
+  }
+
+  // 死霊術（shireijutsu）: 死亡した味方を観測する他の味方のATK+1
+  const allies = getAlliesOnBoard(workingState, deadUnit.owner)
+    .filter(u => u.instanceId !== deadUnit.instanceId);
+  for (const ally of allies) {
+    const aSkill = ally.card.skill ? getSkill(ally.card.skill.id) : null;
+    if (aSkill?.id === 'shireijutsu' && !isSkillBlocked(ally)) {
+      workingState = incrementAtkBuff(workingState, ally.instanceId, 1);
+      workingState = appendLog(workingState, `${ally.card.name}：死霊術！ATK+1`);
     }
   }
 
@@ -319,6 +331,137 @@ export function resolveActivatedSkill(
   workingState = appendLog(workingState, ...result.log);
   workingState = decrementUses(workingState, unit);
   workingState = checkWinner(workingState);
+  workingState = recalculateAuras(workingState);
+  return workingState;
+}
+
+// ─── 移動時スキル発火 ─────────────────────────────────────────────────────
+
+export function triggerOnMove(
+  state: GameSession,
+  unit: Unit,
+  fromPos: Position,
+  toPos: Position,
+): GameSession {
+  if (getDepth(state) >= MAX_DISPATCH_DEPTH) return state;
+
+  const skill = unit.card.skill ? getSkill(unit.card.skill.id) : null;
+  if (!skill || skill.triggerKind !== 'on_move') return state;
+  if (isSkillBlocked(unit) || unit.skillUsesRemaining === 0) return state;
+
+  let workingState = enterDispatch(state);
+  const freshUnit = findUnit(workingState, unit.instanceId) ?? unit;
+  const ctx = makeCtx(freshUnit, workingState, { movedFrom: fromPos, movedTo: toPos });
+
+  if (!skill.shouldTrigger || skill.shouldTrigger(ctx, freshUnit, workingState)) {
+    const result = skill.onTrigger!(ctx, freshUnit, workingState);
+    workingState = result.state;
+    workingState = appendLog(workingState, ...result.log);
+    workingState = decrementUses(workingState, freshUnit);
+  }
+
+  workingState = exitDispatch(workingState);
+  workingState = recalculateAuras(workingState);
+  return workingState;
+}
+
+// ─── スキル使用観測 ───────────────────────────────────────────────────────
+
+export function triggerOnSkillUsed(
+  state: GameSession,
+  skillUser: Unit,
+  skillId: string,
+): GameSession {
+  if (getDepth(state) >= MAX_DISPATCH_DEPTH) return state;
+
+  let workingState = state;
+  const units = getAllUnitsOnBoard(workingState).filter(u => u.instanceId !== skillUser.instanceId);
+
+  for (const unit of units) {
+    const skill = unit.card.skill ? getSkill(unit.card.skill.id) : null;
+    if (!skill || skill.triggerKind !== 'on_skill_used') continue;
+    if (isSkillBlocked(unit)) continue;
+    const freshUnit = findUnit(workingState, unit.instanceId);
+    if (!freshUnit || freshUnit.skillUsesRemaining === 0) continue;
+
+    const ctx = makeCtx(freshUnit, workingState, { skillUser, skillUsedId: skillId });
+    if (skill.shouldTrigger && !skill.shouldTrigger(ctx, freshUnit, workingState)) continue;
+
+    workingState = enterDispatch(workingState);
+    const result = skill.onTrigger!(ctx, freshUnit, workingState);
+    workingState = result.state;
+    workingState = appendLog(workingState, ...result.log);
+    workingState = decrementUses(workingState, freshUnit);
+    workingState = exitDispatch(workingState);
+  }
+
+  return workingState;
+}
+
+// ─── 味方召喚観測 ─────────────────────────────────────────────────────────
+
+export function triggerOnSummonAlly(
+  state: GameSession,
+  summonedUnit: Unit,
+): GameSession {
+  if (getDepth(state) >= MAX_DISPATCH_DEPTH) return state;
+
+  let workingState = state;
+  const allies = getAlliesOnBoard(workingState, summonedUnit.owner)
+    .filter(u => u.instanceId !== summonedUnit.instanceId);
+
+  for (const unit of allies) {
+    const skill = unit.card.skill ? getSkill(unit.card.skill.id) : null;
+    if (!skill || skill.triggerKind !== 'on_summon_ally') continue;
+    if (isSkillBlocked(unit)) continue;
+    const freshUnit = findUnit(workingState, unit.instanceId);
+    if (!freshUnit || freshUnit.skillUsesRemaining === 0) continue;
+
+    const ctx = makeCtx(freshUnit, workingState, { summonedAlly: summonedUnit });
+    if (skill.shouldTrigger && !skill.shouldTrigger(ctx, freshUnit, workingState)) continue;
+
+    workingState = enterDispatch(workingState);
+    const result = skill.onTrigger!(ctx, freshUnit, workingState);
+    workingState = result.state;
+    workingState = appendLog(workingState, ...result.log);
+    workingState = decrementUses(workingState, freshUnit);
+    workingState = exitDispatch(workingState);
+  }
+
+  workingState = recalculateAuras(workingState);
+  return workingState;
+}
+
+// ─── 自陣ダメージ観測 ─────────────────────────────────────────────────────
+
+export function triggerOnBaseDamaged(
+  state: GameSession,
+  damagedOwner: 'player' | 'ai',
+  amount: number,
+): GameSession {
+  if (getDepth(state) >= MAX_DISPATCH_DEPTH) return state;
+
+  let workingState = state;
+  const allies = getAlliesOnBoard(workingState, damagedOwner);
+
+  for (const unit of allies) {
+    const skill = unit.card.skill ? getSkill(unit.card.skill.id) : null;
+    if (!skill || skill.triggerKind !== 'on_base_damaged') continue;
+    if (isSkillBlocked(unit)) continue;
+    const freshUnit = findUnit(workingState, unit.instanceId);
+    if (!freshUnit || freshUnit.skillUsesRemaining === 0) continue;
+
+    const ctx = makeCtx(freshUnit, workingState, { baseDamageAmount: amount });
+    if (skill.shouldTrigger && !skill.shouldTrigger(ctx, freshUnit, workingState)) continue;
+
+    workingState = enterDispatch(workingState);
+    const result = skill.onTrigger!(ctx, freshUnit, workingState);
+    workingState = result.state;
+    workingState = appendLog(workingState, ...result.log);
+    workingState = decrementUses(workingState, freshUnit);
+    workingState = exitDispatch(workingState);
+  }
+
   workingState = recalculateAuras(workingState);
   return workingState;
 }

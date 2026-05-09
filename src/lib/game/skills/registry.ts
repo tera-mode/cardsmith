@@ -3,23 +3,33 @@ import { GameSession, Unit, Position } from '@/lib/types/game';
 // ─── スキルトリガータイプ ─────────────────────────────────────────────────
 
 export type SkillTriggerKind =
-  | 'on_summon'      // 召喚時（自分が召喚された直後）
-  | 'on_attack'      // 攻撃時（自分が攻撃した後）
-  | 'on_damaged'     // 被ダメージ時（自分がダメージを受けた後）
-  | 'on_death'       // 死亡時（自分が死亡した後）
-  | 'on_turn_start'  // ターン開始時
-  | 'on_turn_end'    // ターン終了時
-  | 'activated'      // 手動起動型
-  | 'aura';          // 常時オーラ（毎フレーム再計算）
+  | 'on_summon'        // 召喚時（自分が召喚された直後）
+  | 'on_attack'        // 攻撃時（自分が攻撃した後）
+  | 'on_damaged'       // 被ダメージ時（自分がダメージを受けた後）
+  | 'on_death'         // 死亡時（自分が死亡した後）
+  | 'on_turn_start'    // ターン開始時
+  | 'on_turn_end'      // ターン終了時
+  | 'activated'        // 手動起動型
+  | 'aura'             // 常時オーラ（毎フレーム再計算）
+  | 'on_move'          // 自分が移動した直後
+  | 'on_skill_used'    // 場の他ユニットがスキルを使用した直後
+  | 'on_summon_ally'   // 味方ユニット（自分以外）が召喚された直後
+  | 'on_base_damaged'; // 自陣HPが減った直後
 
 export interface SkillContext {
   remainingUses: number | 'infinite';
   turnCount: number;
   currentTurn: 'player' | 'ai';
-  damagedBy?: Unit;        // on_damaged: ダメージを与えたユニット
-  damageAmount?: number;   // on_damaged: ダメージ量
-  killedBy?: Unit;         // on_death: 死因となったユニット（null の場合も）
-  attackTarget?: Unit;     // on_attack: 攻撃した相手
+  damagedBy?: Unit;           // on_damaged: ダメージを与えたユニット
+  damageAmount?: number;      // on_damaged: ダメージ量
+  killedBy?: Unit;            // on_death: 死因となったユニット
+  attackTarget?: Unit;        // on_attack: 攻撃した相手
+  movedFrom?: Position;       // on_move: 移動元の位置
+  movedTo?: Position;         // on_move: 移動先の位置
+  skillUser?: Unit;           // on_skill_used: スキルを使用したユニット
+  skillUsedId?: string;       // on_skill_used: 使用されたスキルID
+  summonedAlly?: Unit;        // on_summon_ally: 召喚された味方
+  baseDamageAmount?: number;  // on_base_damaged: 自陣HPの減少量
 }
 
 export interface SkillResult {

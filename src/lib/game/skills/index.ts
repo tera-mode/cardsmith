@@ -61,4 +61,64 @@ import './tenkei';
 import './jibaku';
 import './mahi';
 
+// ── 攻撃時スキル (v2) ────────────────────────────────────────────────────
+import './shinshoku';
+import './chodan';
+import './mujihi';
+import './buki_hakai';
+
+// ── 被ダメージ時スキル (v2) ──────────────────────────────────────────────
+import './teni';
+import './touketsu_hansha';
+import './bankai';
+
+// ── 死亡時スキル (v2) ────────────────────────────────────────────────────
+import './eiyou';
+import './daishou_no_tamashii';
+import './saikouchiku';
+import './hatsuga';
+
+// ── ターン端スキル (v2) ──────────────────────────────────────────────────
+import './dokumu';
+import './kunren';
+
+// ── オーラスキル (v2) ────────────────────────────────────────────────────
+import './shireijutsu';
+import './mure';
+import './kokou';
+
+// ── 起動型スキル (v2) ────────────────────────────────────────────────────
+import './ansatsu';
+import './kakusei';
+import './abekobe';
+import './soukan';
+
+// ── on_move スキル ───────────────────────────────────────────────────────
+import './shissou';
+import './zankyou';
+import './junrei';
+import './kazeyomi';
+import './tsuiseki';
+
+// ── on_skill_used スキル ─────────────────────────────────────────────────
+import './maryoku_zoufuku';
+import './rendou';
+import './shokubai';
+import './kyuushuu';
+import './rensajumon';
+
+// ── on_summon_ally スキル ────────────────────────────────────────────────
+import './shukufuku';
+import './kobu_summon';
+import './kangei_no_gi';
+import './kyoumei';
+import './summon_chain';
+
+// ── on_base_damaged スキル ───────────────────────────────────────────────
+import './chuusei';
+import './houfuku_no_yaiba';
+import './douin';
+import './dohatsu';
+import './gekibun';
+
 export { getSkill, getAllSkills, getSkillsByTrigger } from './registry';

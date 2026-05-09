@@ -39,9 +39,10 @@ export interface Position {
 }
 
 export interface UnitBuffs {
-  atkBonus: number;    // 永続バフ (buff スキル、怒り、凱旋など)
-  auraAtk: number;     // オーラ由来の ATK ボーナス (戦旗など、毎ターン再計算)
-  auraMaxHp: number;   // オーラ由来の maxHP ボーナス (聖なる加護など、毎ターン再計算)
+  atkBonus: number;      // 永続バフ (buff スキル、怒り、凱旋など)
+  auraAtk: number;       // オーラ由来の ATK ボーナス (戦旗など、毎ターン再計算)
+  auraMaxHp: number;     // オーラ由来の maxHP ボーナス (聖なる加護など、毎ターン再計算)
+  atkBonusOnce: number;  // 次の攻撃のみ有効なATKボーナス（風読み・追跡用）
 }
 
 export interface StatusEffects {
