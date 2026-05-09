@@ -60,6 +60,7 @@ export interface Unit {
   maxHp: number;
   skillUsesRemaining: number | 'infinite';
   hasActedThisTurn: boolean;
+  hasMovedThisTurn: boolean;
   hasSummonedThisTurn: boolean;
   buffs: UnitBuffs;
   statusEffects: StatusEffects;

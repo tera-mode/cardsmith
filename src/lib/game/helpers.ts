@@ -318,6 +318,7 @@ export function clearTurnStatusEffects(unit: Unit): Unit {
     ...unit,
     statusEffects: { frozen: false, paralyzed: false, silenced: unit.statusEffects.silenced },
     hasActedThisTurn: false,
+    hasMovedThisTurn: false,
     hasSummonedThisTurn: false,
   };
 }
@@ -386,6 +387,7 @@ export function createTokenUnit(owner: 'player' | 'ai', position: Position): Uni
     maxHp: 1,
     skillUsesRemaining: 0,
     hasActedThisTurn: true, // 召喚ターンは行動不可
+    hasMovedThisTurn: false,
     hasSummonedThisTurn: true,
     buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
     statusEffects: { frozen: false, paralyzed: false, silenced: false },
@@ -404,6 +406,7 @@ export function createCloneUnit(source: Unit, position: Position): Unit {
     maxHp: source.card.hp,
     skillUsesRemaining: 0,
     hasActedThisTurn: true,
+    hasMovedThisTurn: false,
     hasSummonedThisTurn: true,
     buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
     statusEffects: { frozen: false, paralyzed: false, silenced: false },

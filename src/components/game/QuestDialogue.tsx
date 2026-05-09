@@ -23,8 +23,8 @@ export default function QuestDialogue({ scenes, onDone, label }: Props) {
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-end"
       style={{
-        background: 'rgba(0,0,0,0.80)',
-        backdropFilter: 'blur(2px)',
+        background: 'rgba(0,0,0,0.60)',
+        backdropFilter: 'blur(1px)',
         paddingBottom: 'max(40px, env(safe-area-inset-bottom, 24px))',
       }}
       onClick={advance}

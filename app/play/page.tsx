@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGame } from '@/contexts/GameContext';
 import { GameProvider } from '@/contexts/GameContext';
@@ -19,6 +19,7 @@ import ArchetypeSelectModal from '@/components/game/ArchetypeSelectModal';
 import DeckSelectModal from '@/components/game/DeckSelectModal';
 import type { Archetype } from '@/lib/game/decks';
 import { getArchetypeFromQuestId, getBattleBgUrl } from '@/lib/utils/archetype';
+import ForgeBg from '@/components/ui/ForgeBg';
 import { QUEST_MAP } from '@/lib/data/quests';
 import { useProfile } from '@/contexts/ProfileContext';
 
@@ -36,14 +37,12 @@ function GameScreen() {
   const initialPlayerHpRef = useRef<number | null>(null);
   const finishHandledRef = useRef(false);
 
-  const searchParams = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search)
-    : new URLSearchParams();
-
+  const searchParams = useSearchParams();
   const questId = searchParams.get('questId') ?? undefined;
   const isQ03 = questId === 'q0_3';
   const questArchetype = getArchetypeFromQuestId(questId) ?? (selectedArchetype ?? undefined);
-  const bgUrl = getBattleBgUrl(questArchetype ?? null);
+  const isTutorial = !!questId?.startsWith('q0_');
+  const bgUrl = isTutorial ? '/images/backgrounds/home.png' : getBattleBgUrl(questArchetype ?? null);
   const questDef = questId ? QUEST_MAP[questId] : undefined;
   const hasPrologue = !!(questDef?.prologue?.length);
   // カスタムデッキが1つ以上あればデッキ選択を挟む（q0_3のアーキタイプ選択後も含む）
@@ -61,6 +60,7 @@ function GameScreen() {
       maxHp: card.hp,
       skillUsesRemaining: card.skill ? card.skill.uses : 0,
       hasActedThisTurn: false,
+      hasMovedThisTurn: false,
       hasSummonedThisTurn: false,
       buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
       statusEffects: { frozen: false, paralyzed: false, silenced: false },
@@ -130,6 +130,7 @@ function GameScreen() {
   if (hasPrologue && !prologueDone) {
     return (
       <div className="game-layout stone-bg" style={{ position: 'relative' }}>
+        <ForgeBg overlayOpacity={0} />
         <QuestDialogue
           scenes={questDef!.prologue!}
           onDone={() => setPrologueDone(true)}
@@ -283,8 +284,10 @@ function GameScreen() {
 
 export default function PlayPage() {
   return (
-    <GameProvider>
-      <GameScreen />
-    </GameProvider>
+    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-[#1a1a2e]"><p className="text-gray-400 text-sm">読み込み中...</p></div>}>
+      <GameProvider>
+        <GameScreen />
+      </GameProvider>
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useMemo } from 'react';
@@ -22,6 +23,24 @@ const SUB_ITEMS = [
   { key: 'history',  label: '履歴',        icon: '📜', href: '/history' },
   { key: 'profile',  label: 'プロフィール', icon: '👤', href: '/profile' },
 ] as const;
+
+function HomeBg() {
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}>
+      <Image
+        src="/images/backgrounds/home.png"
+        alt=""
+        fill
+        style={{ objectFit: 'cover', objectPosition: 'center top' }}
+        priority
+      />
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(180deg, rgba(8,5,3,0.68) 0%, rgba(5,3,1,0.82) 100%)',
+      }} />
+    </div>
+  );
+}
 
 function Torch({ style }: { style?: React.CSSProperties }) {
   return <div className="torch" style={style} />;
@@ -56,11 +75,12 @@ export default function HomePage() {
   if (!user) {
     return (
       <main className="game-layout stone-bg items-center justify-center" style={{ position: 'relative' }}>
+        <HomeBg />
         {/* 松明装飾 */}
-        <Torch style={{ position: 'absolute', top: 20, left: 20 }} />
-        <Torch style={{ position: 'absolute', top: 20, right: 20 }} />
+        <Torch style={{ position: 'absolute', top: 20, left: 20, zIndex: 1 }} />
+        <Torch style={{ position: 'absolute', top: 20, right: 20, zIndex: 1 }} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, padding: '0 24px', maxWidth: 360, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, padding: '0 24px', maxWidth: 360, width: '100%', position: 'relative', zIndex: 1 }}>
           {/* ロゴ */}
           <div style={{ textAlign: 'center' }}>
             <h1 style={{
@@ -114,6 +134,7 @@ export default function HomePage() {
   const homeTheme = profile?.starterArchetype ?? undefined;
   return (
     <div className="game-layout stone-bg flex-col" style={{ position: 'relative' }} data-theme={homeTheme}>
+      <HomeBg />
       {/* プレイヤーバー */}
       <div style={{
         flexShrink: 0,
@@ -121,6 +142,7 @@ export default function HomePage() {
         background: 'linear-gradient(180deg, rgba(40,28,16,0.98) 0%, rgba(20,14,8,0.9) 100%)',
         borderBottom: '1px solid var(--border-rune)',
         position: 'relative',
+        zIndex: 1,
       }}>
         {/* 金グラデ下線 */}
         <div style={{ position: 'absolute', bottom: -1, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, var(--gold), transparent)', opacity: 0.5 }} />
@@ -183,7 +205,7 @@ export default function HomePage() {
         )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 8px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 8px', position: 'relative', zIndex: 1 }}>
         {/* NEXT QUEST */}
         {nextGoal && (
           <div

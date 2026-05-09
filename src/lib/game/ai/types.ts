@@ -1,7 +1,12 @@
-import { GameSession, Unit, Position, Card } from '@/lib/types/game';
-import type { AttackTarget } from '@/lib/types/game';
+import { GameSession, Position, AttackTarget } from '@/lib/types/game';
+import type { Rng } from './rng';
 
-export type AIDifficulty = 'tutorial' | 'easy' | 'normal' | 'hard';
+// ─── 基本型 ───────────────────────────────────────────────────────────────
+
+export type Owner = 'player' | 'ai';
+export type TacticId = 'balanced' | 'scripted';
+
+// ─── 評価重み ─────────────────────────────────────────────────────────────
 
 export interface EvalWeights {
   baseHpDiff: number;
@@ -10,47 +15,59 @@ export interface EvalWeights {
   alliedAdvance: number;
   enemyAdvance: number;
   healerPresence: number;
+  skillPotential: number;
+  enemyAttackThreat: number;
+  alliedAttackThreat: number;
 }
 
-export const DEFAULT_WEIGHTS: EvalWeights = {
-  baseHpDiff: 50,
-  alliedUnitValue: 5,
-  enemyUnitValue: -5,
-  alliedAdvance: 3,
-  enemyAdvance: -3,
-  healerPresence: 8,
-};
+// ─── 探索オプション ───────────────────────────────────────────────────────
 
-export const TUTORIAL_WEIGHTS: EvalWeights = {
-  baseHpDiff: 25,
-  alliedUnitValue: 2,
-  enemyUnitValue: -2,
-  alliedAdvance: 2,
-  enemyAdvance: -1,
-  healerPresence: 4,
-};
-
-export const HARD_WEIGHTS: EvalWeights = {
-  ...DEFAULT_WEIGHTS,
-  healerPresence: 12,
-};
-
-// AI 内部でのアクション表現
-export interface SummonAction {
-  type: 'summon';
-  cardIndex: number;
-  position: Position;
+export interface SearchOptions {
+  topKSummon?: number;
+  topKAction?: number;
 }
 
-export interface UnitAction {
-  type: 'unit_action';
-  unitId: string;
-  movePos: Position | null;
-  attack: AttackTarget | null;
+// ─── AIAction ────────────────────────────────────────────────────────────
+
+export type AIAction =
+  | { type: 'summon';   cardIndex: number; position: Position }
+  | { type: 'move';     unitId: string;    position: Position }
+  | { type: 'attack';   unitId: string;    target: AttackTarget }
+  | { type: 'skill';    unitId: string;    target: Position | null }
+  | { type: 'end_turn' };
+
+// ─── 戦術インターフェース ─────────────────────────────────────────────────
+
+export interface TacticStrategy {
+  id: TacticId;
+  defaultWeights: EvalWeights;
+
+  prefilterActions?(
+    state: GameSession,
+    actions: AIAction[],
+    weights: EvalWeights,
+    options: SearchOptions,
+  ): AIAction[];
+
+  preferAction?(a: AIAction, b: AIAction, state: GameSession): number;
+
+  scriptedTurn?(state: GameSession, rng: Rng): AIAction[];
 }
 
-export interface NoAction {
-  type: 'no_action';
+// ─── BattleAIProfile ─────────────────────────────────────────────────────
+
+export interface BattleAIProfile {
+  id: string;
+  displayName: string;
+  description: string;
+  tacticId: TacticId;
+  searchDepth: 0 | 1 | 2 | 3;
+  evalWeights: EvalWeights;
+  searchOptions?: SearchOptions;
+  defaultBaseHp: number;
 }
 
-export type AIAction = SummonAction | UnitAction | NoAction;
+// ─── レガシー互換（削除予定） ─────────────────────────────────────────────
+
+/** @deprecated Use BattleAIProfile instead */
+export type AIDifficulty = 'tutorial' | 'easy' | 'normal' | 'hard';

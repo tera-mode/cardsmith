@@ -151,7 +151,8 @@ export interface QuestDefinition {
   prologue?: DialogueScene[];
   epilogue?: DialogueScene[];
   enemyDeckId: string;
-  enemyAiLevel: 'tutorial' | 'easy' | 'normal' | 'hard';
+  enemyAIProfileId: string;
+  enemyBaseHp?: number;
   specialRule?: 'use_only_militia' | 'win_in_5_turns' | null;
   reward: Reward;
   rewardReplay?: Reward;

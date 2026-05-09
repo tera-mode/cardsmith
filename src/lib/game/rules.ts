@@ -181,6 +181,7 @@ export function createUnit(card: Card, owner: 'player' | 'ai', position: Positio
     maxHp: card.hp,
     skillUsesRemaining: card.skill ? card.skill.uses : 0,
     hasActedThisTurn: false,
+    hasMovedThisTurn: false,
     hasSummonedThisTurn: true,
     buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
     statusEffects: { frozen: false, paralyzed: false, silenced: false },

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
+import ForgeBg from '@/components/ui/ForgeBg';
 import { CHAPTERS, getChapterQuests } from '@/lib/data/quests';
 import { QuestProgress } from '@/lib/types/meta';
 
@@ -44,7 +45,9 @@ export default function StoryPage() {
   }
 
   return (
-    <div className="game-layout stone-bg flex-col">
+    <div className="game-layout stone-bg flex-col" style={{ position: 'relative' }}>
+      <ForgeBg />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <AppHeader backHref="/" title="ストーリー" />
 
       {/* 章タブ */}
@@ -123,6 +126,7 @@ export default function StoryPage() {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
