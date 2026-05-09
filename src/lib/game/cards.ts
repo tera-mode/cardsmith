@@ -4,7 +4,7 @@ import { Card, MovementPattern, AttackRange } from '@/lib/types/game';
 
 const FWD1 = [{ dx: 0, dy: -1 }];                                    // 前1
 const FWD_SIDES = [{ dx: 0, dy: -1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }]; // 前+左右
-const FWD2J = [{ dx: 0, dy: -2 }];                                   // 前2J
+const FWD2J = [{ dx: 0, dy: -2 }, { dx: 0, dy: -1 }];               // 前2Jまたは前1
 const DIR4 = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
 const FWDBWD = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }];               // 前後1
 const DIR8 = [...DIR4, { dx: -1, dy: -1 }, { dx: 1, dy: -1 }, { dx: -1, dy: 1 }, { dx: 1, dy: 1 }];
@@ -45,13 +45,14 @@ export const CARDS: Card[] = [
   },
   {
     id: 'sei_liese', name: '黄金の戦乙女リーゼ', attribute: 'sei',
-    cost: 9, atk: 2, hp: 2,
+    cost: 9, atk: 2, hp: 3,
     movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
   },
   {
     id: 'sei_sol', name: '太陽神の巫女ソル', attribute: 'sei',
-    cost: 11, atk: 1, hp: 2,
+    cost: 11, atk: 1, hp: 3,
     movement: step(FWD1), attackRange: stepAtk(FWD1),
+    skill: { id: 'gaisen', uses: 1 },
   },
   {
     id: 'sei_mireille', name: '白翼の癒し手ミレイユ', attribute: 'sei',
@@ -67,8 +68,9 @@ export const CARDS: Card[] = [
   },
   {
     id: 'sei_alicia', name: '王国の戦姫アリシア', attribute: 'sei',
-    cost: 17, atk: 2, hp: 1,
+    cost: 17, atk: 2, hp: 3,
     movement: step(FWD1), attackRange: ranged(2),
+    skill: { id: 'senki', uses: 'infinite' },
   },
   {
     id: 'sei_seraphim', name: '七光の大天使セラフィム', attribute: 'sei',
@@ -106,12 +108,13 @@ export const CARDS: Card[] = [
   },
   {
     id: 'mei_lyca', name: '星詠みのリュカオン', attribute: 'mei',
-    cost: 9, atk: 2, hp: 2,
+    cost: 9, atk: 2, hp: 3,
     movement: step(FWD1), attackRange: ranged(2),
+    skill: { id: 'buff', uses: 1 },
   },
   {
     id: 'mei_milka', name: '黒髪の死霊術師ミルカ', attribute: 'mei',
-    cost: 11, atk: 1, hp: 2,
+    cost: 11, atk: 1, hp: 3,
     movement: step(FWD1), attackRange: stepAtk(FWD1),
     skill: { id: 'shoukanshi', uses: 1 },
   },
@@ -129,8 +132,9 @@ export const CARDS: Card[] = [
   },
   {
     id: 'mei_nyx', name: '夜の女王ニュクス', attribute: 'mei',
-    cost: 17, atk: 3, hp: 3,
+    cost: 17, atk: 2, hp: 4,
     movement: step(DIR4), attackRange: stepAtk(DIR4),
+    skill: { id: 'rengeki', uses: 1 },
   },
   {
     id: 'mei_lucifer', name: '漆黒の堕天使ルキフェル', attribute: 'mei',
@@ -142,7 +146,7 @@ export const CARDS: Card[] = [
     id: 'mei_belial', name: '魔界の王ベリアル', attribute: 'mei',
     cost: 28, atk: 5, hp: 6,
     movement: step(DIR4), attackRange: aoe(DIR8),
-    skill: { id: 'kagebunshin', uses: 3 },
+    skill: { id: 'kagebunshin', uses: 1 },
   },
 
   // ════════════════════════════════
@@ -173,8 +177,8 @@ export const CARDS: Card[] = [
   },
   {
     id: 'shin_gai', name: '緑髭のドルイド翁ガイ', attribute: 'shin',
-    cost: 11, atk: 2, hp: 3,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    cost: 11, atk: 1, hp: 3,
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
     skill: { id: 'saisei', uses: 'infinite' },
   },
   {
@@ -191,13 +195,13 @@ export const CARDS: Card[] = [
   },
   {
     id: 'shin_titania', name: '月光のエルフ姫ティターニア', attribute: 'shin',
-    cost: 19, atk: 4, hp: 4,
+    cost: 19, atk: 4, hp: 3,
     movement: jump(FWD2J), attackRange: ranged(3),
-    skill: { id: 'mahi', uses: 3 },
+    skill: { id: 'mahi', uses: 2 },
   },
   {
     id: 'shin_yugdra', name: '太古の樹精ユグドラ', attribute: 'shin',
-    cost: 22, atk: 0, hp: 8,
+    cost: 22, atk: 0, hp: 3,
     movement: step(FWD1), attackRange: aoe(DIR8),
     skill: { id: 'haru_no_ibuki', uses: 'infinite' },
   },
@@ -226,10 +230,11 @@ export const CARDS: Card[] = [
     id: 'en_garo', name: '岩拳の闘士ガロ', attribute: 'en',
     cost: 8, atk: 2, hp: 2,
     movement: step(FWD1), attackRange: stepAtk(FWD1),
+    skill: { id: 'kyousenshi', uses: 'infinite' },
   },
   {
     id: 'en_fai', name: '赤鱗の竜娘ファイ', attribute: 'en',
-    cost: 9, atk: 2, hp: 2,
+    cost: 9, atk: 1, hp: 2,
     movement: jump(FWD2J), attackRange: stepAtk(FWD1),
     skill: { id: 'nagibarai', uses: 1 },
   },
@@ -237,6 +242,7 @@ export const CARDS: Card[] = [
     id: 'en_bran', name: '山の老猟師ブラン', attribute: 'en',
     cost: 11, atk: 2, hp: 2,
     movement: step(FWD1), attackRange: ranged(3),
+    skill: { id: 'penetrate', uses: 1 },
   },
   {
     id: 'en_val', name: '熔岩の魔導士ヴァル', attribute: 'en',
@@ -248,23 +254,23 @@ export const CARDS: Card[] = [
     id: 'en_asuka', name: '火竜騎士アスカ', attribute: 'en',
     cost: 16, atk: 4, hp: 3,
     movement: jump(FWD2J), attackRange: stepAtk(FWD1),
-    skill: { id: 'daishinkan', uses: 1 },
+    skill: { id: 'juugeki', uses: 1 },
   },
   {
     id: 'en_golda', name: '岩石巨人ゴルダ', attribute: 'en',
-    cost: 17, atk: 2, hp: 3,
+    cost: 17, atk: 2, hp: 4,
     movement: step(FWD1), attackRange: stepAtk(FWD1),
     skill: { id: 'koutetsu_no_ishi', uses: 1 },
   },
   {
     id: 'en_kagutsuchi', name: '火竜将軍カグツチ', attribute: 'en',
-    cost: 19, atk: 5, hp: 4,
+    cost: 19, atk: 3, hp: 4,
     movement: step(FWDBWD), attackRange: ranged(2),
     skill: { id: 'rengeki', uses: 2 },
   },
   {
     id: 'en_bahamut', name: '焔の古竜バハムート', attribute: 'en',
-    cost: 28, atk: 4, hp: 4,
+    cost: 28, atk: 5, hp: 5,
     movement: step(DIR4), attackRange: aoe(DIR8),
     skill: { id: 'hangeki', uses: 'infinite' },
   },
@@ -287,6 +293,7 @@ export const CARDS: Card[] = [
     id: 'sou_nadja', name: '蒼波の踊り子ナージャ', attribute: 'sou',
     cost: 8, atk: 2, hp: 2,
     movement: step(DIR4), attackRange: stepAtk(FWD_SIDES),
+    skill: { id: 'strong_blow', uses: 1 },
   },
   {
     id: 'sou_lin', name: '雲の使者リン', attribute: 'sou',
@@ -304,7 +311,7 @@ export const CARDS: Card[] = [
     id: 'sou_quartz', name: '潮風の船長クォーツ', attribute: 'sou',
     cost: 11, atk: 2, hp: 3,
     movement: step(FWD1), attackRange: ranged(2),
-    skill: { id: 'shikikan', uses: 'infinite' },
+    skill: { id: 'shikikan', uses: 3 },
   },
   {
     id: 'sou_aqua', name: '深海の歌姫アクア', attribute: 'sou',
@@ -314,8 +321,9 @@ export const CARDS: Card[] = [
   },
   {
     id: 'sou_raika', name: '雷神の巫女ライカ', attribute: 'sou',
-    cost: 17, atk: 2, hp: 2,
+    cost: 17, atk: 2, hp: 3,
     movement: step(FWD1), attackRange: ranged(2),
+    skill: { id: 'touketsu', uses: 2 },
   },
   {
     id: 'sou_triton', name: '海神の使者トリトン', attribute: 'sou',
@@ -327,7 +335,7 @@ export const CARDS: Card[] = [
     id: 'sou_leviathan', name: '大海の主リヴァイアサン', attribute: 'sou',
     cost: 28, atk: 5, hp: 5,
     movement: step(FWDBWD), attackRange: aoe(DIR8),
-    skill: { id: 'shoukanshi', uses: 'infinite' },
+    skill: { id: 'tsumanami', uses: 2 },
   },
 
   // ════════════════════════════════
@@ -349,6 +357,7 @@ export const CARDS: Card[] = [
     id: 'kou_luna', name: '電脳少女ルナ', attribute: 'kou',
     cost: 8, atk: 1, hp: 2,
     movement: step(FWD1), attackRange: ranged(2),
+    skill: { id: 'keigan', uses: 1 },
   },
   {
     id: 'kou_cog', name: '歯車の騎士コグ', attribute: 'kou',
@@ -360,7 +369,7 @@ export const CARDS: Card[] = [
     id: 'kou_dorothy', name: '科学者の助手ドロシー', attribute: 'kou',
     cost: 11, atk: 0, hp: 2,
     movement: step(FWD1), attackRange: noAtk,
-    skill: { id: 'tenkei', uses: 1 },
+    skill: { id: 'sokouchi', uses: 1 },
   },
   {
     id: 'kou_ares', name: '銀の自律兵装ARES', attribute: 'kou',
@@ -376,7 +385,7 @@ export const CARDS: Card[] = [
   },
   {
     id: 'kou_elsa', name: '雷帝の科学者エルザ', attribute: 'kou',
-    cost: 18, atk: 1, hp: 3,
+    cost: 18, atk: 4, hp: 3,
     movement: step(FWD1), attackRange: ranged(2),
     skill: { id: 'rensa_raigeki', uses: 'infinite' },
   },
@@ -389,7 +398,7 @@ export const CARDS: Card[] = [
   {
     id: 'kou_zero', name: '超兵器ゼロ', attribute: 'kou',
     cost: 30, atk: 6, hp: 5,
-    movement: step(FWD1), attackRange: ranged(5),
+    movement: step(DIR4), attackRange: ranged(5),
     skill: { id: 'jibaku', uses: 1 },
   },
 ];

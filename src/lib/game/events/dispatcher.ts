@@ -254,13 +254,16 @@ export function triggerOnTurnStart(state: GameSession, currentTurn: 'player' | '
     const skill = unit.card.skill ? getSkill(unit.card.skill.id) : null;
     if (!skill || skill.triggerKind !== 'on_turn_start') continue;
     if (isSkillBlocked(unit)) continue;
+    const freshUnit = findUnit(workingState, unit.instanceId);
+    if (!freshUnit || freshUnit.skillUsesRemaining === 0) continue;
 
-    const ctx = makeCtx(unit, workingState);
-    if (skill.shouldTrigger && !skill.shouldTrigger(ctx, unit, workingState)) continue;
+    const ctx = makeCtx(freshUnit, workingState);
+    if (skill.shouldTrigger && !skill.shouldTrigger(ctx, freshUnit, workingState)) continue;
 
-    const result = skill.onTrigger!(ctx, unit, workingState);
+    const result = skill.onTrigger!(ctx, freshUnit, workingState);
     workingState = result.state;
     workingState = appendLog(workingState, ...result.log);
+    workingState = decrementUses(workingState, freshUnit);
   }
 
   // 勝敗判定
@@ -281,7 +284,7 @@ export function triggerOnTurnEnd(state: GameSession, currentTurn: 'player' | 'ai
     if (isSkillBlocked(unit)) continue;
 
     const freshUnit = findUnit(workingState, unit.instanceId);
-    if (!freshUnit) continue;
+    if (!freshUnit || freshUnit.skillUsesRemaining === 0) continue;
 
     const ctx = makeCtx(freshUnit, workingState);
     if (skill.shouldTrigger && !skill.shouldTrigger(ctx, freshUnit, workingState)) continue;
@@ -289,6 +292,7 @@ export function triggerOnTurnEnd(state: GameSession, currentTurn: 'player' | 'ai
     const result = skill.onTrigger!(ctx, freshUnit, workingState);
     workingState = result.state;
     workingState = appendLog(workingState, ...result.log);
+    workingState = decrementUses(workingState, freshUnit);
   }
 
   workingState = recalculateAuras(workingState);

@@ -13,6 +13,7 @@ import './gouka';
 import './shoushuu';
 import './keigan';
 import './gaisen';
+import './sokouchi';
 
 // 攻撃時
 import './rengeki';
@@ -48,6 +49,8 @@ import './senki';
 
 // 起動型
 import './strong_blow';
+import './juugeki';
+import './tsumanami';
 import './daishinkan';
 import './hikiyose';
 import './irekae';

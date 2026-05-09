@@ -5,7 +5,7 @@ import { BOARD_ROWS } from '@/lib/game/rules';
 registerSkill({
   id: 'strong_blow',
   displayName: '強打',
-  description: '最前線から敵陣地に3ダメージ（2回）',
+  description: '最前線から敵陣地に2ダメージ',
   triggerKind: 'activated',
   maxUsesDefault: 2,
 
@@ -16,7 +16,7 @@ registerSkill({
   },
   getValidTargets() { return []; },
   resolve(state, self) {
-    const next = applyBaseDamage(state, self.owner, 3);
-    return { state: next, log: [`${self.card.name}：強打！敵陣地に3ダメージ`] };
+    const next = applyBaseDamage(state, self.owner, 2);
+    return { state: next, log: [`${self.card.name}：強打！敵陣地に2ダメージ`] };
   },
 });
