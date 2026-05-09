@@ -15,6 +15,10 @@ export interface RunAITurnOptions {
   delay?: number;
   debug?: boolean;
   seed?: number;
+  /** 操作する側。シミュレーターから player 側を AI として動かすときに指定。デフォルト 'ai' */
+  owner?: Owner;
+  /** 外部から注入するRNG（シード管理を呼び出し元で行うとき） */
+  rng?: import('./rng').Rng;
 }
 
 function delayFn(ms: number): Promise<void> {
@@ -31,11 +35,13 @@ export async function runAITurn(
     delay = 600,
     debug = false,
     seed = Date.now(),
+    owner: ownerOpt,
+    rng: rngOpt,
   } = options;
 
-  const rng = createRng(seed);
+  const rng = rngOpt ?? createRng(seed);
   const tactic = getTactic(profile.tacticId);
-  const owner: Owner = 'ai';
+  const owner: Owner = ownerOpt ?? 'ai';
   const delayFunc = delay > 0 ? delayFn : undefined;
 
   if (debug) {

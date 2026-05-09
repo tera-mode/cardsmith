@@ -1,7 +1,7 @@
 import { GameSession, Unit } from '@/lib/types/game';
 import { getLegalMoves, getLegalAttacks, getLegalSummonPositions, BOARD_ROWS, BOARD_COLS } from '@/lib/game/rules';
 import { canAct } from '@/lib/game/helpers';
-import { AIAction, EvalWeights, TacticStrategy } from '../types';
+import { AIAction, EvalWeights, Owner, TacticStrategy } from '../types';
 import type { Rng } from '../rng';
 
 const SCRIPTED_WEIGHTS: EvalWeights = {
@@ -21,39 +21,53 @@ export const scripted: TacticStrategy = {
   defaultWeights: SCRIPTED_WEIGHTS,
 
   scriptedTurn(state: GameSession, _rng: Rng): AIAction[] {
+    // state.currentTurn でアクティブな owner を決定（シム・通常ゲーム両対応）
+    const owner: Owner = state.currentTurn as Owner;
+    const ownerState = owner === 'ai' ? state.ai : state.player;
+
+    // AI陣（row0）から前進 = row増加、Player陣（row3）から前進 = row減少
+    const isForward = owner === 'ai'
+      ? (p: { row: number }, cur: { row: number }) => p.row > cur.row
+      : (p: { row: number }, cur: { row: number }) => p.row < cur.row;
+
+    // 前列の判定（より前線に近い）
+    const frontRow = (a: Unit, b: Unit) =>
+      owner === 'ai'
+        ? b.position.row - a.position.row  // AI: row大きい方が前線
+        : a.position.row - b.position.row; // Player: row小さい方が前線
+
     const actions: AIAction[] = [];
 
-    // 1. 召喚: 最安カードを自陣に最も近い空マスへ
-    if (!state.ai.hasSummonedThisTurn && state.ai.hand.length > 0) {
-      const positions = getLegalSummonPositions(state.board, 'ai');
+    // 1. 召喚: 最安カードを前線に最も近い空マスへ
+    if (!ownerState.hasSummonedThisTurn && ownerState.hand.length > 0) {
+      const positions = getLegalSummonPositions(state.board, owner);
       if (positions.length > 0) {
-        // 最安カードを選ぶ
-        const sorted = [...state.ai.hand].map((c, i) => ({ c, i })).sort((a, b) => a.c.cost - b.c.cost);
+        const sorted = [...ownerState.hand].map((c, i) => ({ c, i })).sort((a, b) => a.c.cost - b.c.cost);
         const { i: cardIdx } = sorted[0];
-        // AI陣に最も近いマス (row 0 が AI 側前列)
-        const pos = positions.slice().sort((a, b) => a.row - b.row)[0];
-        actions.push({ type: 'summon', cardIndex: cardIdx, position: pos });
+        // 前線（相手に近い）マスを選ぶ
+        const sortedPos = positions.slice().sort((a, b) =>
+          owner === 'ai' ? b.row - a.row : a.row - b.row  // AI: row大きい方、Player: row小さい方
+        );
+        actions.push({ type: 'summon', cardIndex: cardIdx, position: sortedPos[0] });
       }
     }
 
-    // 2. ユニット行動: 前列（row小）のユニットから処理
+    // 2. ユニット行動: 前線のユニットから処理
     const units: Unit[] = [];
     for (let r = 0; r < BOARD_ROWS; r++) {
       for (let c = 0; c < BOARD_COLS; c++) {
         const u = state.board[r][c];
-        if (u && u.owner === 'ai' && !u.hasActedThisTurn && canAct(u)) {
+        if (u && u.owner === owner && !u.hasActedThisTurn && canAct(u)) {
           units.push(u);
         }
       }
     }
-    // 前列（row昇順）でソート
-    units.sort((a, b) => a.position.row - b.position.row);
+    units.sort(frontRow);
 
-    // hasAttackedThisTurn をシミュレートするため追跡
-    let hasAttacked = state.ai.hasAttackedThisTurn;
+    let hasAttacked = ownerState.hasAttackedThisTurn;
 
     for (const unit of units) {
-      // a) 攻撃可能な敵があれば攻撃
+      // a) 攻撃可能なら攻撃
       if (!hasAttacked) {
         const attacks = getLegalAttacks(unit, state.board);
         if (attacks.length > 0) {
@@ -63,14 +77,15 @@ export const scripted: TacticStrategy = {
         }
       }
 
-      // b) 前進（row番号を減らす方向 = プレイヤー陣地に近づく）
-      const moves = getLegalMoves(unit, state.board).filter(p => p.row < unit.position.row);
+      // b) 前進（owner に応じた方向）
+      const moves = getLegalMoves(unit, state.board).filter(p => isForward(p, unit.position));
       if (moves.length > 0) {
-        // 最も前進できるマス
-        const pos = moves.slice().sort((a, b) => a.row - b.row)[0];
+        const pos = moves.slice().sort((a, b) =>
+          owner === 'ai' ? b.row - a.row : a.row - b.row
+        )[0];
         actions.push({ type: 'move', unitId: unit.instanceId, position: pos });
       }
-      // c) 動けなければ何もしない（スキルも使わない）
+      // c) 動けなければスキルも使わず何もしない
     }
 
     return actions;

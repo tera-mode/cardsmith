@@ -49,3 +49,13 @@ export function shuffleDeck(deck: Card[]): Card[] {
   }
   return shuffled;
 }
+
+/** シード付きRNG でシャッフル（シミュレーター用、決定論的） */
+export function shuffleDeckWithRng(deck: Card[], rng: { next(): number }): Card[] {
+  const shuffled = [...deck];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng.next() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}

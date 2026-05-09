@@ -33,6 +33,7 @@ next-env.d.ts
 # ローカルのみ（リポジトリにプッシュしない）
 docs/playtest_reports/
 docs/screenshots/
+docs/sim_reports/
 public/images/cards/raw/
 public/images/backgrounds/raw/
 .playwright-mcp/
