@@ -36,16 +36,21 @@ export function enumerateActions(state: GameSession, owner: Owner): AIAction[] {
         }
       }
 
-      // 攻撃（1ターン1回制限）
-      if (!ownerState.hasAttackedThisTurn) {
+      const MAX_ACTIONS = 2;
+      const actionsLeft = MAX_ACTIONS - ownerState.actionsUsedThisTurn;
+
+      // 攻撃（1ターン2回まで、ターン1は先攻プレイヤーのベース攻撃不可）
+      if (actionsLeft > 0) {
+        const isFirstMoverTurn1 = state.turnCount === 1 && owner === 'player';
         const attacks = getLegalAttacks(unit, state.board);
         for (const target of attacks) {
+          if (isFirstMoverTurn1 && target.type === 'base') continue;
           actions.push({ type: 'attack', unitId: unit.instanceId, target });
         }
       }
 
-      // 起動型スキル
-      if (!unit.statusEffects.silenced) {
+      // 起動型スキル（残り行動回数がある場合のみ）
+      if (actionsLeft > 0 && !unit.statusEffects.silenced) {
         const skillDef = unit.card.skill ? getSkill(unit.card.skill.id) : null;
         if (skillDef?.triggerKind === 'activated' && unit.skillUsesRemaining !== 0) {
           const ctx = {

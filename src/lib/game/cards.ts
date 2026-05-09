@@ -132,7 +132,7 @@ export const CARDS: Card[] = [
   },
   {
     id: 'mei_nyx', name: '夜の女王ニュクス', attribute: 'mei',
-    cost: 17, atk: 2, hp: 4,
+    cost: 17, atk: 2, hp: 3,
     movement: step(DIR4), attackRange: stepAtk(DIR4),
     skill: { id: 'rengeki', uses: 1 },
   },
@@ -228,13 +228,13 @@ export const CARDS: Card[] = [
   },
   {
     id: 'en_garo', name: '岩拳の闘士ガロ', attribute: 'en',
-    cost: 8, atk: 2, hp: 2,
+    cost: 8, atk: 2, hp: 3,
     movement: step(FWD1), attackRange: stepAtk(FWD1),
     skill: { id: 'kyousenshi', uses: 'infinite' },
   },
   {
     id: 'en_fai', name: '赤鱗の竜娘ファイ', attribute: 'en',
-    cost: 9, atk: 1, hp: 2,
+    cost: 9, atk: 1, hp: 3,
     movement: jump(FWD2J), attackRange: stepAtk(FWD1),
     skill: { id: 'nagibarai', uses: 1 },
   },
@@ -280,7 +280,7 @@ export const CARDS: Card[] = [
   // ════════════════════════════════
   {
     id: 'sou_kaito', name: '見習いの船乗りカイト', attribute: 'sou',
-    cost: 5, atk: 1, hp: 2,
+    cost: 5, atk: 1, hp: 3,
     movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
   },
   {
@@ -303,7 +303,7 @@ export const CARDS: Card[] = [
   },
   {
     id: 'sou_juli', name: '嵐の航海士ジュリ', attribute: 'sou',
-    cost: 10, atk: 2, hp: 2,
+    cost: 10, atk: 3, hp: 3,
     movement: step(FWD1), attackRange: ranged(2),
     skill: { id: 'rensa_raigeki', uses: 3 },
   },
@@ -343,13 +343,13 @@ export const CARDS: Card[] = [
   // ════════════════════════════════
   {
     id: 'kou_mk01', name: '試作機MK-01', attribute: 'kou',
-    cost: 4, atk: 1, hp: 1,
+    cost: 4, atk: 1, hp: 2,
     movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
     skill: { id: 'strong_blow', uses: 1 },
   },
   {
     id: 'kou_kano', name: '見習い技師カノ', attribute: 'kou',
-    cost: 6, atk: 0, hp: 2,
+    cost: 6, atk: 0, hp: 3,
     movement: step(FWD1), attackRange: noAtk,
     skill: { id: 'heal', uses: 3 },
   },
@@ -361,13 +361,13 @@ export const CARDS: Card[] = [
   },
   {
     id: 'kou_cog', name: '歯車の騎士コグ', attribute: 'kou',
-    cost: 10, atk: 1, hp: 4,
+    cost: 10, atk: 2, hp: 4,
     movement: step(DIR4), attackRange: stepAtk(FWD1),
     skill: { id: 'keigen', uses: 'infinite' },
   },
   {
     id: 'kou_dorothy', name: '科学者の助手ドロシー', attribute: 'kou',
-    cost: 11, atk: 0, hp: 2,
+    cost: 11, atk: 0, hp: 3,
     movement: step(FWD1), attackRange: noAtk,
     skill: { id: 'sokouchi', uses: 1 },
   },

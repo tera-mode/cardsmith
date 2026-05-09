@@ -98,11 +98,11 @@ export function applyAttack(
   const freshAtk = findUnit(s, attackerId);
   if (freshAtk) s = updateUnitOnBoard(s, { ...freshAtk, hasActedThisTurn: true });
 
-  // プレイヤーレベルの攻撃フラグ
+  // 行動カウンタを増分（上限2）
   if (owner === 'ai') {
-    s = { ...s, ai: { ...s.ai, hasAttackedThisTurn: true } };
+    s = { ...s, ai: { ...s.ai, actionsUsedThisTurn: s.ai.actionsUsedThisTurn + 1 } };
   } else {
-    s = { ...s, player: { ...s.player, hasAttackedThisTurn: true } };
+    s = { ...s, player: { ...s.player, actionsUsedThisTurn: s.player.actionsUsedThisTurn + 1 } };
   }
 
   return checkWinner(s);
@@ -116,11 +116,19 @@ export function applySkill(
   const caster = findUnit(state, casterId);
   if (!caster) return state;
 
+  const owner = caster.owner;
   let s = resolveActivatedSkill(state, caster, target);
 
   // スキル発動後、ユニットを行動済みにマーク
   const fresh = findUnit(s, casterId);
   if (fresh) s = updateUnitOnBoard(s, { ...fresh, hasActedThisTurn: true });
+
+  // 行動カウンタを増分（攻撃と合算）
+  if (owner === 'ai') {
+    s = { ...s, ai: { ...s.ai, actionsUsedThisTurn: s.ai.actionsUsedThisTurn + 1 } };
+  } else {
+    s = { ...s, player: { ...s.player, actionsUsedThisTurn: s.player.actionsUsedThisTurn + 1 } };
+  }
 
   return checkWinner(s);
 }
@@ -150,7 +158,7 @@ export function applyEndTurn(state: GameSession): GameSession {
         hand: drawn ? [...s.ai.hand, drawn] : s.ai.hand,
         hasSummonedThisTurn: false,
         hasMovedThisTurn: false,
-        hasAttackedThisTurn: false,
+        actionsUsedThisTurn: 0,
       },
     };
   } else {
@@ -165,7 +173,7 @@ export function applyEndTurn(state: GameSession): GameSession {
         hand: drawn ? [...s.player.hand, drawn] : s.player.hand,
         hasSummonedThisTurn: false,
         hasMovedThisTurn: false,
-        hasAttackedThisTurn: false,
+        actionsUsedThisTurn: 0,
       },
     };
   }

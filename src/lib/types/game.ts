@@ -76,7 +76,7 @@ export interface PlayerState {
   hand: Card[];
   hasSummonedThisTurn: boolean;
   hasMovedThisTurn: boolean;
-  hasAttackedThisTurn: boolean;  // 1ターンに攻撃できるのは1回まで
+  actionsUsedThisTurn: number;  // 攻撃+スキル合計の使用回数（上限2）
 }
 
 export type GamePhase = 'draw' | 'main' | 'end_turn' | 'finished';

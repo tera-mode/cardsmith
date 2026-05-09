@@ -22,8 +22,9 @@ export default function HintPanel({ session, mode }: Props) {
       const hasFront = Array.from({ length: BOARD_COLS }, (_, c) => session.board[0]?.[c])
         .some(u => u?.owner === 'player');
       const canMove = !session.player.hasMovedThisTurn;
-      const canAttack = !session.player.hasAttackedThisTurn;
-      if (hasFront && canAttack) hint = '⚔ 最前線からベース攻撃できます';
+      const actionsLeft = 2 - session.player.actionsUsedThisTurn;
+      const canAttack = actionsLeft > 0;
+      if (hasFront && canAttack) hint = `⚔ 最前線からベース攻撃できます（残り${actionsLeft}回）`;
       else if (session.player.hand.length > 0 && !session.player.hasSummonedThisTurn)
         hint = '手札のカードをタップして召喚';
       else if (canMove || canAttack) {

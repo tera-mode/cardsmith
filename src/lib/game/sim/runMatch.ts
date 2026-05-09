@@ -36,12 +36,12 @@ function simEndTurn(state: GameSession): GameSession {
       ...s,
       currentTurn: 'ai',
       turnCount: s.turnCount + 1,
-      player: { ...s.player, hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false },
+      player: { ...s.player, hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0 },
       ai: {
         ...s.ai,
         deck: drawn ? deck : s.ai.deck,
         hand: drawn ? [...s.ai.hand, drawn] : s.ai.hand,
-        hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false,
+        hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0,
       },
     };
   } else {
@@ -50,12 +50,12 @@ function simEndTurn(state: GameSession): GameSession {
       ...s,
       currentTurn: 'player',
       turnCount: s.turnCount + 1,
-      ai: { ...s.ai, hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false },
+      ai: { ...s.ai, hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0 },
       player: {
         ...s.player,
         deck: drawn ? deck : s.player.deck,
         hand: drawn ? [...s.player.hand, drawn] : s.player.hand,
-        hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false,
+        hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0,
       },
     };
   }
@@ -80,8 +80,11 @@ export async function runMatch(config: MatchConfig): Promise<MatchResult> {
 
   // 後攻側は手札+1（先攻後攻補正）
   const SECOND_HAND_BONUS = 1;
-  const handA = firstSide === 'A' ? INITIAL_HAND_SIZE : INITIAL_HAND_SIZE + SECOND_HAND_BONUS;
-  const handB = firstSide === 'B' ? INITIAL_HAND_SIZE : INITIAL_HAND_SIZE + SECOND_HAND_BONUS;
+  const isAFirst = firstSide === 'A';
+  const handA = isAFirst ? INITIAL_HAND_SIZE : INITIAL_HAND_SIZE + SECOND_HAND_BONUS;
+  const handB = isAFirst ? INITIAL_HAND_SIZE + SECOND_HAND_BONUS : INITIAL_HAND_SIZE;
+  const hpA = config.sideA.baseHp;
+  const hpB = config.sideB.baseHp;
 
   let state: GameSession = {
     sessionId: uuidv4(),
@@ -92,16 +95,16 @@ export async function runMatch(config: MatchConfig): Promise<MatchResult> {
     phase: 'main',
     board: createEmptyBoard(),
     player: {
-      baseHp: config.sideA.baseHp,
+      baseHp: hpA,
       deck: deckA.slice(handA),
       hand: deckA.slice(0, handA),
-      hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false,
+      hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0,
     },
     ai: {
-      baseHp: config.sideB.baseHp,
+      baseHp: hpB,
       deck: deckB.slice(handB),
       hand: deckB.slice(0, handB),
-      hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false,
+      hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0,
     },
     log: [],
   };

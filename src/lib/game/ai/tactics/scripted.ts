@@ -64,15 +64,16 @@ export const scripted: TacticStrategy = {
     }
     units.sort(frontRow);
 
-    let hasAttacked = ownerState.hasAttackedThisTurn;
+    const MAX_ACTIONS = 2;
+    let actionsUsed = ownerState.actionsUsedThisTurn;
 
     for (const unit of units) {
-      // a) 攻撃可能なら攻撃
-      if (!hasAttacked) {
+      // a) 攻撃可能なら攻撃（1ターン最大2回）
+      if (actionsUsed < MAX_ACTIONS) {
         const attacks = getLegalAttacks(unit, state.board);
         if (attacks.length > 0) {
           actions.push({ type: 'attack', unitId: unit.instanceId, target: attacks[0] });
-          hasAttacked = true;
+          actionsUsed++;
           continue;
         }
       }
@@ -85,7 +86,7 @@ export const scripted: TacticStrategy = {
         )[0];
         actions.push({ type: 'move', unitId: unit.instanceId, position: pos });
       }
-      // c) 動けなければスキルも使わず何もしない
+      // c) 動けなければ何もしない
     }
 
     return actions;

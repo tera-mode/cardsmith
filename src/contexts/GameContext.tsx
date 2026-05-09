@@ -176,7 +176,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         ? shuffleDeck(buildStarterDeck(playerArchetype))
         : shuffleDeck(buildStandardDeck());
 
-    // 後攻（AI）は手札+1（先攻後攻補正）
+    // 後攻（AI）は手札+2（先攻後攻補正、baseHpは等値）
     const AI_HAND_SIZE = INITIAL_HAND_SIZE + 1;
     const newSession: GameSession = {
       sessionId: uuidv4(),
@@ -192,7 +192,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         hand: playerDeck.slice(0, INITIAL_HAND_SIZE),
         hasSummonedThisTurn: false,
         hasMovedThisTurn: false,
-        hasAttackedThisTurn: false,
+        actionsUsedThisTurn: 0,
       },
       ai: {
         baseHp: enemyBaseHp,
@@ -200,9 +200,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         hand: enemyDeck.slice(0, AI_HAND_SIZE),
         hasSummonedThisTurn: false,
         hasMovedThisTurn: false,
-        hasAttackedThisTurn: false,
+        actionsUsedThisTurn: 0,
       },
-      log: ['ゲーム開始！プレイヤー先攻（後攻AI手札+1）'],
+      log: ['ゲーム開始！プレイヤー先攻（後攻AI手札+1・HP+1）'],
     };
 
     updateSession(newSession);
@@ -272,7 +272,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     // 召喚ターンに行動不可なトークン・クローンは除外
     if (unit.hasActedThisTurn) return;
     // 移動・攻撃どちらも残っていない場合は選択不可
-    if (s.player.hasMovedThisTurn && s.player.hasAttackedThisTurn) return;
+    if (s.player.hasMovedThisTurn && s.player.actionsUsedThisTurn >= 2) return;
     // 移動先を即時ハイライト（移動済みの場合は空）
     const moves = !s.player.hasMovedThisTurn ? getLegalMoves(unit, s.board) : [];
     setMode({ type: 'unit_selected', unit });
@@ -306,7 +306,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const newState = { ...s, board: newBoard, player: { ...s.player, hasMovedThisTurn: true }, log: [...s.log, logEntry] };
     updateSession(newState);
     // 攻撃済みor攻撃対象なし → 即 idle（「行動終了」不要）
-    const hasAttackOptions = !s.player.hasAttackedThisTurn && getLegalAttacks(moved, newBoard).length > 0;
+    const hasAttackOptions = s.player.actionsUsedThisTurn < 2 && getLegalAttacks(moved, newBoard).length > 0;
     if (hasAttackOptions) {
       setMode({ type: 'unit_post_move', unit: moved });
     } else {
@@ -327,6 +327,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const attackTarget = useCallback((target: AttackTarget) => {
     const s = sessionRef.current;
     if (!s || (mode.type !== 'unit_selected' && mode.type !== 'unit_post_move')) return;
+
+    // ターン1の先攻プレイヤーはベース攻撃不可（先行後攻補正）
+    if (s.turnCount === 1 && target.type === 'base') return;
 
     const attacker = mode.unit;
     const atk = getEffectiveAtk(attacker);
@@ -368,8 +371,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    // 攻撃は1ターン1回（hasActedThisTurn はセッションフラグで管理）
-    nextState = { ...nextState, player: { ...nextState.player, hasAttackedThisTurn: true } };
+    // 行動カウンタを増分（上限2）
+    nextState = { ...nextState, player: { ...nextState.player, actionsUsedThisTurn: nextState.player.actionsUsedThisTurn + 1 } };
 
     nextState = checkWinner(nextState);
     const finished = !!nextState.winner;
@@ -428,6 +431,15 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
     let nextState = resolveActivatedSkill(s, unit, target ?? null);
 
+    // スキル発動後：ユニット行動済みマーク + 行動カウンタ増分
+    const freshUnit = findUnit(nextState, unit.instanceId);
+    if (freshUnit) {
+      const b = nextState.board.map(r => [...r]);
+      b[freshUnit.position.row][freshUnit.position.col] = { ...freshUnit, hasActedThisTurn: true };
+      nextState = { ...nextState, board: b };
+    }
+    nextState = { ...nextState, player: { ...nextState.player, actionsUsedThisTurn: nextState.player.actionsUsedThisTurn + 1 } };
+
     nextState = checkWinner(nextState);
     const finished = !!nextState.winner;
     const result: GameSession = { ...nextState, finishedAt: finished ? Date.now() : undefined };
@@ -476,8 +488,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       ...stateWithRevivals,
       currentTurn: 'ai',
       turnCount: s.turnCount + 1,
-      player: { ...stateWithRevivals.player, hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false },
-      ai: { ...stateWithRevivals.ai, deck: aiDeck, hand: aiHand, hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false },
+      player: { ...stateWithRevivals.player, hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0 },
+      ai: { ...stateWithRevivals.ai, deck: aiDeck, hand: aiHand, hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0 },
       log: [...stateWithRevivals.log, `─── ターン${s.turnCount + 1} (AIのターン) ───`],
     };
 
@@ -529,7 +541,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const playerTurnBase: GameSession = {
       ...stateWithAIRevivals,
       currentTurn: 'player' as const,
-      player: { ...stateWithAIRevivals.player, deck: playerDeck, hand: playerHand, hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false },
+      player: { ...stateWithAIRevivals.player, deck: playerDeck, hand: playerHand, hasSummonedThisTurn: false, hasMovedThisTurn: false, actionsUsedThisTurn: 0 },
       log: [...stateWithAIRevivals.log, `─── ターン${afterAI.turnCount} (プレイヤーのターン) ───`],
     };
 

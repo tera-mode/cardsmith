@@ -40,9 +40,10 @@ function Step({ label, done, active }: { label: string; done: boolean; active: b
 export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Props) {
   const isPlayerTurn = session.currentTurn === 'player';
 
-  const summoned = session.player.hasSummonedThisTurn;
-  const moved    = session.player.hasMovedThisTurn;
-  const attacked = session.player.hasAttackedThisTurn;
+  const summoned    = session.player.hasSummonedThisTurn;
+  const moved       = session.player.hasMovedThisTurn;
+  const actionsUsed = session.player.actionsUsedThisTurn;
+  const attacked    = actionsUsed >= 2;
 
   const activeSummon = mode.type === 'card_selected';
   const activeMove   = mode.type === 'unit_moving';
@@ -95,7 +96,7 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
         <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9 }}>›</span>
         <Step label="移動" done={moved}    active={activeMove} />
         <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9 }}>›</span>
-        <Step label="攻撃" done={attacked} active={activeAttack && !attacked} />
+        <Step label={`攻撃 ${actionsUsed}/2`} done={attacked} active={activeAttack && !attacked} />
       </div>
 
       {/* ターン終了ボタン */}

@@ -34,9 +34,15 @@ export default function Board({ board, mode, highlightedCells, onUnitLongPress, 
   const handleCellClick = (pos: Position) => {
     const unit = board[pos.row]?.[pos.col];
 
-    // 召喚モード：ハイライトされたマスにタップ → 召喚
+    // 召喚モード：ハイライトマスで召喚 / 自ユニットタップで選択に切り替え / その他でキャンセル
     if (mode.type === 'card_selected') {
-      if (isHighlighted(pos.row, pos.col)) summonToCell(pos);
+      if (isHighlighted(pos.row, pos.col)) {
+        summonToCell(pos);
+      } else if (unit && unit.owner === 'player') {
+        selectUnit(unit);
+      } else {
+        cancel();
+      }
       return;
     }
 

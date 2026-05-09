@@ -62,8 +62,8 @@ export default function ActionMenu({ mode, session }: Props) {
   const canUseSkill = isActivated && !isSkillBlocked(unit) && unit.skillUsesRemaining !== 0 &&
     (!skillDef?.canActivate || skillDef.canActivate(session, unit, ctx)) && hasRequiredTargets;
   const canMove = isUnitSelected && !session.player.hasMovedThisTurn;
-  const alreadyAttacked = session.player.hasAttackedThisTurn;
-  const hasAttackOptions = (attacks.length > 0 || canUseSkill) && !alreadyAttacked;
+  const actionsLeft = 2 - session.player.actionsUsedThisTurn;
+  const hasAttackOptions = (attacks.length > 0 || canUseSkill) && actionsLeft > 0;
 
   return (
     <div data-testid="action-menu" className="fixed inset-x-0 bottom-0 z-20 safe-bottom">
@@ -121,10 +121,10 @@ export default function ActionMenu({ mode, session }: Props) {
             </button>
           )}
 
-          {/* 攻撃ボタン（1ターン1回まで） */}
-          {alreadyAttacked ? (
+          {/* 攻撃ボタン（1ターン最大2回） */}
+          {actionsLeft <= 0 ? (
             <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '4px 0', fontFamily: 'var(--font-display)' }}>
-              ⚔ このターンはすでに攻撃済み
+              ⚔ このターンの行動回数上限（2回）に達しました
             </p>
           ) : attacks.map((target, i) => (
             <button
@@ -144,8 +144,8 @@ export default function ActionMenu({ mode, session }: Props) {
             </button>
           ))}
 
-          {/* スキル（攻撃と同じ制限） */}
-          {skill && canUseSkill && !alreadyAttacked && (
+          {/* スキル（行動回数制限内のみ） */}
+          {skill && canUseSkill && actionsLeft > 0 && (
             <button
               data-testid="skill-button"
               onClick={() => {
