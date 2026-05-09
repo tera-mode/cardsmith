@@ -78,6 +78,11 @@ export async function runMatch(config: MatchConfig): Promise<MatchResult> {
   // Side A = player, Side B = ai（固定マッピング）
   const firstOwner: 'player' | 'ai' = firstSide === 'A' ? 'player' : 'ai';
 
+  // 後攻側は手札+1（先攻後攻補正）
+  const SECOND_HAND_BONUS = 1;
+  const handA = firstSide === 'A' ? INITIAL_HAND_SIZE : INITIAL_HAND_SIZE + SECOND_HAND_BONUS;
+  const handB = firstSide === 'B' ? INITIAL_HAND_SIZE : INITIAL_HAND_SIZE + SECOND_HAND_BONUS;
+
   let state: GameSession = {
     sessionId: uuidv4(),
     userId: 'sim',
@@ -88,14 +93,14 @@ export async function runMatch(config: MatchConfig): Promise<MatchResult> {
     board: createEmptyBoard(),
     player: {
       baseHp: config.sideA.baseHp,
-      deck: deckA.slice(INITIAL_HAND_SIZE),
-      hand: deckA.slice(0, INITIAL_HAND_SIZE),
+      deck: deckA.slice(handA),
+      hand: deckA.slice(0, handA),
       hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false,
     },
     ai: {
       baseHp: config.sideB.baseHp,
-      deck: deckB.slice(INITIAL_HAND_SIZE),
-      hand: deckB.slice(0, INITIAL_HAND_SIZE),
+      deck: deckB.slice(handB),
+      hand: deckB.slice(0, handB),
       hasSummonedThisTurn: false, hasMovedThisTurn: false, hasAttackedThisTurn: false,
     },
     log: [],

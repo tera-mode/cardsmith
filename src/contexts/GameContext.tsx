@@ -176,6 +176,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         ? shuffleDeck(buildStarterDeck(playerArchetype))
         : shuffleDeck(buildStandardDeck());
 
+    // 後攻（AI）は手札+1（先攻後攻補正）
+    const AI_HAND_SIZE = INITIAL_HAND_SIZE + 1;
     const newSession: GameSession = {
       sessionId: uuidv4(),
       userId,
@@ -194,13 +196,13 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       },
       ai: {
         baseHp: enemyBaseHp,
-        deck: enemyDeck.slice(INITIAL_HAND_SIZE),
-        hand: enemyDeck.slice(0, INITIAL_HAND_SIZE),
+        deck: enemyDeck.slice(AI_HAND_SIZE),
+        hand: enemyDeck.slice(0, AI_HAND_SIZE),
         hasSummonedThisTurn: false,
         hasMovedThisTurn: false,
         hasAttackedThisTurn: false,
       },
-      log: ['ゲーム開始！プレイヤー先攻'],
+      log: ['ゲーム開始！プレイヤー先攻（後攻AI手札+1）'],
     };
 
     updateSession(newSession);
@@ -213,10 +215,16 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const selectCard = useCallback((index: number) => {
     const s = sessionRef.current;
     if (!s || s.currentTurn !== 'player' || s.player.hasSummonedThisTurn) return;
+    // 同じカードを再タップ → 召喚キャンセル
+    if (mode.type === 'card_selected' && mode.cardIndex === index) {
+      setMode({ type: 'idle' });
+      setHighlightedCells([]);
+      return;
+    }
     const positions = getLegalSummonPositions(s.board, 'player');
     setMode({ type: 'card_selected', cardIndex: index });
     setHighlightedCells(positions);
-  }, []);
+  }, [mode]);
 
   const summonToCell = useCallback((pos: Position) => {
     const s = sessionRef.current;

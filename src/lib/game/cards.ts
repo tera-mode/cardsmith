@@ -3,6 +3,7 @@ import { Card, MovementPattern, AttackRange } from '@/lib/types/game';
 // ─── 方向ベクトル定数 ────────────────────────────────────────────────────
 
 const FWD1 = [{ dx: 0, dy: -1 }];                                    // 前1
+const FWD_SIDES = [{ dx: 0, dy: -1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }]; // 前+左右
 const FWD2J = [{ dx: 0, dy: -2 }];                                   // 前2J
 const DIR4 = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
 const FWDBWD = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }];               // 前後1
@@ -27,7 +28,8 @@ export const CARDS: Card[] = [
   {
     id: 'sei_noa', name: '見習い聖騎士ノア', attribute: 'sei',
     cost: 4, atk: 1, hp: 1,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
+    skill: { id: 'strong_blow', uses: 2 },
   },
   {
     id: 'sei_eluna', name: '草原の吟遊詩人エルナ', attribute: 'sei',
@@ -44,7 +46,7 @@ export const CARDS: Card[] = [
   {
     id: 'sei_liese', name: '黄金の戦乙女リーゼ', attribute: 'sei',
     cost: 9, atk: 3, hp: 3,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
   },
   {
     id: 'sei_sol', name: '太陽神の巫女ソル', attribute: 'sei',
@@ -89,7 +91,8 @@ export const CARDS: Card[] = [
   {
     id: 'mei_cal', name: '骸骨の見習い剣士カル', attribute: 'mei',
     cost: 4, atk: 1, hp: 1,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
+    skill: { id: 'strong_blow', uses: 2 },
   },
   {
     id: 'mei_vera', name: '夜の吸血鬼少女ヴェラ', attribute: 'mei',
@@ -152,7 +155,8 @@ export const CARDS: Card[] = [
   {
     id: 'shin_hina', name: 'どんぐり拾いの森人ヒナ', attribute: 'shin',
     cost: 4, atk: 1, hp: 1,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
+    skill: { id: 'strong_blow', uses: 2 },
   },
   {
     id: 'shin_lil', name: '蔓の見習い弓使いリル', attribute: 'shin',
@@ -214,12 +218,13 @@ export const CARDS: Card[] = [
   {
     id: 'en_koko', name: '火打ちのドワーフ娘ココ', attribute: 'en',
     cost: 5, atk: 1, hp: 2,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
   },
   {
     id: 'en_ron', name: '山岳の見習い戦士ロン', attribute: 'en',
     cost: 5, atk: 2, hp: 1,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
+    skill: { id: 'strong_blow', uses: 2 },
   },
   {
     id: 'en_garo', name: '岩拳の闘士ガロ', attribute: 'en',
@@ -276,18 +281,19 @@ export const CARDS: Card[] = [
   {
     id: 'sou_kaito', name: '見習いの船乗りカイト', attribute: 'sou',
     cost: 5, atk: 1, hp: 2,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
   },
   {
     id: 'sou_miu', name: '小人魚のミウ', attribute: 'sou',
     cost: 5, atk: 1, hp: 1,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
     skill: { id: 'fukitobashi', uses: 3 },
   },
   {
     id: 'sou_nadja', name: '蒼波の踊り子ナージャ', attribute: 'sou',
     cost: 8, atk: 2, hp: 2,
-    movement: step(DIR4), attackRange: stepAtk(FWD1),
+    movement: step(DIR4), attackRange: stepAtk(FWD_SIDES),
+    skill: { id: 'strong_blow', uses: 2 },
   },
   {
     id: 'sou_lin', name: '雲の使者リン', attribute: 'sou',
@@ -338,7 +344,8 @@ export const CARDS: Card[] = [
   {
     id: 'kou_mk01', name: '試作機MK-01', attribute: 'kou',
     cost: 4, atk: 1, hp: 1,
-    movement: step(FWD1), attackRange: stepAtk(FWD1),
+    movement: step(FWD1), attackRange: stepAtk(FWD_SIDES),
+    skill: { id: 'strong_blow', uses: 2 },
   },
   {
     id: 'kou_kano', name: '見習い技師カノ', attribute: 'kou',

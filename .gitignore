@@ -34,6 +34,7 @@ next-env.d.ts
 docs/playtest_reports/
 docs/screenshots/
 docs/sim_reports/
+docs/balance/snapshots/
 public/images/cards/raw/
 public/images/backgrounds/raw/
 .playwright-mcp/

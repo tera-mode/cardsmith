@@ -47,6 +47,7 @@ import './seinaru_kago';
 import './senki';
 
 // 起動型
+import './strong_blow';
 import './daishinkan';
 import './hikiyose';
 import './irekae';
