@@ -136,7 +136,13 @@ export function getLegalAttacks(unit: Unit, board: BoardState): AttackTarget[] {
         row: unit.position.row + abs.dy,
         col: unit.position.col + abs.dx,
       };
-      if (!isInBounds(to)) continue;
+      if (!isInBounds(to)) {
+        // 盤外かつ前方向 → 最前線からのベース攻撃
+        if (isAtFront && abs.dy === (owner === 'player' ? -1 : 1)) {
+          targets.push({ type: 'base' });
+        }
+        continue;
+      }
       const target = board[to.row][to.col];
       if (target && target.owner !== owner) {
         targets.push({ type: 'unit', unit: target });
@@ -181,6 +187,7 @@ export function createUnit(card: Card, owner: 'player' | 'ai', position: Positio
     maxHp: card.hp,
     skillUsesRemaining: card.skill ? card.skill.uses : 0,
     hasActedThisTurn: false,
+    hasAttackedThisTurn: false,
     hasMovedThisTurn: false,
     hasSummonedThisTurn: true,
     buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },

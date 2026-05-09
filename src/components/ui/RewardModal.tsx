@@ -4,6 +4,7 @@ import { Reward } from '@/lib/types/meta';
 import { CARDS } from '@/lib/game/cards';
 import { RARITY_COLORS } from '@/lib/types/meta';
 import { getCardRarity } from '@/lib/data/cards';
+import { getCostCapForLevel } from '@/lib/data/economy';
 
 interface Props {
   reward: Reward;
@@ -147,13 +148,25 @@ export default function RewardModal({ reward, leveledUp, newLevel, onClose }: Pr
             marginTop: 10,
             background: 'rgba(232,192,116,0.15)',
             border: '1px solid rgba(232,192,116,0.4)',
-            borderRadius: 4, padding: '10px 14px', textAlign: 'center',
+            borderRadius: 4, padding: '12px 14px', textAlign: 'center',
             animation: 'levelup 0.6s ease-out',
           }}>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.08em' }}>🎉 LEVEL UP!</p>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
               Lv {newLevel - 1} → Lv {newLevel}
             </p>
+            <div style={{
+              marginTop: 8, padding: '6px 10px',
+              background: 'rgba(74,158,255,0.1)', border: '1px solid rgba(74,158,255,0.3)',
+              borderRadius: 4,
+            }}>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--rune-blue)', letterSpacing: '0.06em' }}>
+                📈 デッキ総コスト上限
+              </p>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--rune-blue)', marginTop: 2 }}>
+                {getCostCapForLevel(newLevel - 1)} → {getCostCapForLevel(newLevel)}
+              </p>
+            </div>
           </div>
         )}
 

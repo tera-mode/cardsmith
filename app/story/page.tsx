@@ -6,8 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
 import ForgeBg from '@/components/ui/ForgeBg';
+import ArchetypeSelectModal from '@/components/game/ArchetypeSelectModal';
 import { CHAPTERS, getChapterQuests } from '@/lib/data/quests';
 import { QuestProgress } from '@/lib/types/meta';
+import type { Archetype } from '@/lib/game/decks';
 
 const STATUS_ICON: Record<string, string> = {
   locked: '🔒',
@@ -19,6 +21,7 @@ export default function StoryPage() {
   const { user, loading: authLoading } = useAuth();
   const { questProgress, loading } = useProfile();
   const router = useRouter();
+  const [q03ArchSelect, setQ03ArchSelect] = useState(false);
   const initialChapter = typeof window !== 'undefined'
     ? parseInt(new URLSearchParams(window.location.search).get('chapter') ?? '0') || 0
     : 0;
@@ -115,7 +118,13 @@ export default function StoryPage() {
                 {!isLocked && (
                   <button
                     data-testid="story-quest-start"
-                    onClick={() => router.push(`/play?questId=${q.questId}`)}
+                    onClick={() => {
+                      if (q.questId === 'q0_3' && !isCleared) {
+                        setQ03ArchSelect(true);
+                      } else {
+                        router.push(`/play?questId=${q.questId}`);
+                      }
+                    }}
                     className={isCleared ? 'btn--ghost' : 'btn--primary'}
                     style={{ flexShrink: 0, padding: '6px 12px', width: 'auto', minHeight: 34, fontSize: 11 }}
                   >
@@ -128,6 +137,16 @@ export default function StoryPage() {
         })}
       </div>
       </div>
+
+      {/* q0_3: 対戦開始前に系統選択 */}
+      {q03ArchSelect && (
+        <ArchetypeSelectModal
+          onSelect={(arch: Archetype) => {
+            setQ03ArchSelect(false);
+            router.push(`/play?questId=q0_3&archetype=${arch}`);
+          }}
+        />
+      )}
     </div>
   );
 }

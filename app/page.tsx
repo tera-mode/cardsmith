@@ -9,7 +9,7 @@ import { QUEST_MAP } from '@/lib/data/quests';
 import { getArchetypeFromQuestId } from '@/lib/utils/archetype';
 
 const MENU_ITEMS = [
-  { key: 'regions',    label: '六領域',     icon: '🗺️',  href: '/regions',    accent: '#d4af37' },
+  { key: 'regions',    label: 'クエスト',   icon: '🗺️',  href: '/regions',    accent: '#d4af37' },
   { key: 'play',       label: '自由対戦',   icon: '⚔️',  href: '/play',       accent: '#e85a4a' },
   { key: 'collection', label: 'コレクション', icon: '🃏', href: '/collection', accent: '#c478ff' },
   { key: 'materials',  label: 'マテリアル', icon: '🔩',  href: '/materials',  accent: '#8a7a5e' },
@@ -53,12 +53,15 @@ export default function HomePage() {
 
   const nextGoal = useMemo(() => {
     if (!questProgress.length) return { label: 'チュートリアルを始めよう', href: '/play?questId=q0_1', sub: 'Ch.0-1 鍛炉の灯' };
+    // チュートリアル3クリア後はネクストクエスト非表示（クエストメニューから選択）
+    const isPostTutorial = questProgress.some(p => p.questId === 'q0_3' && p.status === 'cleared');
+    if (isPostTutorial) return null;
     const available = questProgress.filter(p => p.status === 'available');
     if (available.length > 0) {
       const q = QUEST_MAP[available[0].questId];
       return q ? { label: q.title, href: `/play?questId=${q.questId}`, sub: `Ch.${q.chapter}-${q.order}` } : null;
     }
-    return { label: '六領域マップを見る', href: '/regions', sub: '全ての章をクリアした！' };
+    return null;
   }, [questProgress]);
 
   if (authLoading) {

@@ -42,8 +42,9 @@ function GameScreen() {
 
   const searchParams = useSearchParams();
   const questId = searchParams.get('questId') ?? undefined;
+  const urlArchetype = searchParams.get('archetype') as Archetype | null;
   const isQ03 = questId === 'q0_3';
-  const questArchetype = getArchetypeFromQuestId(questId) ?? (selectedArchetype ?? undefined);
+  const questArchetype = getArchetypeFromQuestId(questId) ?? (selectedArchetype ?? urlArchetype ?? undefined);
   const isTutorial = !!questId?.startsWith('q0_');
   const bgUrl = isTutorial ? '/images/backgrounds/home.png' : getBattleBgUrl(questArchetype ?? null);
   const questDef = questId ? QUEST_MAP[questId] : undefined;
@@ -63,6 +64,7 @@ function GameScreen() {
       maxHp: card.hp,
       skillUsesRemaining: card.skill ? card.skill.uses : 0,
       hasActedThisTurn: false,
+      hasAttackedThisTurn: false,
       hasMovedThisTurn: false,
       hasSummonedThisTurn: false,
       buffs: { atkBonus: 0, auraAtk: 0, auraMaxHp: 0 },
@@ -85,11 +87,12 @@ function GameScreen() {
   // ゲーム初期化（プロローグ・系統選択・デッキ選択をすべて通過後に起動）
   useEffect(() => {
     if (!user || session) return;
-    if (isQ03 && !selectedArchetype) return; // q0_3 は系統選択待ち
+    // q0_3 は URLパラメータかstate経由の系統選択が必要
+    if (isQ03 && !selectedArchetype && !urlArchetype) return;
     if (hasPrologue && !prologueDone) return;
     if (needsDeckSelect) return; // デッキ選択待ち
-    initGame(user.uid, questId, selectedArchetype ?? undefined, selectedDeck ?? undefined);
-  }, [user, session, initGame, isQ03, selectedArchetype, questId, hasPrologue, prologueDone, needsDeckSelect, selectedDeck]);
+    initGame(user.uid, questId, selectedArchetype ?? urlArchetype ?? undefined, selectedDeck ?? undefined);
+  }, [user, session, initGame, isQ03, selectedArchetype, urlArchetype, questId, hasPrologue, prologueDone, needsDeckSelect, selectedDeck]);
 
   // リザルトURLパラメータ構築（session ref 経由でstale closure回避）
   const sessionRef = useRef(session);
@@ -104,7 +107,7 @@ function GameScreen() {
       playerHp: String(s.player.baseHp),
       aiHp: String(s.ai.baseHp),
       ...(questId ? { questId } : {}),
-      ...(isQ03 && selectedArchetype ? { archetype: selectedArchetype } : {}),
+      ...(isQ03 && (selectedArchetype ?? urlArchetype) ? { archetype: String(selectedArchetype ?? urlArchetype) } : {}),
     }).toString();
   }, [questId, isQ03, selectedArchetype]);
 
@@ -143,8 +146,8 @@ function GameScreen() {
     );
   }
 
-  // q0_3: 系統選択（プロローグ後）
-  if (isQ03 && !selectedArchetype) {
+  // q0_3: 系統選択（URLパラメータがない場合のみプロローグ後に表示）
+  if (isQ03 && !selectedArchetype && !urlArchetype) {
     return (
       <ArchetypeSelectModal
         onSelect={arch => setSelectedArchetype(arch)}

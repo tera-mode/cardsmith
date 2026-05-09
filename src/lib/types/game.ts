@@ -59,7 +59,8 @@ export interface Unit {
   currentHp: number;
   maxHp: number;
   skillUsesRemaining: number | 'infinite';
-  hasActedThisTurn: boolean;
+  hasActedThisTurn: boolean;     // 攻撃orスキル使用済み（同ユニット2回行動防止）
+  hasAttackedThisTurn: boolean;  // 攻撃済み（移動ブロック用。スキルはセットしない）
   hasMovedThisTurn: boolean;
   hasSummonedThisTurn: boolean;
   buffs: UnitBuffs;

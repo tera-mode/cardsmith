@@ -26,18 +26,21 @@ export function enumerateActions(state: GameSession, owner: Owner): AIAction[] {
     for (let c = 0; c < BOARD_COLS; c++) {
       const unit = state.board[r][c];
       if (!unit || unit.owner !== owner) continue;
-      if (unit.hasActedThisTurn || !canAct(unit)) continue;
+      if (!canAct(unit)) continue;
 
-      // 移動（このターンに移動済みでなければ）
-      if (!unit.hasMovedThisTurn) {
+      const MAX_ACTIONS = 2;
+      const actionsLeft = MAX_ACTIONS - ownerState.actionsUsedThisTurn;
+
+      // 移動：hasAttackedThisTurn（攻撃済み）の場合は移動不可。スキル使用後は移動可。
+      if (!unit.hasMovedThisTurn && !unit.hasAttackedThisTurn) {
         const moves = getLegalMoves(unit, state.board);
         for (const pos of moves) {
           actions.push({ type: 'move', unitId: unit.instanceId, position: pos });
         }
       }
 
-      const MAX_ACTIONS = 2;
-      const actionsLeft = MAX_ACTIONS - ownerState.actionsUsedThisTurn;
+      // 攻撃・スキル：hasActedThisTurn（攻撃orスキル済み）の場合は不可
+      if (unit.hasActedThisTurn) continue;
 
       // 攻撃（1ターン2回まで、ターン1は先攻プレイヤーのベース攻撃不可）
       if (actionsLeft > 0) {

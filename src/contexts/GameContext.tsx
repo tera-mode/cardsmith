@@ -271,8 +271,10 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     if (!canAct(unit)) return;
     // 召喚ターンに行動不可なトークン・クローンは除外
     if (unit.hasActedThisTurn) return;
-    // 移動・攻撃どちらも残っていない場合は選択不可
-    if (s.player.hasMovedThisTurn && s.player.actionsUsedThisTurn >= 2) return;
+    // 移動も攻撃/スキルも残っていない場合は選択不可
+    const canStillMove = !unit.hasMovedThisTurn && !unit.hasAttackedThisTurn;
+    const canStillAct = !unit.hasActedThisTurn && s.player.actionsUsedThisTurn < 2;
+    if (!canStillMove && !canStillAct) return;
     // 移動先を即時ハイライト（移動済みの場合は空）
     const moves = !s.player.hasMovedThisTurn ? getLegalMoves(unit, s.board) : [];
     setMode({ type: 'unit_selected', unit });
@@ -306,7 +308,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const newState = { ...s, board: newBoard, player: { ...s.player, hasMovedThisTurn: true }, log: [...s.log, logEntry] };
     updateSession(newState);
     // 攻撃済みor攻撃対象なし → 即 idle（「行動終了」不要）
-    const hasAttackOptions = s.player.actionsUsedThisTurn < 2 && getLegalAttacks(moved, newBoard).length > 0;
+    // 移動後：攻撃/スキルがまだ使えるか（actionsLeft > 0 かつ hasActedThisTurnでない）
+    const hasAttackOptions = s.player.actionsUsedThisTurn < 2 && !moved.hasActedThisTurn && getLegalAttacks(moved, newBoard).length > 0;
     if (hasAttackOptions) {
       setMode({ type: 'unit_post_move', unit: moved });
     } else {
@@ -369,6 +372,14 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       if (freshAttacker) {
         nextState = triggerOnAttack(nextState, freshAttacker, defender, atk);
       }
+    }
+
+    // 攻撃者を行動済みにマーク（hasAttackedThisTurn=true で移動も封印）
+    const freshAtk = findUnit(nextState, attacker.instanceId);
+    if (freshAtk) {
+      const b = nextState.board.map(r => [...r]);
+      b[freshAtk.position.row][freshAtk.position.col] = { ...freshAtk, hasActedThisTurn: true, hasAttackedThisTurn: true };
+      nextState = { ...nextState, board: b };
     }
 
     // 行動カウンタを増分（上限2）

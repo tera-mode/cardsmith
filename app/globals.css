@@ -61,6 +61,20 @@
 [data-theme='kou']  { --theme-color: #64748b; --theme-glow: rgba(100,116,139,0.4); --theme-dim: rgba(100,116,139,0.12);}
 
 /* ============================================================
+   モバイル長押し選択防止
+   ============================================================ */
+.game-layout,
+.game-layout *,
+[data-testid="hand"],
+[data-testid^="card-"],
+[data-testid^="unit-"],
+[data-testid="board"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes flicker {

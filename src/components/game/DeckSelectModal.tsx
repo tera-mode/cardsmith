@@ -92,8 +92,8 @@ export default function DeckSelectModal({ starterArchetype, onSelect }: Props) {
             <span style={{ color: 'var(--gold)', fontSize: 18 }}>›</span>
           </button>
 
-          {/* カスタムデッキ一覧 */}
-          {decks.map(deck => {
+          {/* カスタムデッキ一覧（更新日時の新しい順） */}
+          {[...decks].sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0)).map(deck => {
             const cards = deckToCards(deck, ownedCards);
             if (cards.length === 0) return null;
             return (

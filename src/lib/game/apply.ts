@@ -94,9 +94,9 @@ export function applyAttack(
     if (freshAtk) s = triggerOnAttack(s, freshAtk, defender, atk);
   }
 
-  // 攻撃者を行動済みにマーク
+  // 攻撃者を行動済みにマーク（hasAttackedThisTurn=true で移動も封印）
   const freshAtk = findUnit(s, attackerId);
-  if (freshAtk) s = updateUnitOnBoard(s, { ...freshAtk, hasActedThisTurn: true });
+  if (freshAtk) s = updateUnitOnBoard(s, { ...freshAtk, hasActedThisTurn: true, hasAttackedThisTurn: true });
 
   // 行動カウンタを増分（上限2）
   if (owner === 'ai') {
@@ -141,7 +141,7 @@ export function applyEndTurn(state: GameSession): GameSession {
 
   // 盤面ユニットのターンフラグをリセット
   const board = state.board.map(row =>
-    row.map(cell => cell ? { ...cell, hasActedThisTurn: false, hasMovedThisTurn: false } : null)
+    row.map(cell => cell ? { ...cell, hasActedThisTurn: false, hasAttackedThisTurn: false, hasMovedThisTurn: false } : null)
   );
 
   // 次の手番のドロー（シミュレーション用：簡易版）
