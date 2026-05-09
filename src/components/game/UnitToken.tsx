@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'motion/react';
 import { Unit } from '@/lib/types/game';
 import { getEffectiveAtk } from '@/lib/game/helpers';
 
@@ -18,23 +19,26 @@ export default function UnitToken({ unit, isSelected }: Props) {
     <div
       data-testid={`unit-${unit.instanceId}`}
       className={`unit-token unit-token--${isPlayer ? 'player' : 'enemy'}${unit.hasActedThisTurn ? ' unit-token--acted' : ''}`}
-      style={{ position: 'absolute', inset: 2, overflow: 'hidden' }}
+      style={{
+        position: 'absolute', inset: 2, overflow: 'hidden',
+        filter: unit.hasActedThisTurn ? 'saturate(0.45) brightness(0.8)' : 'none',
+        transition: 'filter 0.3s',
+      }}
     >
-      {/* HP バー（上部） */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 3,
-        background: 'rgba(0,0,0,0.7)', borderRadius: '2px 2px 0 0', overflow: 'hidden',
-      }}>
-        <div style={{
-          height: '100%',
-          width: `${hpPercent}%`,
-          background: hpPercent > 50
-            ? 'linear-gradient(90deg, #6bd998, #4aaf78)'
-            : hpPercent > 25
-              ? 'linear-gradient(90deg, #ffd54a, #e8a93a)'
-              : 'linear-gradient(90deg, #ff6b5b, #c83a28)',
-          transition: 'width 0.3s',
-        }} />
+      {/* HP バー（上部） - motion でアニメーション */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 3, background: 'rgba(0,0,0,0.7)', borderRadius: '2px 2px 0 0', overflow: 'hidden' }}>
+        <motion.div
+          animate={{ width: `${hpPercent}%` }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          style={{
+            height: '100%',
+            background: hpPercent > 50
+              ? 'linear-gradient(90deg, #6bd998, #4aaf78)'
+              : hpPercent > 25
+                ? 'linear-gradient(90deg, #ffd54a, #e8a93a)'
+                : 'linear-gradient(90deg, #ff6b5b, #c83a28)',
+          }}
+        />
       </div>
 
       {/* キャラクター画像 */}
@@ -43,24 +47,14 @@ export default function UnitToken({ unit, isSelected }: Props) {
         alt=""
         draggable={false}
         style={{
-          position: 'absolute',
-          top: 3,
-          left: 0,
-          right: 0,
-          bottom: 14,
-          width: '100%',
-          height: 'calc(100% - 17px)',
-          objectFit: 'cover',
-          objectPosition: 'center 18%',
-          display: 'block',
-          userSelect: 'none',
-          WebkitTouchCallout: 'none',
-          pointerEvents: 'none',
+          position: 'absolute', top: 3, left: 0, right: 0, bottom: 14,
+          width: '100%', height: 'calc(100% - 17px)',
+          objectFit: 'cover', objectPosition: 'center 18%',
+          display: 'block', userSelect: 'none',
+          WebkitTouchCallout: 'none', pointerEvents: 'none',
         } as React.CSSProperties}
         onContextMenu={(e) => e.preventDefault()}
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = 'none';
-        }}
+        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
       />
 
       {/* ATK / HP（下部オーバーレイ） */}
@@ -80,16 +74,51 @@ export default function UnitToken({ unit, isSelected }: Props) {
       {unit.card.skill && unit.skillUsesRemaining !== 0 && (
         <div style={{
           position: 'absolute', top: 4, right: 1, zIndex: 4,
-          background: 'rgba(196,120,255,0.9)',
-          borderRadius: '0 2px 0 2px',
-          padding: '0 2px',
-          fontSize: 8,
-          fontFamily: 'var(--font-display)',
-          fontWeight: 700,
-          color: '#fff',
-          lineHeight: '11px',
+          background: 'rgba(196,120,255,0.9)', borderRadius: '0 2px 0 2px',
+          padding: '0 2px', fontSize: 8, fontFamily: 'var(--font-display)',
+          fontWeight: 700, color: '#fff', lineHeight: '11px',
         }}>
           {unit.skillUsesRemaining === 'infinite' ? '∞' : unit.skillUsesRemaining}
+        </div>
+      )}
+
+      {/* 凍結オーバーレイ */}
+      {unit.statusEffects.frozen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.55, 0.75, 0.55] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          style={{
+            position: 'absolute', inset: 0, zIndex: 5,
+            background: 'linear-gradient(135deg, rgba(125,211,252,0.35), rgba(125,211,252,0.55))',
+            borderRadius: 2, pointerEvents: 'none',
+          }}
+        >
+          <span style={{ position: 'absolute', top: 1, left: 2, fontSize: 12 }}>❄️</span>
+        </motion.div>
+      )}
+
+      {/* 麻痺オーバーレイ */}
+      {unit.statusEffects.paralyzed && (
+        <motion.div
+          animate={{ opacity: [0, 0.65, 0] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          style={{
+            position: 'absolute', inset: 0, zIndex: 5,
+            background: 'rgba(250,204,21,0.45)', pointerEvents: 'none',
+          }}
+        >
+          <span style={{ position: 'absolute', top: 1, left: 2, fontSize: 12 }}>⚡</span>
+        </motion.div>
+      )}
+
+      {/* 沈黙オーバーレイ */}
+      {unit.statusEffects.silenced && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 5,
+          background: 'rgba(100,116,139,0.3)', pointerEvents: 'none',
+        }}>
+          <span style={{ position: 'absolute', top: 1, left: 2, fontSize: 12 }}>🔇</span>
         </div>
       )}
     </div>

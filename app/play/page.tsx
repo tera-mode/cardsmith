@@ -22,6 +22,8 @@ import { getArchetypeFromQuestId, getBattleBgUrl } from '@/lib/utils/archetype';
 import ForgeBg from '@/components/ui/ForgeBg';
 import { QUEST_MAP } from '@/lib/data/quests';
 import { useProfile } from '@/contexts/ProfileContext';
+import { EffectQueueProvider } from '@/contexts/EffectQueueContext';
+import { EffectLayer } from '@/components/effects/EffectLayer';
 
 function GameScreen() {
   const { user, loading } = useAuth();
@@ -36,6 +38,7 @@ function GameScreen() {
   const initialAiHpRef = useRef<number | null>(null);
   const initialPlayerHpRef = useRef<number | null>(null);
   const finishHandledRef = useRef(false);
+  const boardRef = useRef<HTMLElement | null>(null);
 
   const searchParams = useSearchParams();
   const questId = searchParams.get('questId') ?? undefined;
@@ -196,13 +199,15 @@ function GameScreen() {
         </div>
 
         {/* 盤面 */}
-        <div className="flex justify-center items-center flex-shrink-0">
+        <div className="flex justify-center items-center flex-shrink-0" style={{ position: 'relative' }}>
           <Board
             board={session.board}
             mode={mode}
             highlightedCells={highlightedCells}
             onUnitLongPress={setDetailUnit}
+            boardRef={boardRef}
           />
+          <EffectLayer boardRef={boardRef} />
         </div>
 
         {/* プレイヤー陣地HP */}
@@ -285,9 +290,11 @@ function GameScreen() {
 export default function PlayPage() {
   return (
     <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-[#1a1a2e]"><p className="text-gray-400 text-sm">読み込み中...</p></div>}>
-      <GameProvider>
-        <GameScreen />
-      </GameProvider>
+      <EffectQueueProvider>
+        <GameProvider>
+          <GameScreen />
+        </GameProvider>
+      </EffectQueueProvider>
     </Suspense>
   );
 }

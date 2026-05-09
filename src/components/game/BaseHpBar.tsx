@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'motion/react';
 import { BASE_HP } from '@/lib/game/decks';
 
 interface Props {
@@ -52,7 +53,11 @@ export default function BaseHpBar({ owner, hp, maxHp = BASE_HP }: Props) {
       </span>
 
       <div className="hp-bar-dungeon__track">
-        <div className="hp-bar-dungeon__fill" style={{ width: `${percent}%` }} />
+        <motion.div
+          className="hp-bar-dungeon__fill"
+          animate={{ width: `${percent}%` }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        />
       </div>
     </div>
   );

@@ -30,6 +30,7 @@ import { runAITurn, getProfile } from '@/lib/game/ai/index';
 import type { BattleAIProfile } from '@/lib/game/ai/index';
 import { QUEST_MAP } from '@/lib/data/quests';
 import { auth } from '@/lib/firebase/config';
+import { useEffectQueueSafe } from '@/contexts/EffectQueueContext';
 
 // スキル登録（全スキルを初期化）
 import '@/lib/game/skills/index';
@@ -156,6 +157,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const [highlightedCells, setHighlightedCells] = useState<Position[]>([]);
   const [aiProfile, setAiProfile] = useState<BattleAIProfile>(getProfile('normal_balanced'));
   const sessionRef = useRef<GameSession | null>(null);
+  const effectQueue = useEffectQueueSafe();
 
   const updateSession = useCallback((s: GameSession) => {
     sessionRef.current = s;
@@ -221,6 +223,10 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     if (!s || mode.type !== 'card_selected') return;
     const card = s.player.hand[mode.cardIndex];
     if (!card) return;
+
+    // 召喚エフェクト
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    effectQueue?.push({ type: 'summon', cardId: card.id, attribute: card.attribute as any, to: pos, durationMs: 600 } as any);
 
     const unit = createUnit(card, 'player', pos);
     const newBoard = placeUnit(s.board, unit, pos);
@@ -317,6 +323,19 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const attacker = mode.unit;
     const atk = getEffectiveAtk(attacker);
 
+    // 攻撃エフェクト（AttackTargetにsideはないため、attacker.ownerで判断）
+    const attackKind = attacker.card.attackRange.type === 'ranged'
+      ? (attacker.card.id.includes('cannon') ? 'ranged_cannon' : 'ranged_arrow')
+      : 'melee';
+    const targetPos = target.type === 'base'
+      ? { row: attacker.owner === 'player' ? 0 : 3, col: 2 }
+      : target.unit.position;
+    effectQueue?.push([
+      { type: 'attack_motion', attacker: attacker.position, target: targetPos, attackKind, durationMs: attackKind === 'melee' ? 250 : 400 },
+      { type: 'hit', target: targetPos, damage: atk, attackKind, durationMs: 300 },
+      { type: 'damage_number', position: targetPos, value: atk, kind: 'damage', durationMs: 1000 },
+    ]);
+
     let nextState: GameSession;
 
     if (target.type === 'base') {
@@ -383,6 +402,22 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     const skillDef = unit.card.skill ? getSkill(unit.card.skill.id) : null;
     if (!skillDef || skillDef.triggerKind !== 'activated') return;
 
+    // スキルエフェクト
+    const skillId = unit.card.skill?.id ?? '';
+    const visualHint =
+      ['heal', 'saisei', 'haru_no_ibuki', 'keigan'].includes(skillId) ? 'heal' :
+      ['buff', 'bless'].includes(skillId) ? 'buff' :
+      ['freeze', 'mafu'].includes(skillId) ? 'debuff' :
+      ['penetrate', 'kamikaze', 'rengeki'].includes(skillId) ? 'aoe' : 'generic';
+    effectQueue?.push({
+      type: 'skill_proc' as const,
+      source: unit.position,
+      skillId,
+      targets: target ? [target] : undefined,
+      visualHint,
+      durationMs: 600,
+    });
+
     let nextState = resolveActivatedSkill(s, unit, target ?? null);
 
     nextState = checkWinner(nextState);
@@ -393,7 +428,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     if (finished) saveSession(result);
     setMode({ type: 'idle' });
     setHighlightedCells([]);
-  }, [mode, updateSession]);
+  }, [mode, updateSession, effectQueue]);
 
   // ─── ターン終了 ──────────────────────────────────────────────────────────
 
@@ -440,6 +475,9 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
     // AIターン開始スキル発火
     let aiTurnWithStart = triggerOnTurnStart(aiTurnState, 'ai');
+
+    // AIターンバナー
+    effectQueue?.push({ type: 'turn_banner', side: 'ai', turnCount: s.turnCount + 1, durationMs: 1000 });
 
     setMode({ type: 'idle' });
     setHighlightedCells([]);
@@ -497,9 +535,19 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       finishedAt: finished ? Date.now() : undefined,
     };
 
+    // プレイヤーターンバナー or 勝敗エフェクト
+    if (finished) {
+      effectQueue?.push({
+        type: finalState.winner === 'player' ? 'victory' : 'defeat',
+        durationMs: finalState.winner === 'player' ? 2500 : 2000,
+      });
+    } else {
+      effectQueue?.push({ type: 'turn_banner', side: 'player', turnCount: afterAI.turnCount, durationMs: 1000 });
+    }
+
     updateSession(finalSession);
     if (finished) saveSession(finalSession);
-  }, [updateSession]);
+  }, [updateSession, effectQueue]);
 
   const cancel = useCallback(() => {
     setMode({ type: 'idle' });

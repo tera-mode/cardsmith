@@ -10,9 +10,10 @@ interface Props {
   mode: InteractionMode;
   highlightedCells: Position[];
   onUnitLongPress?: (unit: Unit) => void;
+  boardRef?: React.RefObject<HTMLElement | null>;
 }
 
-export default function Board({ board, mode, highlightedCells, onUnitLongPress }: Props) {
+export default function Board({ board, mode, highlightedCells, onUnitLongPress, boardRef }: Props) {
   const { selectUnit, moveUnit, summonToCell, useSkill, cancel } = useGame();
 
   const isHighlighted = (row: number, col: number) =>
@@ -79,6 +80,7 @@ export default function Board({ board, mode, highlightedCells, onUnitLongPress }
   return (
     <div
       data-testid="board"
+      ref={boardRef as React.RefObject<HTMLDivElement>}
       className="grid gap-px bg-[#0a1628]"
       style={{
         gridTemplateColumns: `repeat(${BOARD_COLS}, 1fr)`,
