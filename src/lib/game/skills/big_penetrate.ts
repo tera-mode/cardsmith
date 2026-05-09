@@ -14,7 +14,6 @@ registerSkill({
     const frontRow = self.owner === 'player' ? 0 : BOARD_ROWS - 1;
     return self.position.row === frontRow;
   },
-  getValidTargets() { return []; },
   resolve(state, self) {
     const dmg = getEffectiveAtk(self);
     const next = applyBaseDamage(state, self.owner, dmg);

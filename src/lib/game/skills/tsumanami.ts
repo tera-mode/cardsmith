@@ -10,7 +10,6 @@ registerSkill({
   maxUsesDefault: 2,
 
   canActivate(_state, _self, ctx) { return ctx.remainingUses !== 0; },
-  getValidTargets() { return []; },
   resolve(state, self) {
     const enemies = getEnemiesOnBoard(state, self.owner);
     let workingState = state;

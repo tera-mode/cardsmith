@@ -10,7 +10,6 @@ registerSkill({
   maxUsesDefault: 1,
 
   canActivate(_state, _self, ctx) { return ctx.remainingUses !== 0; },
-  getValidTargets() { return []; },
   resolve(state, self) {
     const enemies = getAdjacent8Enemies(state, self.position, self.owner);
     const dmg = getEffectiveAtk(self) * 2;

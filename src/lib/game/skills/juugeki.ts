@@ -14,7 +14,6 @@ registerSkill({
     const frontRow = self.owner === 'player' ? 0 : BOARD_ROWS - 1;
     return self.position.row === frontRow;
   },
-  getValidTargets() { return []; },
   resolve(state, self) {
     const next = applyBaseDamage(state, self.owner, 3);
     return { state: next, log: [`${self.card.name}：重撃！敵陣地に3ダメージ`] };

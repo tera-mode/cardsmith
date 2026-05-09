@@ -14,7 +14,6 @@ registerSkill({
     const frontRow = self.owner === 'player' ? 0 : BOARD_ROWS - 1;
     return self.position.row === frontRow;
   },
-  getValidTargets() { return []; },
   resolve(state, self) {
     const next = applyBaseDamage(state, self.owner, 2);
     return { state: next, log: [`${self.card.name}：貫通攻撃！陣地に2ダメージ`] };
