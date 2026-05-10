@@ -43,6 +43,7 @@ function GameScreen() {
 
   const searchParams = useSearchParams();
   const questId = searchParams.get('questId') ?? undefined;
+  const returnTo = searchParams.get('returnTo') ?? undefined;
   const urlArchetype = searchParams.get('archetype') as Archetype | null;
   const isQ03 = questId === 'q0_3';
   const questArchetype = getArchetypeFromQuestId(questId) ?? (selectedArchetype ?? urlArchetype ?? undefined);
@@ -63,6 +64,7 @@ function GameScreen() {
       playerHp: String(session.player.baseHp),
       aiHp: String(session.ai.baseHp),
       ...(questId ? { questId } : {}),
+      ...(returnTo ? { returnTo } : {}),
     }).toString();
     router.push(`/result?${params}`);
   };
@@ -122,8 +124,9 @@ function GameScreen() {
       aiHp: String(s.ai.baseHp),
       ...(questId ? { questId } : {}),
       ...(isQ03 && (selectedArchetype ?? urlArchetype) ? { archetype: String(selectedArchetype ?? urlArchetype) } : {}),
+      ...(returnTo ? { returnTo } : {}),
     }).toString();
-  }, [questId, isQ03, selectedArchetype]);
+  }, [questId, isQ03, selectedArchetype, returnTo]);
 
   // ゲーム終了 → エピローグ or リザルト遷移
   useEffect(() => {

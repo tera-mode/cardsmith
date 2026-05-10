@@ -9,7 +9,8 @@ import { QUEST_MAP } from '@/lib/data/quests';
 import { getArchetypeFromQuestId } from '@/lib/utils/archetype';
 
 const MENU_ITEMS = [
-  { key: 'regions',    label: 'クエスト',   icon: '🗺️',  href: '/regions',    accent: '#d4af37' },
+  { key: 'story',      label: 'ストーリー', icon: '📖',  href: '/story/0',    accent: '#9855d4' },
+  { key: 'regions',    label: '領域探索',   icon: '🗺️',  href: '/regions',    accent: '#d4af37' },
   { key: 'play',       label: '自由対戦',   icon: '⚔️',  href: '/play',       accent: '#e85a4a' },
   { key: 'collection', label: 'コレクション', icon: '🃏', href: '/collection', accent: '#c478ff' },
   { key: 'materials',  label: 'マテリアル', icon: '🔩',  href: '/materials',  accent: '#8a7a5e' },
@@ -48,7 +49,7 @@ export default function HomePage() {
   const router = useRouter();
 
   const nextGoal = useMemo(() => {
-    if (!questProgress.length) return { label: 'チュートリアルを始めよう', href: '/play?questId=q0_1', sub: 'Ch.0-1 鍛炉の灯' };
+    if (!questProgress.length) return { label: 'ストーリーを始めよう', href: '/story/0', sub: '第0章：転生の日' };
     // チュートリアル3クリア後はネクストクエスト非表示（クエストメニューから選択）
     const isPostTutorial = questProgress.some(p => p.questId === 'q0_3' && p.status === 'cleared');
     if (isPostTutorial) return null;

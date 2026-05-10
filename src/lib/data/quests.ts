@@ -609,10 +609,60 @@ const KOU: QuestDefinition[] = [
   },
 ];
 
+// ─── ストーリーバトル（第0〜1章） ─────────────────────────────────────────────
+
+const STORY_BATTLES: QuestDefinition[] = [
+  {
+    questId: 'story_0_4',
+    chapter: 0, order: 10,
+    title: '野盗との戦闘（第0章シーン4）',
+    description: '野盗を撃退せよ。',
+    enemyDeckId: 'story_bandit_easy',
+    enemyAIProfileId: 'tutorial_scripted',
+    enemyBaseHp: 5,
+    reward: { exp: 10, runes: 20 },
+    prerequisites: [],
+  },
+  {
+    questId: 'story_1_2',
+    chapter: 1, order: 10,
+    title: '街道の野盗戦（第1章シーン2）',
+    description: '街道の野盗を撃退せよ。',
+    enemyDeckId: 'story_bandit_easy',
+    enemyAIProfileId: 'tutorial_scripted',
+    enemyBaseHp: 5,
+    reward: { exp: 20, runes: 30 },
+    prerequisites: [],
+  },
+  {
+    questId: 'story_1_4',
+    chapter: 1, order: 11,
+    title: 'ゴロツキ撃退（第1章シーン4）',
+    description: '写畜を守れ。',
+    enemyDeckId: 'story_thug',
+    enemyAIProfileId: 'easy_balanced',
+    enemyBaseHp: 5,
+    reward: { exp: 30, runes: 40 },
+    prerequisites: [],
+  },
+  {
+    questId: 'story_1_5',
+    chapter: 1, order: 12,
+    title: '子供たちの挑戦（第1章シーン5）',
+    description: 'ニケをいじめる子供たちを退けろ。',
+    enemyDeckId: 'story_kids',
+    enemyAIProfileId: 'tutorial_scripted',
+    enemyBaseHp: 5,
+    reward: { exp: 25, runes: 35 },
+    prerequisites: [],
+  },
+];
+
 // ─── エクスポート ─────────────────────────────────────────────────────────────
 
 export const QUESTS: QuestDefinition[] = [
   ...TUTORIAL,
+  ...STORY_BATTLES,
   ...SEI,
   ...MEI,
   ...SHIN,

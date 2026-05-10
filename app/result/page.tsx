@@ -22,6 +22,7 @@ function ResultContent() {
   const aiHp = params.get('aiHp');
   const questId = params.get('questId');
   const archetypeParam = params.get('archetype') as Archetype | null;
+  const returnTo = params.get('returnTo');
 
   const [rewardApplied, setRewardApplied] = useState(false);
   const [showReward, setShowReward] = useState(false);
@@ -128,11 +129,11 @@ function ResultContent() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
           <button
             data-testid="play-again"
-            onClick={() => questId ? router.push('/story') : router.push('/play')}
+            onClick={() => returnTo ? router.push(returnTo) : questId ? router.push('/story') : router.push('/play')}
             className="btn--primary"
             style={{ minHeight: 48, fontSize: 14 }}
           >
-            {questId ? '📖 ストーリーへ戻る' : '⚔ もう一度プレイ'}
+            {returnTo ? 'ストーリーへ戻る' : questId ? '📖 ストーリーへ戻る' : '⚔ もう一度プレイ'}
           </button>
           <button
             onClick={() => router.push('/')}

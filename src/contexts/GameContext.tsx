@@ -148,6 +148,23 @@ function resolveEnemyConfig(questId?: string): {
     return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
   }
 
+  // ストーリーバトル専用デッキ
+  if (quest.enemyDeckId === 'story_bandit_easy') {
+    const deck = [c('sei_noa'), c('sei_noa'), c('sei_noa'), c('shin_hina'), c('shin_hina')];
+    return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
+  }
+  if (quest.enemyDeckId === 'story_thug') {
+    const deck = [
+      c('sei_eluna'), c('sei_eluna'), c('sei_eluna'),
+      c('shin_lil'), c('shin_lil'), c('shin_hina'),
+    ];
+    return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
+  }
+  if (quest.enemyDeckId === 'story_kids') {
+    const deck = [c('sei_noa'), c('sei_noa'), c('sei_noa'), c('shin_hina'), c('shin_hina')];
+    return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
+  }
+
   return { profile, enemyDeck: shuffleDeck(buildStandardDeck()), enemyBaseHp };
 }
 
