@@ -34,10 +34,6 @@ function HomeBg() {
         style={{ objectFit: 'cover', objectPosition: 'center top' }}
         priority
       />
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(180deg, rgba(8,5,3,0.68) 0%, rgba(5,3,1,0.82) 100%)',
-      }} />
     </div>
   );
 }
