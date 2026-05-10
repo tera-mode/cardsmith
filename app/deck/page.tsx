@@ -51,6 +51,43 @@ export default function DeckPage() {
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pressDidFire = useRef(false);
 
+  // カルーセルマウスドラッグ
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragScrollLeft = useRef(0);
+  const hasDragged = useRef(false);
+  const [carouselHovered, setCarouselHovered] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateCarouselArrows = () => {
+    const el = carouselRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  };
+
+  const onCarouselMouseDown = (e: React.MouseEvent) => {
+    isDragging.current = true;
+    hasDragged.current = false;
+    dragStartX.current = e.pageX;
+    dragScrollLeft.current = carouselRef.current?.scrollLeft ?? 0;
+  };
+
+  const onCarouselMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !carouselRef.current) return;
+    const dx = e.pageX - dragStartX.current;
+    if (Math.abs(dx) > 4) hasDragged.current = true;
+    carouselRef.current.scrollLeft = dragScrollLeft.current - dx;
+  };
+
+  const onCarouselMouseUp = () => { isDragging.current = false; };
+
+  const scrollCarousel = (dir: 'left' | 'right') => {
+    carouselRef.current?.scrollBy({ left: dir === 'left' ? -240 : 240, behavior: 'smooth' });
+  };
+
   const startPress = (card: CardWithRarity) => {
     pressDidFire.current = false;
     pressTimer.current = setTimeout(() => {
@@ -248,74 +285,99 @@ export default function DeckPage() {
           <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--gold)', letterSpacing: '0.14em', textAlign: 'center', padding: '5px 0 3px', opacity: 0.75 }}>
             ⚜ 編成中のユニット ⚜
           </p>
-          {/* hand-scroll クラスで全ブラウザのスクロールバー非表示 + タッチ対応 */}
-          <div className="hand-scroll" style={{ display: 'flex', gap: 5, padding: '0 10px 8px' }}>
-            {deckSlots.map(({ cardId, card, idx }) => {
-              const rc = card?.rarity ?? 'C';
-              return (
-                <button
-                  key={`${cardId}-${idx}`}
-                  onClick={() => removeCard(cardId)}
-                  style={{
-                    flexShrink: 0, width: 118, height: 156, borderRadius: 8,
-                    background: RARITY_BG[rc],
-                    border: `1px solid ${RARITY_COLOR[rc]}55`,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
-                    padding: '0 4px 6px', cursor: 'pointer', position: 'relative', overflow: 'hidden',
-                  }}
-                >
-                  {/* キャラ画像 */}
-                  {card && (
-                    <img
-                      src={`/images/chars/${card.id}.png`}
-                      alt=""
-                      style={{
-                        position: 'absolute', top: 0, left: 0, width: '100%', height: '75%',
-                        objectFit: 'cover', objectPosition: 'center 10%',
-                        opacity: 0.92,
-                      }}
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                  )}
-                  {/* レアリティ上部ライン */}
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: RARITY_COLOR[rc], opacity: 0.85, zIndex: 1 }} />
-                  {/* コストバッジ */}
-                  <div style={{
-                    position: 'absolute', top: 6, left: 6, zIndex: 2,
-                    width: 22, height: 22, borderRadius: '50%',
-                    background: 'rgba(0,0,0,0.85)', border: `1px solid ${RARITY_COLOR[rc]}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 700, color: RARITY_COLOR[rc], fontFamily: 'var(--font-display)',
-                  }}>
-                    {card?.cost ?? '?'}
-                  </div>
-                  {/* 削除アイコン */}
-                  <div style={{ position: 'absolute', top: 5, right: 6, fontSize: 11, color: 'rgba(255,255,255,0.5)', zIndex: 2 }}>✕</div>
-                  {/* カード名（底部グラデーション帯） */}
-                  <p style={{
-                    position: 'relative', zIndex: 2,
-                    fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3,
-                    textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%',
-                    textShadow: '0 1px 4px rgba(0,0,0,1)',
-                    background: 'linear-gradient(transparent, rgba(0,0,0,0.82) 35%)',
-                    width: '100%', padding: '8px 4px 0',
-                  }}>
-                    {card?.name ?? '?'}
-                  </p>
-                </button>
-              );
-            })}
-            {/* 空きスロット */}
-            {Array.from({ length: DECK_MAX_CARDS - total }, (_, i) => (
-              <div key={`empty-${i}`} style={{
-                flexShrink: 0, width: 118, height: 156, borderRadius: 8,
-                border: '1px dashed rgba(255,255,255,0.08)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 16, color: 'rgba(255,255,255,0.08)',
-              }}>
-                ＋
-              </div>
-            ))}
+          {/* 矢印 + スクロール本体のラッパー */}
+          <div
+            style={{ position: 'relative' }}
+            onMouseEnter={() => { setCarouselHovered(true); updateCarouselArrows(); }}
+            onMouseLeave={() => { setCarouselHovered(false); isDragging.current = false; }}
+          >
+            {/* 左矢印 */}
+            {carouselHovered && canScrollLeft && (
+              <button
+                className="carousel-arrow carousel-arrow--left"
+                onClick={() => scrollCarousel('left')}
+              >‹</button>
+            )}
+
+            {/* スクロール本体 */}
+            <div
+              ref={carouselRef}
+              className="hand-scroll carousel-scroll"
+              style={{ display: 'flex', gap: 5, padding: '0 10px 8px' }}
+              onMouseDown={onCarouselMouseDown}
+              onMouseMove={onCarouselMouseMove}
+              onMouseUp={onCarouselMouseUp}
+              onMouseLeave={onCarouselMouseUp}
+              onScroll={updateCarouselArrows}
+            >
+              {deckSlots.map(({ cardId, card, idx }) => {
+                const rc = card?.rarity ?? 'C';
+                return (
+                  <button
+                    key={`${cardId}-${idx}`}
+                    onClick={() => {
+                      if (hasDragged.current) { hasDragged.current = false; return; }
+                      removeCard(cardId);
+                    }}
+                    style={{
+                      flexShrink: 0, width: 118, height: 156, borderRadius: 8,
+                      background: RARITY_BG[rc],
+                      border: `1px solid ${RARITY_COLOR[rc]}55`,
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
+                      padding: '0 4px 6px', cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                    }}
+                  >
+                    {card && (
+                      <img
+                        src={`/images/chars/${card.id}.png`}
+                        alt=""
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '75%', objectFit: 'cover', objectPosition: 'center 10%', opacity: 0.92 }}
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    )}
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: RARITY_COLOR[rc], opacity: 0.85, zIndex: 1 }} />
+                    <div style={{
+                      position: 'absolute', top: 6, left: 6, zIndex: 2,
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: 'rgba(0,0,0,0.85)', border: `1px solid ${RARITY_COLOR[rc]}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 700, color: RARITY_COLOR[rc], fontFamily: 'var(--font-display)',
+                    }}>
+                      {card?.cost ?? '?'}
+                    </div>
+                    <div style={{ position: 'absolute', top: 5, right: 6, fontSize: 11, color: 'rgba(255,255,255,0.5)', zIndex: 2 }}>✕</div>
+                    <p style={{
+                      position: 'relative', zIndex: 2,
+                      fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3,
+                      textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%',
+                      textShadow: '0 1px 4px rgba(0,0,0,1)',
+                      background: 'linear-gradient(transparent, rgba(0,0,0,0.82) 35%)',
+                      width: '100%', padding: '8px 4px 0',
+                    }}>
+                      {card?.name ?? '?'}
+                    </p>
+                  </button>
+                );
+              })}
+              {Array.from({ length: DECK_MAX_CARDS - total }, (_, i) => (
+                <div key={`empty-${i}`} style={{
+                  flexShrink: 0, width: 118, height: 156, borderRadius: 8,
+                  border: '1px dashed rgba(255,255,255,0.08)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 16, color: 'rgba(255,255,255,0.08)',
+                }}>
+                  ＋
+                </div>
+              ))}
+            </div>
+
+            {/* 右矢印 */}
+            {carouselHovered && canScrollRight && (
+              <button
+                className="carousel-arrow carousel-arrow--right"
+                onClick={() => scrollCarousel('right')}
+              >›</button>
+            )}
           </div>
         </div>
 
