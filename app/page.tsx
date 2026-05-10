@@ -146,9 +146,8 @@ export default function HomePage() {
         {/* 金グラデ下線 */}
         <div style={{ position: 'absolute', bottom: -1, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, var(--gold), transparent)', opacity: 0.5 }} />
 
-        {/* ロゴ + 松明 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
-          <Torch />
+        {/* ロゴ */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
           <Image
             src="/images/ui/logo_en.webp"
             alt="CARDSMITH"
@@ -156,7 +155,6 @@ export default function HomePage() {
             height={138}
             style={{ height: 40, width: 'auto' }}
           />
-          <Torch />
         </div>
 
         {/* Lv バッジ + EXP バー + ルーン */}
