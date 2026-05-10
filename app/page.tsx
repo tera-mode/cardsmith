@@ -79,23 +79,26 @@ export default function HomePage() {
     return (
       <main className="game-layout stone-bg items-center justify-center" style={{ position: 'relative' }}>
         <HomeBg />
-        {/* 松明装飾 */}
-        <Torch style={{ position: 'absolute', top: 20, left: 20, zIndex: 1 }} />
-        <Torch style={{ position: 'absolute', top: 20, right: 20, zIndex: 1 }} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, padding: '0 24px', maxWidth: 360, width: '100%', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, padding: '0 20px', maxWidth: 420, width: '100%', position: 'relative', zIndex: 1 }}>
           {/* ロゴ */}
           <Image
             src="/images/ui/logo.webp"
             alt="CARDSMITH"
-            width={280}
-            height={186}
+            width={630}
+            height={419}
             priority
-            style={{ maxWidth: '100%', height: 'auto' }}
+            style={{ width: '100%', height: 'auto' }}
           />
 
           {/* キャッチコピー */}
-          <div className="panel--ornate" style={{ padding: '14px 16px', width: '100%', textAlign: 'center' }}>
+          <div style={{
+            background: 'linear-gradient(180deg, rgba(50,36,22,0.96) 0%, rgba(28,20,12,0.96) 100%)',
+            border: '1px solid var(--gold-deep)',
+            borderRadius: 4,
+            boxShadow: 'inset 0 1px 0 rgba(232,192,116,0.2), inset 0 -1px 0 rgba(0,0,0,0.6), 0 4px 20px rgba(0,0,0,0.5)',
+            padding: '14px 16px', width: '100%', textAlign: 'center',
+          }}>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
               地下迷宮の奥深く、<br />ルーンを刻み、最強のカードを鍛えよ。<br />4×4の戦場で覇を競え。
             </p>
