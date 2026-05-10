@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
+import CardModal from '@/components/ui/CardModal';
 import { CARDS_WITH_RARITY } from '@/lib/data/cards';
 import { Deck, Rarity } from '@/lib/types/meta';
 import { DECK_MAX_CARDS, DECK_MAX_SAME, getCostCapForLevel } from '@/lib/data/economy';
@@ -32,6 +33,8 @@ const RARITY_BG: Record<Rarity, string> = {
   SSR: 'rgba(251,191,36,0.18)',
 };
 
+type CardWithRarity = typeof CARDS_WITH_RARITY[number];
+
 export default function DeckPage() {
   const { user, loading: authLoading } = useAuth();
   const { profile, ownedCards, decks, loading, saveOrUpdateDeck, removeDeck } = useProfile();
@@ -42,6 +45,22 @@ export default function DeckPage() {
   const [saving, setSaving] = useState(false);
   const [showUnsaved, setShowUnsaved] = useState(false);
   const [attrFilter, setAttrFilter] = useState('all');
+  const [detailCard, setDetailCard] = useState<CardWithRarity | null>(null);
+
+  // 長押し検出（カードリスト全体で共有）
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressDidFire = useRef(false);
+
+  const startPress = (card: CardWithRarity) => {
+    pressDidFire.current = false;
+    pressTimer.current = setTimeout(() => {
+      pressDidFire.current = true;
+      setDetailCard(card);
+    }, 500);
+  };
+  const cancelPress = () => {
+    if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null; }
+  };
 
   useEffect(() => {
     if (!editing) return;
@@ -141,7 +160,6 @@ export default function DeckPage() {
       })
       .sort((a, b) => (a.card?.cost ?? 0) - (b.card?.cost ?? 0));
 
-    // 属性フィルタ
     const visibleCards = CARDS_WITH_RARITY.filter(card =>
       attrFilter === 'all' || card.attribute === attrFilter
     );
@@ -191,7 +209,6 @@ export default function DeckPage() {
 
         {/* ── ステータスバー ── */}
         <div style={{ flexShrink: 0, padding: '8px 14px 7px', background: 'rgba(8,5,2,0.9)', borderBottom: '1px solid var(--border-rune)' }}>
-          {/* 枚数ゲージ */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-dim)', letterSpacing: '0.08em', width: 32, flexShrink: 0 }}>枚数</span>
             <div style={{ flex: 1, height: 5, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden' }}>
@@ -202,14 +219,10 @@ export default function DeckPage() {
                 transition: 'width 0.3s',
               }} />
             </div>
-            <span style={{
-              fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, flexShrink: 0, minWidth: 32, textAlign: 'right',
-              color: total === DECK_MAX_CARDS ? 'var(--gold)' : 'var(--text-primary)',
-            }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, flexShrink: 0, minWidth: 32, textAlign: 'right', color: total === DECK_MAX_CARDS ? 'var(--gold)' : 'var(--text-primary)' }}>
               {total}<span style={{ color: 'var(--text-dim)', fontWeight: 400, fontSize: 10 }}>/{DECK_MAX_CARDS}</span>
             </span>
           </div>
-          {/* コストゲージ */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-dim)', letterSpacing: '0.08em', width: 32, flexShrink: 0 }}>コスト</span>
             <div style={{ flex: 1, height: 5, background: 'rgba(0,0,0,0.7)', borderRadius: 3, overflow: 'hidden' }}>
@@ -222,10 +235,7 @@ export default function DeckPage() {
             </div>
             <span
               data-testid="cost-cap-warning"
-              style={{
-                fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, flexShrink: 0, minWidth: 32, textAlign: 'right',
-                color: costColor,
-              }}
+              style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, flexShrink: 0, minWidth: 32, textAlign: 'right', color: costColor }}
             >
               {totalCost}<span style={{ color: 'var(--text-dim)', fontWeight: 400, fontSize: 10 }}>/{costCap}</span>
               {overCap && <span style={{ marginLeft: 2, fontSize: 10 }}>⚠</span>}
@@ -236,9 +246,10 @@ export default function DeckPage() {
         {/* ── 編成中カルーセル ── */}
         <div style={{ flexShrink: 0, background: 'rgba(12,8,4,0.92)', borderBottom: '1px solid var(--border-rune)' }}>
           <p style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--gold)', letterSpacing: '0.14em', textAlign: 'center', padding: '5px 0 3px', opacity: 0.75 }}>
-            ⚜ 編成中の戦士 ⚜
+            ⚜ 編成中のユニット ⚜
           </p>
-          <div style={{ display: 'flex', gap: 5, overflowX: 'auto', padding: '0 10px 8px', scrollbarWidth: 'none' }}>
+          {/* hand-scroll クラスで全ブラウザのスクロールバー非表示 + タッチ対応 */}
+          <div className="hand-scroll" style={{ display: 'flex', gap: 5, padding: '0 10px 8px' }}>
             {deckSlots.map(({ cardId, card, idx }) => {
               const rc = card?.rarity ?? 'C';
               return (
@@ -246,33 +257,58 @@ export default function DeckPage() {
                   key={`${cardId}-${idx}`}
                   onClick={() => removeCard(cardId)}
                   style={{
-                    flexShrink: 0, width: 58, height: 78, borderRadius: 5,
+                    flexShrink: 0, width: 60, height: 84, borderRadius: 6,
                     background: RARITY_BG[rc],
                     border: `1px solid ${RARITY_COLOR[rc]}55`,
-                    boxShadow: `inset 0 0 10px ${RARITY_COLOR[rc]}18`,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
-                    padding: '4px 3px', cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                    padding: '0 3px 4px', cursor: 'pointer', position: 'relative', overflow: 'hidden',
                   }}
                 >
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: RARITY_COLOR[rc], opacity: 0.7 }} />
+                  {/* キャラ画像 */}
+                  {card && (
+                    <img
+                      src={`/images/chars/${card.id}.png`}
+                      alt=""
+                      style={{
+                        position: 'absolute', top: 0, left: 0, width: '100%', height: '72%',
+                        objectFit: 'cover', objectPosition: 'center 10%',
+                        opacity: 0.9,
+                      }}
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
+                  {/* レアリティ上部ライン */}
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: RARITY_COLOR[rc], opacity: 0.8, zIndex: 1 }} />
+                  {/* コストバッジ */}
                   <div style={{
-                    position: 'absolute', top: 4, left: 4, width: 14, height: 14, borderRadius: '50%',
+                    position: 'absolute', top: 4, left: 4, zIndex: 2,
+                    width: 15, height: 15, borderRadius: '50%',
                     background: 'rgba(0,0,0,0.85)', border: `1px solid ${RARITY_COLOR[rc]}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 8, fontWeight: 700, color: RARITY_COLOR[rc], fontFamily: 'var(--font-display)',
                   }}>
                     {card?.cost ?? '?'}
                   </div>
-                  <div style={{ position: 'absolute', top: 3, right: 3, fontSize: 8, color: 'rgba(255,255,255,0.3)' }}>✕</div>
-                  <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.25, textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%' }}>
+                  {/* 削除アイコン */}
+                  <div style={{ position: 'absolute', top: 3, right: 3, fontSize: 8, color: 'rgba(255,255,255,0.45)', zIndex: 2 }}>✕</div>
+                  {/* カード名（底部） */}
+                  <p style={{
+                    position: 'relative', zIndex: 2,
+                    fontSize: 8, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.25,
+                    textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                    background: 'linear-gradient(transparent, rgba(0,0,0,0.7) 40%)',
+                    width: '100%', padding: '4px 2px 0',
+                  }}>
                     {card?.name ?? '?'}
                   </p>
                 </button>
               );
             })}
+            {/* 空きスロット */}
             {Array.from({ length: DECK_MAX_CARDS - total }, (_, i) => (
               <div key={`empty-${i}`} style={{
-                flexShrink: 0, width: 58, height: 78, borderRadius: 5,
+                flexShrink: 0, width: 60, height: 84, borderRadius: 6,
                 border: '1px dashed rgba(255,255,255,0.08)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 16, color: 'rgba(255,255,255,0.08)',
@@ -284,10 +320,9 @@ export default function DeckPage() {
         </div>
 
         {/* ── 属性フィルタ ── */}
-        <div style={{
+        <div className="hand-scroll" style={{
           flexShrink: 0, display: 'flex', gap: 4, padding: '6px 10px',
           background: 'rgba(10,6,2,0.8)', borderBottom: '1px solid var(--border-rune)',
-          overflowX: 'auto', scrollbarWidth: 'none',
         }}>
           {[{ key: 'all', label: '全', color: 'var(--gold)' }, ...Object.entries(ATTR).map(([k, v]) => ({ key: k, label: v.label, color: v.color }))].map(({ key, label, color }) => (
             <button
@@ -321,17 +356,36 @@ export default function DeckPage() {
               <div
                 key={card.id}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
+                  display: 'flex', alignItems: 'center', gap: 8,
                   background: inDeck > 0 ? RARITY_BG[rc] : 'rgba(18,12,6,0.8)',
                   border: `1px solid ${inDeck > 0 ? `${RARITY_COLOR[rc]}45` : 'var(--border-rune)'}`,
                   borderLeft: `3px solid ${RARITY_COLOR[rc]}`,
-                  borderRadius: 4, padding: '7px 10px 7px 9px',
+                  borderRadius: 4,
                   opacity: !owned ? 0.38 : 1,
                   transition: 'opacity 0.15s, background 0.15s',
+                  overflow: 'hidden',
+                  userSelect: 'none',
                 }}
+                onTouchStart={() => startPress(card)}
+                onTouchEnd={cancelPress}
+                onTouchMove={cancelPress}
+                onMouseDown={() => startPress(card)}
+                onMouseUp={cancelPress}
+                onMouseLeave={cancelPress}
               >
-                {/* カード名 + メタ */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+                {/* キャラ画像サムネイル */}
+                <div style={{ width: 40, height: 52, flexShrink: 0, overflow: 'hidden', background: RARITY_BG[rc] }}>
+                  <img
+                    src={`/images/chars/${card.id}.png`}
+                    alt=""
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 10%', display: 'block' }}
+                    onError={e => { (e.target as HTMLImageElement).style.opacity = '0'; }}
+                  />
+                </div>
+
+                {/* カード情報 */}
+                <div style={{ flex: 1, minWidth: 0, padding: '6px 0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
                     <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {card.name}
@@ -356,9 +410,7 @@ export default function DeckPage() {
                       ATK{card.atk}  HP{card.hp}
                     </span>
                     {card.skill && (
-                      <span style={{ fontSize: 9, color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>
-                        ✦スキル有
-                      </span>
+                      <span style={{ fontSize: 9, color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>✦スキル有</span>
                     )}
                   </div>
                 </div>
@@ -377,14 +429,17 @@ export default function DeckPage() {
                 {/* 追加ボタン */}
                 <button
                   data-testid={`deck-builder-add-${card.id}`}
-                  onClick={() => addCard(card.id)}
+                  onClick={() => {
+                    if (pressDidFire.current) { pressDidFire.current = false; return; }
+                    addCard(card.id);
+                  }}
                   disabled={!canAdd}
                   style={{
-                    width: 34, height: 34, borderRadius: 4, flexShrink: 0,
-                    background: canAdd ? 'rgba(34,197,94,0.12)' : 'rgba(20,14,8,0.6)',
-                    border: `1px solid ${canAdd ? '#22c55e70' : 'var(--border-rune)'}`,
+                    width: 38, height: 52, borderRadius: 0, flexShrink: 0,
+                    background: canAdd ? 'rgba(34,197,94,0.12)' : 'rgba(14,10,6,0.6)',
+                    borderLeft: `1px solid ${canAdd ? '#22c55e50' : 'var(--border-rune)'}`,
                     color: canAdd ? '#4ade80' : 'var(--text-dim)',
-                    fontSize: 22, lineHeight: 1, cursor: canAdd ? 'pointer' : 'default',
+                    fontSize: 22, cursor: canAdd ? 'pointer' : 'default',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
@@ -408,6 +463,15 @@ export default function DeckPage() {
             編集内容が保存されていません。<br />破棄して一覧に戻りますか？
           </p>
         </ConfirmSheet>
+
+        {/* カード詳細モーダル（長押し） */}
+        {detailCard && (
+          <CardModal
+            card={detailCard}
+            count={ownedCards.find(c => c.cardId === detailCard.id && !c.isCrafted)?.count}
+            onClose={() => setDetailCard(null)}
+          />
+        )}
       </div>
     );
   }
@@ -466,7 +530,6 @@ export default function DeckPage() {
                 </div>
               </div>
 
-              {/* 枚数ゲージ */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-dim)', width: 32, flexShrink: 0 }}>枚数</span>
                 <div style={{ flex: 1, height: 4, background: 'rgba(0,0,0,0.6)', borderRadius: 2, overflow: 'hidden' }}>
@@ -481,7 +544,6 @@ export default function DeckPage() {
                 </span>
               </div>
 
-              {/* コストゲージ */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-dim)', width: 32, flexShrink: 0 }}>コスト</span>
                 <div style={{ flex: 1, height: 4, background: 'rgba(0,0,0,0.6)', borderRadius: 2, overflow: 'hidden' }}>
