@@ -309,6 +309,7 @@ export default function DeckPage() {
               onMouseUp={onCarouselMouseUp}
               onMouseLeave={onCarouselMouseUp}
               onScroll={updateCarouselArrows}
+              onDragStart={e => e.preventDefault()}
             >
               {deckSlots.map(({ cardId, card, idx }) => {
                 const rc = card?.rarity ?? 'C';
@@ -331,7 +332,8 @@ export default function DeckPage() {
                       <img
                         src={`/images/chars/${card.id}.png`}
                         alt=""
-                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '75%', objectFit: 'cover', objectPosition: 'center 10%', opacity: 0.92 }}
+                        draggable={false}
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '75%', objectFit: 'cover', objectPosition: 'center 10%', opacity: 0.92, pointerEvents: 'none' }}
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     )}
