@@ -7,6 +7,7 @@ interface Props {
   mode: InteractionMode;
   isFinished: boolean;
   onEndTurn: () => void;
+  onGearClick?: () => void;
 }
 
 function Step({ label, done, active }: { label: string; done: boolean; active: boolean }) {
@@ -37,7 +38,24 @@ function Step({ label, done, active }: { label: string; done: boolean; active: b
   );
 }
 
-export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Props) {
+function GearButton({ onClick }: { onClick?: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="メニュー"
+      style={{
+        width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+        background: 'rgba(20,14,8,0.7)', border: '1px solid var(--border-rune)',
+        color: 'var(--text-dim)', fontSize: 15, cursor: 'pointer',
+        display: 'grid', placeItems: 'center',
+      }}
+    >
+      ⚙
+    </button>
+  );
+}
+
+export default function TurnStepBar({ session, mode, isFinished, onEndTurn, onGearClick }: Props) {
   const isPlayerTurn = session.currentTurn === 'player';
 
   const summoned    = session.player.hasSummonedThisTurn;
@@ -52,12 +70,14 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
   if (!isPlayerTurn || isFinished) {
     return (
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        display: 'flex', alignItems: 'center', gap: 8,
         padding: '8px 12px',
         background: 'rgba(8,6,4,0.8)',
         borderTop: '1px solid var(--border-rune)',
       }}>
+        <GearButton onClick={onGearClick} />
         <span style={{
+          flex: 1, textAlign: 'center',
           fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700,
           color: 'var(--text-secondary)', letterSpacing: '0.06em',
         }}>
@@ -65,6 +85,7 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
             ? (session.winner === 'player' ? '🏆 勝利！' : session.winner === 'ai' ? '💀 敗北...' : '⚖ 引き分け')
             : '⏳ AI思考中...'}
         </span>
+        <div style={{ width: 32 }} />
       </div>
     );
   }
@@ -80,6 +101,8 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
         borderTop: '1px solid var(--border-rune)',
       }}
     >
+      <GearButton onClick={onGearClick} />
+
       {/* ステップインジケーター */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}>
         <Step label="召喚" done={summoned} active={activeSummon && !summoned} />

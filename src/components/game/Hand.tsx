@@ -26,11 +26,11 @@ export default function Hand({ hand, deckCount, mode, hasSummonedThisTurn, isPla
       style={{ paddingTop: 6, paddingBottom: 6 }}
     >
       <div className="flex items-center gap-2 px-3">
-        <span className="text-xs text-gray-500">山札</span>
-        <span className="text-xs text-gray-400">{deckCount}枚</span>
-        <span className="text-xs text-gray-600">|</span>
         <span className="text-xs text-gray-400">手札</span>
         <span className="text-xs text-gray-500">{hand.length}枚</span>
+        <span className="text-xs text-gray-600">|</span>
+        <span className="text-xs text-gray-500">山札</span>
+        <span className="text-xs text-gray-400">{deckCount}枚</span>
         {!canSummon && isPlayerTurn && (
           <span className="text-xs text-orange-400">（召喚済み）</span>
         )}

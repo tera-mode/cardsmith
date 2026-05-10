@@ -34,6 +34,8 @@ function GameScreen() {
   const [selectedDeck, setSelectedDeck] = useState<Card[] | null>(null);
   const [prologueDone, setPrologueDone] = useState(false);
   const [showEpilogue, setShowEpilogue] = useState(false);
+  const [showGearMenu, setShowGearMenu] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const initialAiHpRef = useRef<number | null>(null);
   const initialPlayerHpRef = useRef<number | null>(null);
   const finishHandledRef = useRef(false);
@@ -51,6 +53,19 @@ function GameScreen() {
   // カスタムデッキが1つ以上あればデッキ選択を挟む（q0_3のアーキタイプ選択後も含む）
   const hasSavedDecks = decks.length > 0;
   const needsDeckSelect = hasSavedDecks && selectedDeck === null;
+
+  const handleSurrender = () => {
+    setShowGearMenu(false);
+    if (!session) return;
+    const params = new URLSearchParams({
+      winner: 'ai',
+      turns: String(session.turnCount),
+      playerHp: String(session.player.baseHp),
+      aiHp: String(session.ai.baseHp),
+      ...(questId ? { questId } : {}),
+    }).toString();
+    router.push(`/result?${params}`);
+  };
 
   const openCardPreview = (card: Card) => {
     setDetailUnit({
@@ -236,10 +251,15 @@ function GameScreen() {
           </div>
         )}
 
-        {/* 手札（左）＋ バトルログ（右）2カラム */}
-        <div style={{ flexShrink: 0, borderTop: '1px solid var(--border-rune)', display: 'flex', alignItems: 'stretch' }}>
-          {/* 左: 手札 */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+        {/* 手札（左）＋ バトルログ（右）2カラム — 高さ固定でログが伸びないよう制御 */}
+        <div style={{
+          flexShrink: 0,
+          borderTop: '1px solid var(--border-rune)',
+          display: 'flex', alignItems: 'stretch',
+          height: 'calc(7rem + 3rem)',  /* 手札スクロール7rem + ヘッダー/パディング分 */
+        }}>
+          {/* 左: 手札（縦方向はクリップ） */}
+          <div style={{ flex: 1, minWidth: 0, overflowY: 'hidden' }}>
             <Hand
               hand={session.player.hand}
               deckCount={session.player.deck.length}
@@ -249,7 +269,7 @@ function GameScreen() {
               onCardLongPress={openCardPreview}
             />
           </div>
-          {/* 右: バトルログ（手札高さに追従してスクロール） */}
+          {/* 右: バトルログ（行高さに合わせてスクロール） */}
           <div style={{
             width: 110, flexShrink: 0,
             borderLeft: '1px solid var(--border-rune)',
@@ -274,6 +294,7 @@ function GameScreen() {
             mode={mode}
             isFinished={isFinished}
             onEndTurn={isPlayerTurn && !isFinished ? endTurn : () => {}}
+            onGearClick={() => setShowGearMenu(true)}
           />
         </div>
       </div>
@@ -295,6 +316,115 @@ function GameScreen() {
           onDone={handleEpilogueDone}
           label="エピローグ"
         />
+      )}
+
+      {/* ⚙ 歯車メニュー */}
+      {showGearMenu && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end"
+          style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowGearMenu(false)}
+        >
+          <div
+            style={{
+              width: '100%', maxWidth: 480, margin: '0 auto',
+              background: 'linear-gradient(180deg, rgba(30,20,10,0.98) 0%, rgba(16,10,4,0.98) 100%)',
+              border: '1px solid var(--border-rune)',
+              borderRadius: '12px 12px 0 0',
+              padding: '20px 16px 32px',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <p style={{
+              fontFamily: 'var(--font-display)', fontSize: 11,
+              color: 'var(--gold)', letterSpacing: '0.14em', textAlign: 'center',
+              marginBottom: 18, opacity: 0.8,
+            }}>⚙ メニュー</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { label: '🏠 ホームに戻る', action: () => router.push('/'), danger: false },
+                { label: '🏳 降参する', action: handleSurrender, danger: true },
+                { label: '❓ 操作方法', action: () => { setShowGearMenu(false); setShowHowToPlay(true); }, danger: false },
+              ].map(({ label, action, danger }) => (
+                <button
+                  key={label}
+                  onClick={action}
+                  style={{
+                    width: '100%', padding: '13px 16px', borderRadius: 6, fontSize: 13, fontWeight: 700,
+                    fontFamily: 'var(--font-display)', cursor: 'pointer', textAlign: 'left',
+                    background: danger ? 'rgba(239,68,68,0.08)' : 'rgba(232,192,116,0.06)',
+                    border: `1px solid ${danger ? 'rgba(239,68,68,0.3)' : 'var(--border-rune)'}`,
+                    color: danger ? '#f87171' : 'var(--text-primary)',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowGearMenu(false)}
+              style={{
+                width: '100%', marginTop: 16, padding: '11px 0', borderRadius: 6,
+                background: 'rgba(20,14,8,0.8)', border: '1px solid var(--border-rune)',
+                color: 'var(--text-dim)', fontSize: 12, fontFamily: 'var(--font-display)',
+                cursor: 'pointer', letterSpacing: '0.06em',
+              }}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ❓ 操作方法 */}
+      {showHowToPlay && (
+        <div
+          className="fixed inset-0 z-[201] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', padding: '0 16px' }}
+          onClick={() => setShowHowToPlay(false)}
+        >
+          <div
+            style={{
+              width: '100%', maxWidth: 360,
+              background: 'linear-gradient(180deg, rgba(30,20,10,0.98) 0%, rgba(16,10,4,0.98) 100%)',
+              border: '1px solid var(--border-rune)', borderRadius: 10,
+              padding: '20px 18px',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', textAlign: 'center', marginBottom: 16 }}>
+              ❓ 操作方法
+            </p>
+            {[
+              { title: '召喚', desc: '手札のカードをタップ → 光ったマスをタップ' },
+              { title: '移動', desc: 'ユニットをタップ → アクションメニュー「移動」→ 移動先をタップ' },
+              { title: '攻撃', desc: 'ユニットをタップ → 「攻撃」→ 対象をタップ' },
+              { title: 'スキル', desc: 'ユニットをタップ → 「スキル」→ 対象を選択' },
+              { title: 'ターン終了', desc: '右下の「ターン終了」ボタンをタップ' },
+            ].map(({ title, desc }) => (
+              <div key={title} style={{ marginBottom: 10 }}>
+                <p style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, color: 'var(--gold)', marginBottom: 2, letterSpacing: '0.04em' }}>
+                  {title}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{desc}</p>
+              </div>
+            ))}
+            <button
+              onClick={() => setShowHowToPlay(false)}
+              style={{
+                width: '100%', marginTop: 14, padding: '11px 0', borderRadius: 6,
+                background: 'rgba(232,192,116,0.1)', border: '1px solid var(--gold-deep)',
+                color: 'var(--gold)', fontSize: 12, fontFamily: 'var(--font-display)',
+                cursor: 'pointer', letterSpacing: '0.06em',
+              }}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
