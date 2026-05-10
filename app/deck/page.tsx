@@ -257,11 +257,11 @@ export default function DeckPage() {
                   key={`${cardId}-${idx}`}
                   onClick={() => removeCard(cardId)}
                   style={{
-                    flexShrink: 0, width: 60, height: 84, borderRadius: 6,
+                    flexShrink: 0, width: 118, height: 156, borderRadius: 8,
                     background: RARITY_BG[rc],
                     border: `1px solid ${RARITY_COLOR[rc]}55`,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
-                    padding: '0 3px 4px', cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                    padding: '0 4px 6px', cursor: 'pointer', position: 'relative', overflow: 'hidden',
                   }}
                 >
                   {/* キャラ画像 */}
@@ -270,35 +270,35 @@ export default function DeckPage() {
                       src={`/images/chars/${card.id}.png`}
                       alt=""
                       style={{
-                        position: 'absolute', top: 0, left: 0, width: '100%', height: '72%',
+                        position: 'absolute', top: 0, left: 0, width: '100%', height: '75%',
                         objectFit: 'cover', objectPosition: 'center 10%',
-                        opacity: 0.9,
+                        opacity: 0.92,
                       }}
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   )}
                   {/* レアリティ上部ライン */}
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: RARITY_COLOR[rc], opacity: 0.8, zIndex: 1 }} />
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: RARITY_COLOR[rc], opacity: 0.85, zIndex: 1 }} />
                   {/* コストバッジ */}
                   <div style={{
-                    position: 'absolute', top: 4, left: 4, zIndex: 2,
-                    width: 15, height: 15, borderRadius: '50%',
+                    position: 'absolute', top: 6, left: 6, zIndex: 2,
+                    width: 22, height: 22, borderRadius: '50%',
                     background: 'rgba(0,0,0,0.85)', border: `1px solid ${RARITY_COLOR[rc]}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 8, fontWeight: 700, color: RARITY_COLOR[rc], fontFamily: 'var(--font-display)',
+                    fontSize: 11, fontWeight: 700, color: RARITY_COLOR[rc], fontFamily: 'var(--font-display)',
                   }}>
                     {card?.cost ?? '?'}
                   </div>
                   {/* 削除アイコン */}
-                  <div style={{ position: 'absolute', top: 3, right: 3, fontSize: 8, color: 'rgba(255,255,255,0.45)', zIndex: 2 }}>✕</div>
-                  {/* カード名（底部） */}
+                  <div style={{ position: 'absolute', top: 5, right: 6, fontSize: 11, color: 'rgba(255,255,255,0.5)', zIndex: 2 }}>✕</div>
+                  {/* カード名（底部グラデーション帯） */}
                   <p style={{
                     position: 'relative', zIndex: 2,
-                    fontSize: 8, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.25,
+                    fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3,
                     textAlign: 'center', wordBreak: 'break-all', maxWidth: '100%',
-                    textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-                    background: 'linear-gradient(transparent, rgba(0,0,0,0.7) 40%)',
-                    width: '100%', padding: '4px 2px 0',
+                    textShadow: '0 1px 4px rgba(0,0,0,1)',
+                    background: 'linear-gradient(transparent, rgba(0,0,0,0.82) 35%)',
+                    width: '100%', padding: '8px 4px 0',
                   }}>
                     {card?.name ?? '?'}
                   </p>
@@ -308,7 +308,7 @@ export default function DeckPage() {
             {/* 空きスロット */}
             {Array.from({ length: DECK_MAX_CARDS - total }, (_, i) => (
               <div key={`empty-${i}`} style={{
-                flexShrink: 0, width: 60, height: 84, borderRadius: 6,
+                flexShrink: 0, width: 118, height: 156, borderRadius: 8,
                 border: '1px dashed rgba(255,255,255,0.08)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 16, color: 'rgba(255,255,255,0.08)',
@@ -344,7 +344,7 @@ export default function DeckPage() {
         </div>
 
         {/* ── カードリスト ── */}
-        <div className="safe-scroll" style={{ flex: 1, overflowY: 'auto', padding: '6px 10px 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div className="safe-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '6px 10px 8px' }}>
           {visibleCards.map(card => {
             const owned = ownedCards.find(c => c.cardId === card.id && !c.isCrafted);
             const inDeck = getEntryCount(editing, card.id);
@@ -364,6 +364,7 @@ export default function DeckPage() {
                   opacity: !owned ? 0.38 : 1,
                   transition: 'opacity 0.15s, background 0.15s',
                   overflow: 'hidden',
+                  marginBottom: 4,
                   userSelect: 'none',
                 }}
                 onTouchStart={() => startPress(card)}
