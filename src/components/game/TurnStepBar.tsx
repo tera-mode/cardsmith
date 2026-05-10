@@ -80,16 +80,6 @@ export default function TurnStepBar({ session, mode, isFinished, onEndTurn }: Pr
         borderTop: '1px solid var(--border-rune)',
       }}
     >
-      {/* ▶ あなたのターン + ターン数 */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0,
-        fontFamily: 'var(--font-display)', fontSize: 9, fontWeight: 700,
-        color: '#f8d878', letterSpacing: '0.04em',
-      }}>
-        <span style={{ fontSize: 8 }}>▶</span>
-        <span style={{ whiteSpace: 'nowrap' }}>T{session.turnCount}&nbsp;あなたのターン</span>
-      </div>
-
       {/* ステップインジケーター */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}>
         <Step label="召喚" done={summoned} active={activeSummon && !summoned} />

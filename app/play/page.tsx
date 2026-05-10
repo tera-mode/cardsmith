@@ -242,25 +242,28 @@ function GameScreen() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <Hand
               hand={session.player.hand}
+              deckCount={session.player.deck.length}
               mode={mode}
               hasSummonedThisTurn={session.player.hasSummonedThisTurn}
               isPlayerTurn={isPlayerTurn}
               onCardLongPress={openCardPreview}
             />
           </div>
-          {/* 右: バトルログ */}
+          {/* 右: バトルログ（手札高さに追従してスクロール） */}
           <div style={{
             width: 110, flexShrink: 0,
             borderLeft: '1px solid var(--border-rune)',
             display: 'flex', flexDirection: 'column',
             background: 'rgba(8,6,4,0.5)',
+            overflow: 'hidden',
           }}>
             <p style={{
               fontSize: 9, fontFamily: 'var(--font-display)',
               color: 'var(--text-dim)', letterSpacing: '0.06em',
-              padding: '3px 6px 1px', flexShrink: 0,
+              padding: '3px 6px 2px', flexShrink: 0,
+              borderBottom: '1px solid rgba(255,255,255,0.05)',
             }}>ログ</p>
-            <GameLog log={session.log} style={{ maxHeight: 'none', flex: 1, minHeight: 0 }} />
+            <GameLog log={session.log} style={{ maxHeight: 'none', flex: 1, minHeight: 0, overflowY: 'auto' }} />
           </div>
         </div>
 

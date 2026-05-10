@@ -508,7 +508,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     let aiTurnWithStart = triggerOnTurnStart(aiTurnState, 'ai');
 
     // AIターンバナー
-    effectQueue?.push({ type: 'turn_banner', side: 'ai', turnCount: s.turnCount + 1, durationMs: 1000 });
+    effectQueue?.push({ type: 'turn_banner', side: 'ai', turnCount: s.turnCount + 1, durationMs: 2200 });
 
     setMode({ type: 'idle' });
     setHighlightedCells([]);
@@ -573,7 +573,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         durationMs: finalState.winner === 'player' ? 2500 : 2000,
       });
     } else {
-      effectQueue?.push({ type: 'turn_banner', side: 'player', turnCount: afterAI.turnCount, durationMs: 1000 });
+      effectQueue?.push({ type: 'turn_banner', side: 'player', turnCount: afterAI.turnCount, durationMs: 2200 });
     }
 
     updateSession(finalSession);

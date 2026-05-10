@@ -6,13 +6,14 @@ import { useGame } from '@/contexts/GameContext';
 
 interface Props {
   hand: Card[];
+  deckCount: number;
   mode: InteractionMode;
   hasSummonedThisTurn: boolean;
   isPlayerTurn: boolean;
   onCardLongPress?: (card: Card) => void;
 }
 
-export default function Hand({ hand, mode, hasSummonedThisTurn, isPlayerTurn, onCardLongPress }: Props) {
+export default function Hand({ hand, deckCount, mode, hasSummonedThisTurn, isPlayerTurn, onCardLongPress }: Props) {
   const { selectCard } = useGame();
 
   const selectedIndex = mode.type === 'card_selected' ? mode.cardIndex : -1;
@@ -22,8 +23,12 @@ export default function Hand({ hand, mode, hasSummonedThisTurn, isPlayerTurn, on
     <div
       data-testid="hand"
       className="flex flex-col gap-1"
+      style={{ paddingTop: 6, paddingBottom: 6 }}
     >
       <div className="flex items-center gap-2 px-3">
+        <span className="text-xs text-gray-500">山札</span>
+        <span className="text-xs text-gray-400">{deckCount}枚</span>
+        <span className="text-xs text-gray-600">|</span>
         <span className="text-xs text-gray-400">手札</span>
         <span className="text-xs text-gray-500">{hand.length}枚</span>
         {!canSummon && isPlayerTurn && (
@@ -31,7 +36,7 @@ export default function Hand({ hand, mode, hasSummonedThisTurn, isPlayerTurn, on
         )}
       </div>
 
-      <div className="hand-scroll flex gap-2 px-3 pb-1 min-h-[7rem]" style={{ paddingTop: 10 }}>
+      <div className="hand-scroll flex gap-2 px-3 pb-1 min-h-[7rem]" style={{ paddingTop: 6 }}>
         {hand.length === 0 ? (
           <div className="flex items-center text-xs text-gray-500 w-full justify-center">
             手札なし
