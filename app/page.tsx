@@ -150,11 +150,11 @@ export default function HomePage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
           <Torch />
           <Image
-            src="/images/ui/logo.webp"
+            src="/images/ui/logo_en.webp"
             alt="CARDSMITH"
-            width={120}
-            height={80}
-            style={{ height: 'auto' }}
+            width={490}
+            height={138}
+            style={{ height: 40, width: 'auto' }}
           />
           <Torch />
         </div>
