@@ -9,7 +9,7 @@ import ConfirmSheet from '@/components/ui/ConfirmSheet';
 import RarityBadge from '@/components/ui/RarityBadge';
 import ImageCropModal from '@/components/ui/ImageCropModal';
 import ImageLibraryModal from '@/components/ui/ImageLibraryModal';
-import { MATERIALS } from '@/lib/data/materials';
+import { MATERIALS, formatSkillUses } from '@/lib/data/materials';
 import { getCostCapForLevel, rarityFromCost } from '@/lib/data/economy';
 import { ForgeSpec, validateForge, buildCraftedCard, consumeMaterialsForForge } from '@/lib/server-logic/forge';
 import { MaterialCategory, OwnedCard, RARITY_COLORS, UserImage } from '@/lib/types/meta';
@@ -221,7 +221,14 @@ export default function ForgePage() {
             >
               <span style={{ fontSize: 22 }}>{mat.icon}</span>
               <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{mat.name}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{mat.name}</p>
+                  {mat.effect.type === 'skill' && (
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#c084fc', background: 'rgba(88,28,135,0.45)', padding: '1px 5px', borderRadius: 3, flexShrink: 0 }}>
+                      {formatSkillUses(mat.effect.skill.uses)}
+                    </span>
+                  )}
+                </div>
                 <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{mat.description}</p>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -477,9 +484,20 @@ export default function ForgePage() {
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 52, flexShrink: 0 }}>スキル</span>
             <button data-testid="forge-slot-skill" onClick={() => setSelectingSlot('skill')}
               style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}>
-              {spec.skillMaterialId
-                ? <span style={{ color: 'var(--text-primary)' }}>{getMat(spec.skillMaterialId)?.icon} {getMat(spec.skillMaterialId)?.name}</span>
-                : <span style={{ color: 'var(--text-dim)' }}>＋ 任意</span>}
+              {(() => {
+                const skMat = getMat(spec.skillMaterialId);
+                if (!skMat) return <span style={{ color: 'var(--text-dim)' }}>＋ 任意</span>;
+                return (
+                  <span style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    {skMat.icon} {skMat.name}
+                    {skMat.effect.type === 'skill' && (
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#c084fc', background: 'rgba(88,28,135,0.45)', padding: '1px 4px', borderRadius: 3 }}>
+                        {formatSkillUses(skMat.effect.skill.uses)}
+                      </span>
+                    )}
+                  </span>
+                );
+              })()}
             </button>
             {spec.skillMaterialId && (
               <button onClick={() => setSpec(s => ({ ...s, skillMaterialId: undefined }))}

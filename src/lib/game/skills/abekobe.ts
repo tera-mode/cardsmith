@@ -1,31 +1,35 @@
 import { registerSkill } from './registry';
-import { findUnit, getEffectiveAtk } from '@/lib/game/helpers';
+import { getEnemiesOnBoard, getEffectiveAtk } from '@/lib/game/helpers';
 
 registerSkill({
   id: 'abekobe',
   displayName: 'あべこべ',
-  description: '自分のATKと現在HPを入れ替える（1回）',
+  description: '敵1体のATKと現在HPを入れ替える（1回）',
   triggerKind: 'activated',
   maxUsesDefault: 1,
 
-  canActivate(_state, _self, ctx) { return ctx.remainingUses !== 0; },
-  getValidTargets() { return []; },
-  resolve(state, self) {
-    const fresh = findUnit(state, self.instanceId);
-    if (!fresh) return { state, log: [] };
-    const oldAtk = getEffectiveAtk(fresh);
-    const oldHp = fresh.currentHp;
-    const newCard = { ...fresh.card, atk: Math.max(1, oldHp) };
-    const newHp = Math.max(1, Math.min(oldAtk, fresh.maxHp));
-    const newAtkBonus = 0; // reset buffs so effective ATK = card.atk
+  canActivate(state, self, ctx) {
+    return ctx.remainingUses !== 0 && getEnemiesOnBoard(state, self.owner).length > 0;
+  },
+  getValidTargets(state, self) {
+    return getEnemiesOnBoard(state, self.owner).map(e => e.position);
+  },
+  resolve(state, self, target) {
+    if (!target) return { state, log: [] };
+    const enemy = state.board[target.row][target.col];
+    if (!enemy) return { state, log: [] };
+    const oldAtk = getEffectiveAtk(enemy);
+    const oldHp = enemy.currentHp;
+    const newCard = { ...enemy.card, atk: Math.max(1, oldHp) };
+    const newHp = Math.max(1, Math.min(oldAtk, enemy.maxHp));
     const updated = {
-      ...fresh,
+      ...enemy,
       card: newCard,
       currentHp: newHp,
-      buffs: { ...fresh.buffs, atkBonus: newAtkBonus, atkBonusOnce: 0 },
+      buffs: { ...enemy.buffs, atkBonus: 0, atkBonusOnce: 0 },
     };
     const board = state.board.map(r => [...r]);
-    board[fresh.position.row][fresh.position.col] = updated;
-    return { state: { ...state, board }, log: [`${self.card.name}：あべこべ！ATK${oldAtk}↔HP${oldHp}を入れ替えた`] };
+    board[enemy.position.row][enemy.position.col] = updated;
+    return { state: { ...state, board }, log: [`${self.card.name}：あべこべ！${enemy.card.name}のATK${oldAtk}↔HP${oldHp}を入れ替えた`] };
   },
 });

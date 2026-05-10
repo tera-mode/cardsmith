@@ -5,9 +5,9 @@ import { placeUnit } from '@/lib/game/rules';
 registerSkill({
   id: 'kagebunshin',
   displayName: '影分身',
-  description: '隣接する空きマスにスキルなしのクローンを生成（3回）',
+  description: '隣接する空きマスにスキルなしのクローンを生成（1回）',
   triggerKind: 'activated',
-  maxUsesDefault: 3,
+  maxUsesDefault: 1,
 
   canActivate(state, self, ctx) {
     return ctx.remainingUses !== 0 && getAdjacent4Empty(state, self.position).length > 0;

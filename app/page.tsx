@@ -85,21 +85,14 @@ export default function HomePage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, padding: '0 24px', maxWidth: 360, width: '100%', position: 'relative', zIndex: 1 }}>
           {/* ロゴ */}
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 30, fontWeight: 700,
-              letterSpacing: '0.12em',
-              color: 'var(--gold)',
-              textShadow: '0 0 16px rgba(232,192,116,0.5), 0 2px 0 #000',
-              marginBottom: 4,
-            }}>
-              ⚒ CARDSMITH
-            </h1>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: '0.2em', color: 'var(--text-muted)' }}>
-              THE APEX RUNESMITH
-            </p>
-          </div>
+          <Image
+            src="/images/ui/logo.webp"
+            alt="CARDSMITH"
+            width={280}
+            height={186}
+            priority
+            style={{ maxWidth: '100%', height: 'auto' }}
+          />
 
           {/* キャッチコピー */}
           <div className="panel--ornate" style={{ padding: '14px 16px', width: '100%', textAlign: 'center' }}>
@@ -153,9 +146,13 @@ export default function HomePage() {
         {/* ロゴ + 松明 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
           <Torch />
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', textShadow: '0 0 10px rgba(232,192,116,0.4)' }}>
-            CARDSMITH
-          </h1>
+          <Image
+            src="/images/ui/logo.webp"
+            alt="CARDSMITH"
+            width={120}
+            height={80}
+            style={{ height: 'auto' }}
+          />
           <Torch />
         </div>
 

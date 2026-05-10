@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
 import ConfirmSheet from '@/components/ui/ConfirmSheet';
-import { MATERIALS } from '@/lib/data/materials';
+import { MATERIALS, formatSkillUses } from '@/lib/data/materials';
 import { getMaterialPrice } from '@/lib/data/economy';
 import { consumeRunes } from '@/lib/server-logic/profile';
 import { Material, MaterialCategory, OwnedMaterial } from '@/lib/types/meta';
@@ -104,7 +104,14 @@ export default function ShopPage() {
             >
               <span className="text-2xl">{mat.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white">{mat.name}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-bold text-white">{mat.name}</p>
+                  {mat.effect.type === 'skill' && (
+                    <span className="text-[10px] font-bold text-purple-300 bg-purple-900/50 px-1 rounded shrink-0">
+                      {formatSkillUses(mat.effect.skill.uses)}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[10px] text-muted truncate">{mat.description}</p>
                 <p className="text-xs text-muted">所持 ×{owned}</p>
               </div>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import AppHeader from '@/components/ui/AppHeader';
-import { MATERIALS } from '@/lib/data/materials';
+import { MATERIALS, formatSkillUses } from '@/lib/data/materials';
 import { MaterialCategory } from '@/lib/types/meta';
 
 const TABS: { key: MaterialCategory; label: string }[] = [
@@ -78,7 +78,14 @@ export default function MaterialsPage() {
                     ×{count}
                   </span>
                 </div>
-                <p className="text-xs font-bold text-white">{mat.name}</p>
+                <div className="flex items-center gap-1 flex-wrap">
+                  <p className="text-xs font-bold text-white">{mat.name}</p>
+                  {mat.effect.type === 'skill' && (
+                    <span className="text-[9px] font-bold text-purple-300 bg-purple-900/50 px-1 rounded">
+                      {formatSkillUses(mat.effect.skill.uses)}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[10px] text-muted mt-0.5">{mat.description}</p>
                 <p className="text-[10px] text-gold mt-1">コスト {mat.cost}</p>
               </div>
