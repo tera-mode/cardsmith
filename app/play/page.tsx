@@ -12,7 +12,6 @@ import BaseHpBar from '@/components/game/BaseHpBar';
 import TurnStepBar from '@/components/game/TurnStepBar';
 import ActionMenu, { SkipMoveButton } from '@/components/game/ActionMenu';
 import GameLog from '@/components/game/GameLog';
-import HintPanel from '@/components/game/HintPanel';
 import QuestDialogue from '@/components/game/QuestDialogue';
 import CardModal from '@/components/ui/CardModal';
 import ArchetypeSelectModal from '@/components/game/ArchetypeSelectModal';
@@ -221,9 +220,6 @@ function GameScreen() {
           />
         </div>
 
-        {/* ヒントパネル（状況に応じたガイド） */}
-        <HintPanel session={session} mode={mode} />
-
         {/* 移動モード中：その場に留まる / 戻る */}
         <SkipMoveButton mode={mode} />
 
@@ -240,20 +236,32 @@ function GameScreen() {
           </div>
         )}
 
-        {/* ゲームログ */}
-        <div style={{ flexShrink: 0, height: 52, overflow: 'hidden', borderTop: '1px solid var(--border-rune)' }}>
-          <GameLog log={session.log} />
-        </div>
-
-        {/* 手札 */}
-        <div style={{ flexShrink: 0, borderTop: '1px solid var(--border-rune)', paddingTop: 4, paddingBottom: 4 }}>
-          <Hand
-            hand={session.player.hand}
-            mode={mode}
-            hasSummonedThisTurn={session.player.hasSummonedThisTurn}
-            isPlayerTurn={isPlayerTurn}
-            onCardLongPress={openCardPreview}
-          />
+        {/* 手札（左）＋ バトルログ（右）2カラム */}
+        <div style={{ flexShrink: 0, borderTop: '1px solid var(--border-rune)', display: 'flex', alignItems: 'stretch' }}>
+          {/* 左: 手札 */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Hand
+              hand={session.player.hand}
+              mode={mode}
+              hasSummonedThisTurn={session.player.hasSummonedThisTurn}
+              isPlayerTurn={isPlayerTurn}
+              onCardLongPress={openCardPreview}
+            />
+          </div>
+          {/* 右: バトルログ */}
+          <div style={{
+            width: 110, flexShrink: 0,
+            borderLeft: '1px solid var(--border-rune)',
+            display: 'flex', flexDirection: 'column',
+            background: 'rgba(8,6,4,0.5)',
+          }}>
+            <p style={{
+              fontSize: 9, fontFamily: 'var(--font-display)',
+              color: 'var(--text-dim)', letterSpacing: '0.06em',
+              padding: '3px 6px 1px', flexShrink: 0,
+            }}>ログ</p>
+            <GameLog log={session.log} style={{ maxHeight: 'none', flex: 1, minHeight: 0 }} />
+          </div>
         </div>
 
         {/* ターン終了バー */}

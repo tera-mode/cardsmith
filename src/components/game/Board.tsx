@@ -90,7 +90,7 @@ export default function Board({ board, mode, highlightedCells, onUnitLongPress, 
       className="grid gap-px bg-[#0a1628]"
       style={{
         gridTemplateColumns: `repeat(${BOARD_COLS}, 1fr)`,
-        width: 'min(calc(100vw - 1.5rem), 460px)',
+        width: 'min(calc(100vw - 1.5rem), 360px)',
         aspectRatio: `${BOARD_COLS} / ${BOARD_ROWS}`,
       }}
     >

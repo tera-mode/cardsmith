@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface Props {
   log: string[];
+  style?: React.CSSProperties;
 }
 
-export default function GameLog({ log }: Props) {
+export default function GameLog({ log, style }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,8 +21,9 @@ export default function GameLog({ log }: Props) {
       style={{
         overflowY: 'auto',
         maxHeight: 52,
-        padding: '4px 12px',
+        padding: '4px 8px',
         background: 'rgba(8,6,4,0.7)',
+        ...style,
       }}
     >
       {log.slice(-12).map((entry, i) => (
