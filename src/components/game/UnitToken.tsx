@@ -13,7 +13,7 @@ export default function UnitToken({ unit, isSelected }: Props) {
   const isPlayer = unit.owner === 'player';
   const atk = getEffectiveAtk(unit);
   const hpPercent = Math.max(0, (unit.currentHp / (unit.maxHp + unit.buffs.auraMaxHp)) * 100);
-  const imgSrc = `/images/chars/${unit.cardId}.png`;
+  const imgSrc = unit.card.imagePath ?? `/images/chars/${unit.cardId}.png`;
 
   return (
     <div

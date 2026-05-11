@@ -99,7 +99,7 @@ export default function CardDetailModal({ unit, onClose }: Props) {
 
           {/* キャラクター画像 */}
           <img
-            src={`/images/chars/${card.id}.png`}
+            src={card.imagePath ?? `/images/chars/${card.id}.png`}
             alt={card.name}
             className="absolute inset-0 w-full h-full object-cover"
             style={{ objectPosition: 'center 15%' }}

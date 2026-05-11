@@ -67,7 +67,7 @@ export default function CardInHand({ card, index, isSelected, disabled, onClick,
         }} />
         {/* キャラクター画像 */}
         <img
-          src={`/images/chars/${card.id}.png`}
+          src={card.imagePath ?? `/images/chars/${card.id}.png`}
           alt={card.name}
           draggable={false}
           style={{

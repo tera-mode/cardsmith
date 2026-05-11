@@ -29,6 +29,7 @@ export interface Card {
   atk: number;
   hp: number;
   skill?: Skill;
+  imagePath?: string; // 指定時はこちらを優先（省略時は /images/chars/{id}.png）
 }
 
 // ─── 動的データ：ゲーム状態 ───────────────────────────────────────────────

@@ -315,12 +315,31 @@ function CharSprite({ slot, position }: SpriteProps) {
 
 // ─── カード創造UI ────────────────────────────────────────────────────────────
 
+// 選択できるカードイラスト一覧
+const IMAGE_OPTIONS = [
+  { id: 'militia',        label: '民兵' },
+  { id: 'light_infantry', label: '軽歩兵' },
+  { id: 'assault_soldier',label: '急襲兵' },
+  { id: 'scout',          label: '偵察兵' },
+  { id: 'spear_soldier',  label: '槍兵' },
+  { id: 'heavy_infantry', label: '重装兵' },
+  { id: 'combat_soldier', label: '戦闘兵' },
+  { id: 'archer',         label: '弓兵' },
+  { id: 'guard',          label: '衛兵' },
+  { id: 'healer',         label: '治癒兵' },
+  { id: 'cavalry',        label: '騎兵' },
+  { id: 'cannon',         label: '大砲' },
+  { id: 'defender',       label: '守護兵' },
+] as const;
+
 interface CardCreateProps {
-  onSubmit: (name: string) => void;
+  onSubmit: (name: string, imageId: string) => void;
 }
 
 function CardCreateOverlay({ onSubmit }: CardCreateProps) {
   const [name, setName] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string>('');
+  const canSubmit = name.trim() && selectedImage;
 
   return (
     <div
@@ -328,12 +347,13 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
         position: 'absolute',
         inset: 0,
         zIndex: 30,
-        background: 'rgba(0,0,0,0.85)',
+        background: 'rgba(0,0,0,0.88)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0 24px',
+        justifyContent: 'flex-start',
+        overflowY: 'auto',
+        padding: '16px 16px 32px',
       }}
     >
       <div
@@ -341,26 +361,29 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
           background: 'linear-gradient(180deg, rgba(42,28,16,0.98) 0%, rgba(20,12,6,0.98) 100%)',
           border: '2px solid var(--gold-deep)',
           borderRadius: 12,
-          padding: '28px 24px',
-          maxWidth: 340,
+          padding: '22px 18px',
+          maxWidth: 380,
           width: '100%',
           boxShadow: '0 0 32px rgba(212,175,55,0.25)',
-          textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: 36, marginBottom: 12 }}>✨</div>
-        <p style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 16,
-          fontWeight: 700,
-          color: 'var(--gold)',
-          letterSpacing: '0.08em',
-          marginBottom: 8,
-        }}>
-          カードを創造しよう！
-        </p>
-        <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
-          あなたの最初のカードに名前をつけましょう
+        {/* タイトル */}
+        <div style={{ textAlign: 'center', marginBottom: 18 }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>✨</div>
+          <p style={{
+            fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700,
+            color: 'var(--gold)', letterSpacing: '0.08em', marginBottom: 4,
+          }}>
+            カードを創造しよう！
+          </p>
+          <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            最初のカードに名前とイラストを選んでください
+          </p>
+        </div>
+
+        {/* カード名入力 */}
+        <p style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'var(--font-display)', marginBottom: 6 }}>
+          ① カード名
         </p>
         <input
           type="text"
@@ -370,7 +393,7 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
           onChange={e => setName(e.target.value)}
           style={{
             width: '100%',
-            padding: '12px 14px',
+            padding: '11px 13px',
             borderRadius: 6,
             border: '1px solid var(--border-rune-bright)',
             background: 'rgba(0,0,0,0.5)',
@@ -378,31 +401,82 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
             fontFamily: 'var(--font-body)',
             fontSize: 15,
             outline: 'none',
-            marginBottom: 16,
+            marginBottom: 20,
             boxSizing: 'border-box',
           }}
           autoFocus
         />
+
+        {/* イラスト選択 */}
+        <p style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'var(--font-display)', marginBottom: 10 }}>
+          ② イラストを選ぶ
+          {selectedImage && (
+            <span style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontWeight: 400, marginLeft: 8 }}>
+              — {IMAGE_OPTIONS.find(o => o.id === selectedImage)?.label}
+            </span>
+          )}
+        </p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 8,
+          marginBottom: 20,
+        }}>
+          {IMAGE_OPTIONS.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => setSelectedImage(opt.id)}
+              title={opt.label}
+              style={{
+                padding: 0,
+                borderRadius: 6,
+                border: selectedImage === opt.id
+                  ? '2px solid var(--gold)'
+                  : '2px solid rgba(196,154,90,0.2)',
+                background: selectedImage === opt.id
+                  ? 'rgba(212,175,55,0.15)'
+                  : 'rgba(0,0,0,0.4)',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                boxShadow: selectedImage === opt.id ? '0 0 8px rgba(212,175,55,0.5)' : 'none',
+                transition: 'border 0.15s, box-shadow 0.15s',
+                aspectRatio: '1 / 1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/images/cards/${opt.id}.png`}
+                alt={opt.label}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </button>
+          ))}
+        </div>
+
+        {/* 完成ボタン */}
         <button
-          onClick={() => { if (name.trim()) onSubmit(name.trim()); }}
-          disabled={!name.trim()}
+          onClick={() => { if (canSubmit) onSubmit(name.trim(), selectedImage); }}
+          disabled={!canSubmit}
           style={{
             width: '100%',
             padding: '13px 0',
             borderRadius: 6,
-            background: name.trim()
+            background: canSubmit
               ? 'linear-gradient(180deg, #d4af37, #a87a36)'
               : 'rgba(80,70,50,0.5)',
             border: 'none',
-            color: name.trim() ? '#1a1208' : 'var(--text-dim)',
+            color: canSubmit ? '#1a1208' : 'var(--text-dim)',
             fontFamily: 'var(--font-display)',
             fontSize: 14,
             fontWeight: 700,
             letterSpacing: '0.08em',
-            cursor: name.trim() ? 'pointer' : 'default',
+            cursor: canSubmit ? 'pointer' : 'default',
           }}
         >
-          完成！
+          {canSubmit ? '完成！' : (name.trim() ? 'イラストを選んでください' : '名前を入力してください')}
         </button>
       </div>
     </div>
@@ -500,8 +574,9 @@ export default function StoryPlayer({
 
   // ─── カード創造 ─────────────────────────────────────────────────────────────
 
-  const handleCardCreate = useCallback((cardName: string) => {
+  const handleCardCreate = useCallback((cardName: string, imageId: string) => {
     localStorage.setItem('cardsmith_story_first_card_name', cardName);
+    localStorage.setItem('cardsmith_story_first_card_image', imageId);
     setInternalCtx(prev => ({ ...prev, firstCardName: cardName }));
     onCardCreate(storyState.eventIndex, cardName);
     setStoryState(prev => {

@@ -57,13 +57,12 @@ function Chapter0Content() {
         localStorage.setItem('cardsmith_story_ch0_step', String(eventIndex));
         router.push(`/play?questId=${questId}&returnTo=${encodeURIComponent('/story/0?battleDone=' + questId)}`);
       }}
-      onCardCreate={(eventIndex, cardName) => {
+      onCardCreate={(eventIndex, _cardName) => {
         localStorage.setItem('cardsmith_story_ch0_step', String(eventIndex));
         // player_first カードを所持カードに追加（5枚）
         const now = Date.now();
         const existing = ownedCards.filter(c => c.cardId !== 'player_first');
         updateCards([...existing, { cardId: 'player_first', count: 5, isCrafted: true, acquiredAt: now }]);
-        void cardName; // ストーリー台詞はlocalStorage経由で反映済み
       }}
       onComplete={(chapterNum, nextChapter) => {
         localStorage.removeItem('cardsmith_story_ch0_step');
