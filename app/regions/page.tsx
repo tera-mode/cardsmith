@@ -27,11 +27,6 @@ function getProgress(chapter: number, questProgress: QuestProgress[]) {
   return { cleared, total: quests.length };
 }
 
-function isChapterUnlocked(chapter: number, questProgress: QuestProgress[]) {
-  if (chapter === 0) return true;
-  // ch 1-6: requires q0_3 cleared
-  return questProgress.some(p => p.questId === 'q0_3' && p.status === 'cleared');
-}
 
 // ─── ページ ───────────────────────────────────────────────────────────────────
 
@@ -50,7 +45,6 @@ export default function RegionsPage() {
     return { cleared, total: quests.length };
   }, [questProgress]);
 
-  const q03Cleared = questProgress.some(p => p.questId === 'q0_3' && p.status === 'cleared');
 
   if (loading || authLoading) {
     return (
@@ -93,9 +87,6 @@ export default function RegionsPage() {
               }}>
                 {tutorialProgress.cleared}/{tutorialProgress.total}
               </span>
-              {!q03Cleared && (
-                <p style={{ fontSize: 9, color: 'var(--rune-red)', marginTop: 1 }}>未完了</p>
-              )}
             </div>
           </div>
 
@@ -115,46 +106,31 @@ export default function RegionsPage() {
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.08em', marginBottom: 8, textAlign: 'center' }}>
             ⚔ SIX REALMS ⚔
           </div>
-          {!q03Cleared && (
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 12, fontStyle: 'italic' }}>
-              チュートリアルをクリアするとクエストが解放される
-            </p>
-          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {REGION_DATA.map(region => {
             const prog = getProgress(region.chapter, questProgress);
-            const unlocked = q03Cleared;
             const allCleared = prog.cleared === prog.total && prog.total > 0;
 
             return (
               <div
                 key={region.chapter}
                 data-testid={`region-card-${region.chapter}`}
-                onClick={() => unlocked && router.push(`/story?chapter=${region.chapter}`)}
+                onClick={() => router.push(`/story?chapter=${region.chapter}`)}
                 style={{
                   background: region.bg,
-                  border: `1px solid ${region.color}${unlocked ? '50' : '20'}`,
+                  border: `1px solid ${region.color}50`,
                   borderRadius: 12,
                   padding: '14px 12px',
-                  cursor: unlocked ? 'pointer' : 'default',
-                  opacity: unlocked ? 1 : 0.45,
+                  cursor: 'pointer',
+                  opacity: 1,
                   position: 'relative',
                   overflow: 'hidden',
                   transition: 'border-color 0.15s',
                   minHeight: 120,
                 }}
               >
-                {/* ロック表示 */}
-                {!unlocked && (
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(0,0,0,0.4)',
-                    fontSize: 28, borderRadius: 11,
-                  }}>🔒</div>
-                )}
 
                 {/* 全クリアバッジ */}
                 {allCleared && (

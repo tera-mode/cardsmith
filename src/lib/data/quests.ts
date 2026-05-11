@@ -83,7 +83,7 @@ const SEI: QuestDefinition[] = [
     enemyAIProfileId: 'easy_balanced',
     reward: { exp: 60, runes: 100, cards: [{ cardId: 'sei_mireille', count: 2 }] },
     rewardReplay: { exp: 12, runes: 30 },
-    prerequisites: ['q0_3'],
+    prerequisites: [],
   },
   {
     questId: 'qsei_2',
@@ -175,7 +175,7 @@ const MEI: QuestDefinition[] = [
     enemyAIProfileId: 'easy_balanced',
     reward: { exp: 60, runes: 100, cards: [{ cardId: 'mei_rose', count: 2 }] },
     rewardReplay: { exp: 12, runes: 30 },
-    prerequisites: ['q0_3'],
+    prerequisites: [],
   },
   {
     questId: 'qmei_2',
@@ -265,7 +265,7 @@ const SHIN: QuestDefinition[] = [
     enemyAIProfileId: 'easy_balanced',
     reward: { exp: 60, runes: 100, cards: [{ cardId: 'shin_arca', count: 2 }] },
     rewardReplay: { exp: 12, runes: 30 },
-    prerequisites: ['q0_3'],
+    prerequisites: [],
   },
   {
     questId: 'qshin_2',
@@ -355,7 +355,7 @@ const EN: QuestDefinition[] = [
     enemyAIProfileId: 'easy_balanced',
     reward: { exp: 60, runes: 100, cards: [{ cardId: 'en_val', count: 2 }] },
     rewardReplay: { exp: 12, runes: 30 },
-    prerequisites: ['q0_3'],
+    prerequisites: [],
   },
   {
     questId: 'qen_2',
@@ -446,7 +446,7 @@ const SOU: QuestDefinition[] = [
     enemyAIProfileId: 'easy_balanced',
     reward: { exp: 60, runes: 100, cards: [{ cardId: 'sou_quartz', count: 2 }] },
     rewardReplay: { exp: 12, runes: 30 },
-    prerequisites: ['q0_3'],
+    prerequisites: [],
   },
   {
     questId: 'qsou_2',
@@ -536,7 +536,7 @@ const KOU: QuestDefinition[] = [
     enemyAIProfileId: 'easy_balanced',
     reward: { exp: 60, runes: 100, cards: [{ cardId: 'kou_ares', count: 2 }] },
     rewardReplay: { exp: 12, runes: 30 },
-    prerequisites: ['q0_3'],
+    prerequisites: [],
   },
   {
     questId: 'qkou_2',
