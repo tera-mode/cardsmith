@@ -83,6 +83,8 @@ export default function ProfilePage() {
                 localStorage.removeItem('cardsmith_story_ch0_step');
                 localStorage.removeItem('cardsmith_story_ch1_step');
                 localStorage.removeItem('cardsmith_story_first_card_name');
+                localStorage.removeItem('cardsmith_story_first_card_image');
+                localStorage.removeItem('cardsmith_story_first_card_image_data');
                 router.push('/');
               } finally {
                 setDebugBusy(null);

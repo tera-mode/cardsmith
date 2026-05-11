@@ -101,16 +101,18 @@ function buildStoryPlayerDeck(): Card[] {
   const firstName = typeof window !== 'undefined'
     ? (localStorage.getItem('cardsmith_story_first_card_name') ?? '最初のカード')
     : '最初のカード';
-  const firstImage = typeof window !== 'undefined'
+  const firstImageId = typeof window !== 'undefined'
     ? (localStorage.getItem('cardsmith_story_first_card_image') ?? 'militia')
     : 'militia';
+  const customData = typeof window !== 'undefined'
+    ? localStorage.getItem('cardsmith_story_first_card_image_data')
+    : null;
+  const imagePath = firstImageId === 'custom' && customData
+    ? customData
+    : `/images/cards/${firstImageId !== 'custom' ? firstImageId : 'militia'}.png`;
   const base = CARD_MAP['player_first'];
   if (!base) return shuffleDeck(buildStandardDeck());
-  const firstCard: Card = {
-    ...base,
-    name: firstName,
-    imagePath: `/images/cards/${firstImage}.png`,
-  };
+  const firstCard: Card = { ...base, name: firstName, imagePath };
   const c = (id: string) => CARD_MAP[id]!;
   return [
     firstCard, firstCard, firstCard, firstCard, firstCard,

@@ -336,10 +336,61 @@ interface CardCreateProps {
   onSubmit: (name: string, imageId: string) => void;
 }
 
+// アップロード画像を canvas で 400×400 以内に縮小し JPEG base64 を返す
+function resizeImageToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('read error'));
+    reader.onload = (e) => {
+      const img = document.createElement('img');
+      img.onerror = () => reject(new Error('image load error'));
+      img.onload = () => {
+        const MAX = 400;
+        const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+        const w = Math.round(img.width * ratio);
+        const h = Math.round(img.height * ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = e.target!.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function CardCreateOverlay({ onSubmit }: CardCreateProps) {
   const [name, setName] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string>('');
+  const [selectedImage, setSelectedImage] = useState<string>('');    // preset id or 'custom'
+  const [customPreview, setCustomPreview] = useState<string>('');    // base64 preview
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const canSubmit = name.trim() && selectedImage;
+
+  const handlePresetClick = (id: string) => {
+    setSelectedImage(id);
+    setCustomPreview('');
+    localStorage.removeItem('cardsmith_story_first_card_image_data');
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const base64 = await resizeImageToBase64(file);
+      setCustomPreview(base64);
+      setSelectedImage('custom');
+      localStorage.setItem('cardsmith_story_first_card_image_data', base64);
+    } catch {
+      // 読み込み失敗は無視
+    }
+    e.target.value = '';
+  };
+
+  const selectedLabel = selectedImage === 'custom'
+    ? 'マイ画像'
+    : IMAGE_OPTIONS.find(o => o.id === selectedImage)?.label;
 
   return (
     <div
@@ -356,6 +407,14 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
         padding: '16px 16px 32px',
       }}
     >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleUpload}
+      />
+
       <div
         style={{
           background: 'linear-gradient(180deg, rgba(42,28,16,0.98) 0%, rgba(20,12,6,0.98) 100%)',
@@ -381,7 +440,7 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
           </p>
         </div>
 
-        {/* カード名入力 */}
+        {/* ① カード名 */}
         <p style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'var(--font-display)', marginBottom: 6 }}>
           ① カード名
         </p>
@@ -407,53 +466,89 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
           autoFocus
         />
 
-        {/* イラスト選択 */}
+        {/* ② イラスト選択 */}
         <p style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'var(--font-display)', marginBottom: 10 }}>
           ② イラストを選ぶ
-          {selectedImage && (
+          {selectedLabel && (
             <span style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontWeight: 400, marginLeft: 8 }}>
-              — {IMAGE_OPTIONS.find(o => o.id === selectedImage)?.label}
+              — {selectedLabel}
             </span>
           )}
         </p>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 8,
-          marginBottom: 20,
-        }}>
+
+        {/* プリセットグリッド */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 14 }}>
           {IMAGE_OPTIONS.map(opt => (
             <button
               key={opt.id}
-              onClick={() => setSelectedImage(opt.id)}
+              onClick={() => handlePresetClick(opt.id)}
               title={opt.label}
               style={{
-                padding: 0,
-                borderRadius: 6,
-                border: selectedImage === opt.id
-                  ? '2px solid var(--gold)'
-                  : '2px solid rgba(196,154,90,0.2)',
-                background: selectedImage === opt.id
-                  ? 'rgba(212,175,55,0.15)'
-                  : 'rgba(0,0,0,0.4)',
-                cursor: 'pointer',
-                overflow: 'hidden',
+                padding: 0, borderRadius: 6, cursor: 'pointer', overflow: 'hidden',
+                aspectRatio: '1 / 1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: selectedImage === opt.id ? '2px solid var(--gold)' : '2px solid rgba(196,154,90,0.2)',
+                background: selectedImage === opt.id ? 'rgba(212,175,55,0.15)' : 'rgba(0,0,0,0.4)',
                 boxShadow: selectedImage === opt.id ? '0 0 8px rgba(212,175,55,0.5)' : 'none',
                 transition: 'border 0.15s, box-shadow 0.15s',
-                aspectRatio: '1 / 1',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/images/cards/${opt.id}.png`}
-                alt={opt.label}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
+              <img src={`/images/cards/${opt.id}.png`} alt={opt.label}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </button>
           ))}
+        </div>
+
+        {/* 区切り */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(196,154,90,0.25)' }} />
+          <span style={{ fontSize: 11, color: 'var(--text-dim)', flexShrink: 0 }}>または自分の画像を使う</span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(196,154,90,0.25)' }} />
+        </div>
+
+        {/* アップロードエリア */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20 }}>
+          {/* プレビュー or プレースホルダー */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              width: 72, height: 72, flexShrink: 0,
+              borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
+              border: selectedImage === 'custom' ? '2px solid var(--gold)' : '2px dashed rgba(196,154,90,0.4)',
+              background: 'rgba(0,0,0,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: selectedImage === 'custom' ? '0 0 8px rgba(212,175,55,0.5)' : 'none',
+              padding: 0,
+            }}
+          >
+            {customPreview ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={customPreview} alt="custom"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            ) : (
+              <span style={{ fontSize: 26, opacity: 0.5 }}>🖼️</span>
+            )}
+          </button>
+
+          <div style={{ flex: 1 }}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                width: '100%', padding: '10px 0',
+                borderRadius: 6, cursor: 'pointer',
+                background: 'rgba(212,175,55,0.08)',
+                border: '1px solid rgba(196,154,90,0.35)',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-display)', fontSize: 12,
+                letterSpacing: '0.04em',
+              }}
+            >
+              📤 画像をアップロード
+            </button>
+            <p style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 5, lineHeight: 1.5 }}>
+              JPG / PNG / WEBP（自動リサイズ）
+            </p>
+          </div>
         </div>
 
         {/* 完成ボタン */}
@@ -461,19 +556,12 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
           onClick={() => { if (canSubmit) onSubmit(name.trim(), selectedImage); }}
           disabled={!canSubmit}
           style={{
-            width: '100%',
-            padding: '13px 0',
-            borderRadius: 6,
-            background: canSubmit
-              ? 'linear-gradient(180deg, #d4af37, #a87a36)'
-              : 'rgba(80,70,50,0.5)',
+            width: '100%', padding: '13px 0', borderRadius: 6,
+            background: canSubmit ? 'linear-gradient(180deg, #d4af37, #a87a36)' : 'rgba(80,70,50,0.5)',
             border: 'none',
             color: canSubmit ? '#1a1208' : 'var(--text-dim)',
-            fontFamily: 'var(--font-display)',
-            fontSize: 14,
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            cursor: canSubmit ? 'pointer' : 'default',
+            fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700,
+            letterSpacing: '0.08em', cursor: canSubmit ? 'pointer' : 'default',
           }}
         >
           {canSubmit ? '完成！' : (name.trim() ? 'イラストを選んでください' : '名前を入力してください')}
