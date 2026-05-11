@@ -37,4 +37,11 @@ docs/sim_reports/
 docs/balance/snapshots/
 public/images/cards/raw/
 public/images/backgrounds/raw/
+public/images/story_chars/raw/
 .playwright-mcp/
+
+# MCP設定（APIキー含むためコミット不可・各自ローカルで設定）
+.mcp.json
+
+# Claude Code ローカル設定
+.claude/settings.local.json

@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "gemini-image": {
+      "command": "node",
+      "args": ["<gemini-nanobanana-mcp のパス>/build/index.js"],
+      "env": {
+        "GEMINI_API_KEY": "<your-gemini-api-key>",
+        "GEMINI_IMAGE_ENDPOINT": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent",
+        "AUTO_SAVE": "true",
+        "DEFAULT_SAVE_DIR": "<プロジェクトルート>/public/images"
+      }
+    }
+  }
+}

@@ -48,6 +48,7 @@ src/
     └── types/game.ts               ← 型定義
 docs/
 ├── requirements.md                 ← 実装要件書
+├── story_chars_visual.md           ← ストーリーキャラ ビジュアル仕様書
 ├── playtest_reports/               ← プレイテスト出力（gitignore）
 └── screenshots/                    ← 確認用スクリーンショット（gitignore）
 ```
@@ -154,7 +155,26 @@ mcp__gemini-image__generate_image(
 | フォーマット | PNG |
 | プロンプト仕様 | `docs/chars_visual.md` を参照 |
 
-#### 1-3. ボード背景
+#### 1-3. ストーリーキャラ立ち絵
+
+| 項目 | 規則 |
+|------|------|
+| 保存先（透過済み） | `public/images/story_chars/{charId}_{expression}.png` |
+| 保存先（生成raw） | `public/images/story_chars/raw/{charId}_{expression}.png` |
+| フォーマット | PNG（透過） |
+| 背景除去 | rembg（isnet-anime モデル）— Python 3.10 に install 済み |
+| プロンプト仕様 | `docs/story_chars_visual.md` の「確定済み生成設定」セクションを参照 |
+
+**背景除去コマンド（Windows / Python 3.10）：**
+```python
+from rembg import remove, new_session
+from PIL import Image
+session = new_session("isnet-anime")
+img = Image.open(r"raw\{charId}_{expression}.png")
+remove(img, session=session).save(r"{charId}_{expression}.png")
+```
+
+#### 1-4. ボード背景
 
 | 項目 | 規則 |
 |------|------|
@@ -181,6 +201,11 @@ public/images/
 │   ├── sei_noa.png
 │   ├── mei_vera.png
 │   └── ...（60体）
+├── story_chars/             ← ストーリーキャラ立ち絵（透過PNG）
+│   ├── raw/                 ← 生成rawファイル（背景除去前）
+│   ├── story_god_smile.png
+│   ├── story_brigitta_calm.png
+│   └── ...
 ├── backgrounds/             ← ボード背景
 │   └── board.jpg
 └── ui/                      ← UIアセット（ロゴ等）
