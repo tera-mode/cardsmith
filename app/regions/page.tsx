@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -39,11 +39,6 @@ export default function RegionsPage() {
     if (!authLoading && !user) router.push('/');
   }, [user, authLoading, router]);
 
-  const tutorialProgress = useMemo(() => {
-    const quests = getChapterQuests(0);
-    const cleared = quests.filter(q => questProgress.find(p => p.questId === q.questId && p.status === 'cleared')).length;
-    return { cleared, total: quests.length };
-  }, [questProgress]);
 
 
   if (loading || authLoading) {
@@ -63,43 +58,6 @@ export default function RegionsPage() {
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 24px' }}>
 
-        {/* チュートリアル */}
-        <div
-          className="panel--ornate"
-          style={{ padding: '12px 14px', marginBottom: 14, cursor: 'pointer', opacity: 1 }}
-          onClick={() => router.push('/story')}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 22 }}>📖</span>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-                CHAPTER 0 チュートリアル
-              </p>
-              <p style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>
-                鍛炉の灯から旅立ちまで — 3話
-              </p>
-            </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <span style={{
-                fontSize: 13, fontWeight: 700,
-                fontFamily: 'var(--font-display)',
-                color: tutorialProgress.cleared === tutorialProgress.total ? '#22c55e' : 'var(--gold)',
-              }}>
-                {tutorialProgress.cleared}/{tutorialProgress.total}
-              </span>
-            </div>
-          </div>
-
-          {/* プログレスバー */}
-          <div style={{ marginTop: 8, height: 3, background: 'rgba(0,0,0,0.5)', borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', borderRadius: 2,
-              width: `${(tutorialProgress.cleared / tutorialProgress.total) * 100}%`,
-              background: 'linear-gradient(90deg, #d4af37, #f8d878)',
-              transition: 'width 0.5s',
-            }} />
-          </div>
-        </div>
 
         {/* 領域グリッド */}
         <div style={{ marginBottom: 8 }}>
