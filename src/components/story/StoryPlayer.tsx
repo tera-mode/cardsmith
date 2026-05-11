@@ -277,9 +277,9 @@ function CharSprite({ slot, position }: SpriteProps) {
   if (!slot) return null;
 
   const posStyles: Record<CharPosition, React.CSSProperties> = {
-    left:   { left: '-2%' },
+    left:   { left: '-10%' },
     center: { left: '50%', transform: 'translateX(-50%)' },
-    right:  { right: '-2%' },
+    right:  { right: '-10%' },
   };
 
   return (
@@ -289,7 +289,7 @@ function CharSprite({ slot, position }: SpriteProps) {
         bottom: 140,
         ...posStyles[position],
         // コンテナに明示サイズを与えて objectFit: contain でアスペクト比を保持
-        width: position === 'center' ? 'min(92vw, 480px)' : 'min(64vw, 320px)',
+        width: position === 'center' ? 'min(92vw, 480px)' : 'min(82vw, 420px)',
         height: 'calc(100% - 155px)',
         transition: 'opacity 0.3s ease',
         opacity: visible ? 1 : 0,
