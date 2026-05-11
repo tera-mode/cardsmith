@@ -10,9 +10,18 @@ export async function getQuestProgress(userId: string): Promise<QuestProgress[]>
   snap.docs.forEach(d => { saved[d.id] = d.data() as QuestProgress; });
 
   return QUESTS.map(q => {
-    if (saved[q.questId]) return saved[q.questId];
-    const isAvailable = q.prerequisites.length === 0;
-    return { questId: q.questId, status: isAvailable ? 'available' : 'locked', attemptCount: 0 };
+    const savedEntry = saved[q.questId];
+    if (!savedEntry) {
+      const isAvailable = q.prerequisites.length === 0;
+      return { questId: q.questId, status: isAvailable ? 'available' : 'locked', attemptCount: 0 };
+    }
+    // prerequisites が変更されて条件を満たすようになった locked クエストを再評価
+    if (savedEntry.status === 'locked') {
+      const allMet = q.prerequisites.length === 0
+        || q.prerequisites.every(pid => saved[pid]?.status === 'cleared');
+      if (allMet) return { ...savedEntry, status: 'available' };
+    }
+    return savedEntry;
   });
 }
 

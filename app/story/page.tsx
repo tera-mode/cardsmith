@@ -23,12 +23,12 @@ function StoryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [q03ArchSelect, setQ03ArchSelect] = useState(false);
-  const initialChapter = parseInt(searchParams.get('chapter') ?? '0') || 0;
+  const initialChapter = parseInt(searchParams.get('chapter') ?? '1') || 1;
   const [chapter, setChapter] = useState(initialChapter);
 
   // URLパラメータが変わったら章を更新
   useEffect(() => {
-    const c = parseInt(searchParams.get('chapter') ?? '0') || 0;
+    const c = parseInt(searchParams.get('chapter') ?? '1') || 1;
     setChapter(c);
   }, [searchParams]);
 
@@ -39,12 +39,13 @@ function StoryContent() {
   const getProgress = (questId: string): QuestProgress | undefined =>
     questProgress.find(p => p.questId === questId);
 
-  const quests = getChapterQuests(chapter);
+  // story_* はストーリーモード専用バトルのため領域クエスト一覧には表示しない
+  const quests = getChapterQuests(chapter).filter(q => !q.questId.startsWith('story_'));
 
   if (loading) {
     return (
       <div className="game-layout flex-col bg-[#0a0e27]">
-        <AppHeader backHref="/" title="ストーリー" />
+        <AppHeader backHref="/regions" title="クエスト" />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
         </div>
@@ -56,11 +57,11 @@ function StoryContent() {
     <div className="game-layout stone-bg flex-col" style={{ position: 'relative' }}>
       <ForgeBg />
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <AppHeader backHref="/" title="ストーリー" />
+      <AppHeader backHref="/regions" title="クエスト" />
 
       {/* 章タブ */}
       <div style={{ flexShrink: 0, display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-rune)', background: 'rgba(14,10,6,0.85)' }}>
-        {CHAPTERS.map(c => (
+        {CHAPTERS.filter(c => c.chapter !== 0).map(c => (
           <button
             key={c.chapter}
             onClick={() => setChapter(c.chapter)}
