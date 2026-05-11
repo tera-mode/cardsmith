@@ -366,7 +366,6 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
   const [selectedImage, setSelectedImage] = useState<string>('');    // preset id or 'custom'
   const [customPreview, setCustomPreview] = useState<string>('');    // base64 preview
   const canSubmit = name.trim() && selectedImage;
-  const uploadInputId = 'card-create-upload-input';
 
   const handlePresetClick = (id: string) => {
     setSelectedImage(id);
@@ -407,14 +406,6 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
         padding: '16px 16px 32px',
       }}
     >
-      {/* display:none では click() がブロックされるため opacity:0 で非表示 */}
-      <input
-        id={uploadInputId}
-        type="file"
-        accept="image/*"
-        style={{ position: 'absolute', width: 0, height: 0, opacity: 0, overflow: 'hidden' }}
-        onChange={handleUpload}
-      />
 
       <div
         style={{
@@ -507,14 +498,13 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
           <div style={{ flex: 1, height: 1, background: 'rgba(196,154,90,0.25)' }} />
         </div>
 
-        {/* アップロードエリア：label htmlFor でファイルピッカーを確実に起動 */}
+        {/* アップロードエリア：input を label の子要素にして display:none で確実に動作 */}
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20 }}>
-          {/* プレビューサムネイル */}
-          <label
-            htmlFor={uploadInputId}
+          {/* プレビューサムネイル（表示のみ・クリック不可） */}
+          <div
             style={{
               width: 72, height: 72, flexShrink: 0,
-              borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
+              borderRadius: 8, overflow: 'hidden',
               border: selectedImage === 'custom' ? '2px solid var(--gold)' : '2px dashed rgba(196,154,90,0.4)',
               background: 'rgba(0,0,0,0.4)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -528,11 +518,11 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
             ) : (
               <span style={{ fontSize: 26, opacity: 0.5 }}>🖼️</span>
             )}
-          </label>
+          </div>
 
           <div style={{ flex: 1 }}>
+            {/* input を label の子にすることで display:none でも label クリックで起動できる */}
             <label
-              htmlFor={uploadInputId}
               style={{
                 display: 'block', width: '100%', padding: '10px 0',
                 borderRadius: 6, cursor: 'pointer', textAlign: 'center',
@@ -540,9 +530,15 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
                 border: '1px solid rgba(196,154,90,0.35)',
                 color: 'var(--text-secondary)',
                 fontFamily: 'var(--font-display)', fontSize: 12,
-                letterSpacing: '0.04em',
+                letterSpacing: '0.04em', boxSizing: 'border-box',
               }}
             >
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleUpload}
+              />
               📤 画像をアップロード
             </label>
             <p style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 5, lineHeight: 1.5 }}>
