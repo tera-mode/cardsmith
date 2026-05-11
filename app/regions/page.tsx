@@ -75,7 +75,7 @@ export default function RegionsPage() {
               <div
                 key={region.chapter}
                 data-testid={`region-card-${region.chapter}`}
-                onClick={() => router.push(`/story?chapter=${region.chapter}`)}
+                onClick={() => router.push(`/quest?region=${region.chapter}`)}
                 style={{
                   background: region.bg,
                   border: `1px solid ${region.color}50`,
