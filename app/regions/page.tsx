@@ -44,7 +44,7 @@ export default function RegionsPage() {
   if (loading || authLoading) {
     return (
       <div className="game-layout stone-bg flex-col">
-        <AppHeader backHref="/" title="クエスト" />
+        <AppHeader backHref="/" title="領域探索" />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
         </div>
@@ -54,7 +54,7 @@ export default function RegionsPage() {
 
   return (
     <div className="game-layout stone-bg flex-col" data-testid="region-map">
-      <AppHeader backHref="/" title="クエスト" />
+      <AppHeader backHref="/" title="領域探索" />
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 24px' }}>
 
