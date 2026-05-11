@@ -20,8 +20,24 @@ const BG_GRADIENTS: Record<string, string> = {
   tavern_night: 'linear-gradient(180deg, #1a0a00 0%, #0d0500 100%)',
 };
 
+// 実画像がある背景ID → ファイルパスのマッピング（生成済みのみ追加）
+const BG_IMAGES: Record<string, string> = {
+  divine:        '/images/backgrounds/story_divine.jpg',
+  field_day:     '/images/backgrounds/story_field_day.jpg',
+  field_dusk:    '/images/backgrounds/story_field_dusk.jpg',
+  road_forest:   '/images/backgrounds/story_road_forest.jpg',
+  elna_city:     '/images/backgrounds/story_elna_city.jpg',
+  elna_alley:    '/images/backgrounds/story_elna_alley.jpg',
+  elna_square:   '/images/backgrounds/story_elna_square.jpg',
+  forge_morning: '/images/backgrounds/story_forge_morning.jpg',
+};
+
 function getBg(id: string): string {
   return BG_GRADIENTS[id] ?? '#000';
+}
+
+function getBgImage(id: string): string | null {
+  return BG_IMAGES[id] ?? null;
 }
 
 // ─── キャラクター画像マッピング ────────────────────────────────────────────────
@@ -261,9 +277,9 @@ function CharSprite({ slot, position }: SpriteProps) {
   if (!slot) return null;
 
   const posStyles: Record<CharPosition, React.CSSProperties> = {
-    left:   { left: 0, transform: 'translateX(-10%)' },
+    left:   { left: '-2%' },
     center: { left: '50%', transform: 'translateX(-50%)' },
-    right:  { right: 0, transform: 'translateX(10%)' },
+    right:  { right: '-2%' },
   };
 
   return (
@@ -272,21 +288,26 @@ function CharSprite({ slot, position }: SpriteProps) {
         position: 'absolute',
         bottom: 140,
         ...posStyles[position],
-        height: '65%',
-        maxWidth: 200,
+        // コンテナに明示サイズを与えて objectFit: contain でアスペクト比を保持
+        width: position === 'center' ? 'min(92vw, 480px)' : 'min(64vw, 320px)',
+        height: 'calc(100% - 155px)',
         transition: 'opacity 0.3s ease',
         opacity: visible ? 1 : 0,
         pointerEvents: 'none',
         userSelect: 'none',
       }}
     >
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={getCharImage(slot.id, slot.expr)}
         alt={slot.id}
-        width={512}
-        height={1024}
-        style={{ height: '100%', width: 'auto', objectFit: 'contain', objectPosition: 'bottom' }}
-        priority
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          objectPosition: 'bottom center',
+          display: 'block',
+        }}
       />
     </div>
   );
@@ -511,6 +532,7 @@ export default function StoryPlayer({
   }
 
   const bg = storyState.background ? getBg(storyState.background) : '#000';
+  const bgImage = storyState.background ? getBgImage(storyState.background) : null;
   const dlg = storyState.dialogue;
   const ctx = internalCtx;
 
@@ -519,8 +541,7 @@ export default function StoryPlayer({
       style={{
         position: 'fixed',
         inset: 0,
-        background: bg,
-        transition: 'background 0.8s ease',
+        background: '#000',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -528,6 +549,26 @@ export default function StoryPlayer({
         WebkitUserSelect: 'none',
       }}
     >
+      {/* 背景レイヤー（画像 or グラデーション） */}
+      <div
+        style={{
+          position: 'absolute', inset: 0, zIndex: 0,
+          transition: 'opacity 0.8s ease',
+        }}
+      >
+        {bgImage ? (
+          <Image
+            src={bgImage}
+            alt=""
+            fill
+            style={{ objectFit: 'cover', objectPosition: 'center' }}
+            priority
+          />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, background: bg, transition: 'background 0.8s ease' }} />
+        )}
+      </div>
+
       {/* 全画面タップ層（ダイアログ進行用） */}
       {storyState.awaiting === 'dialogue' && (
         <div
@@ -536,8 +577,8 @@ export default function StoryPlayer({
         />
       )}
 
-      {/* キャラクタースプライト */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
+      {/* キャラクタースプライト（overflow: hidden でサイドへの溢れをクリップ） */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none', overflow: 'hidden' }}>
         <CharSprite slot={storyState.chars.left} position="left" />
         <CharSprite slot={storyState.chars.center} position="center" />
         <CharSprite slot={storyState.chars.right} position="right" />

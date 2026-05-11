@@ -4,9 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
-import { useMemo } from 'react';
-import { QUEST_MAP } from '@/lib/data/quests';
-import { getArchetypeFromQuestId } from '@/lib/utils/archetype';
+import { useMemo, useEffect, useState } from 'react';
 
 const MENU_ITEMS = [
   { key: 'story',      label: 'ストーリー', icon: '📖',  href: '/story/0',    accent: '#9855d4' },
@@ -48,18 +46,25 @@ export default function HomePage() {
   const { profile, questProgress, loading: profileLoading } = useProfile();
   const router = useRouter();
 
+  // ストーリー進行状況をlocalStorageから取得（クライアント側のみ）
+  const [storyChapter, setStoryChapter] = useState<0 | 1>(0);
+  useEffect(() => {
+    if (localStorage.getItem('cardsmith_story_ch1_step') !== null) {
+      setStoryChapter(1);
+    }
+  }, []);
+
   const nextGoal = useMemo(() => {
-    if (!questProgress.length) return { label: 'ストーリーを始めよう', href: '/story/0', sub: '第0章：転生の日' };
-    // チュートリアル3クリア後はネクストクエスト非表示（クエストメニューから選択）
+    // q0_3 クリア後はネクストクエスト非表示（領域探索メニューから選択）
     const isPostTutorial = questProgress.some(p => p.questId === 'q0_3' && p.status === 'cleared');
     if (isPostTutorial) return null;
-    const available = questProgress.filter(p => p.status === 'available');
-    if (available.length > 0) {
-      const q = QUEST_MAP[available[0].questId];
-      return q ? { label: q.title, href: `/play?questId=${q.questId}`, sub: `Ch.${q.chapter}-${q.order}` } : null;
+
+    // それ以外は常にストーリーへ誘導（旧チュートリアルクエストは表示しない）
+    if (storyChapter === 1) {
+      return { label: '第1章を続ける', href: '/story/1', sub: '第1章：エルナへの道' };
     }
-    return null;
-  }, [questProgress]);
+    return { label: 'ストーリーを始めよう', href: '/story/0', sub: '第0章：転生の日' };
+  }, [questProgress, storyChapter]);
 
   if (authLoading) {
     return (

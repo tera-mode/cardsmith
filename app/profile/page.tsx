@@ -77,7 +77,16 @@ export default function ProfilePage() {
             onClick={async () => {
               if (!confirm('データを初期状態に戻します。よろしいですか？')) return;
               setDebugBusy('reset');
-              try { await debugReset(); } finally { setDebugBusy(null); }
+              try {
+                await debugReset();
+                // ストーリー進行データ（localStorage）もクリア
+                localStorage.removeItem('cardsmith_story_ch0_step');
+                localStorage.removeItem('cardsmith_story_ch1_step');
+                localStorage.removeItem('cardsmith_story_first_card_name');
+                router.push('/');
+              } finally {
+                setDebugBusy(null);
+              }
             }}
             className="w-full py-3 rounded-xl bg-gray-900/40 border border-gray-600/40 text-gray-400 text-sm font-bold disabled:opacity-50"
           >
