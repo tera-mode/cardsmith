@@ -3,12 +3,14 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import StoryPlayer from '@/components/story/StoryPlayer';
 import { CHAPTER0 } from '@/lib/story/chapter0';
 import type { StoryContext } from '@/lib/story/types';
 
 function Chapter0Content() {
   const { user, loading } = useAuth();
+  const { ownedCards, updateCards } = useProfile();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [context, setContext] = useState<StoryContext>({ firstCardName: '私の最初のカード', playerName: '冒険者' });
@@ -55,8 +57,13 @@ function Chapter0Content() {
         localStorage.setItem('cardsmith_story_ch0_step', String(eventIndex));
         router.push(`/play?questId=${questId}&returnTo=${encodeURIComponent('/story/0?battleDone=' + questId)}`);
       }}
-      onCardCreate={(eventIndex) => {
+      onCardCreate={(eventIndex, cardName) => {
         localStorage.setItem('cardsmith_story_ch0_step', String(eventIndex));
+        // player_first カードを所持カードに追加（5枚）
+        const now = Date.now();
+        const existing = ownedCards.filter(c => c.cardId !== 'player_first');
+        updateCards([...existing, { cardId: 'player_first', count: 5, isCrafted: true, acquiredAt: now }]);
+        void cardName; // ストーリー台詞はlocalStorage経由で反映済み
       }}
       onComplete={(chapterNum, nextChapter) => {
         localStorage.removeItem('cardsmith_story_ch0_step');

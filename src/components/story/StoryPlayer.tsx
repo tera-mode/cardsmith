@@ -77,7 +77,7 @@ interface Props {
   initialEventIndex?: number;
   context: StoryContext;
   onBattle: (questId: string, eventIndex: number) => void;
-  onCardCreate: (eventIndex: number) => void;
+  onCardCreate: (eventIndex: number, cardName: string) => void;
   onComplete: (chapterNum: number, nextChapter?: number) => void;
 }
 
@@ -503,7 +503,7 @@ export default function StoryPlayer({
   const handleCardCreate = useCallback((cardName: string) => {
     localStorage.setItem('cardsmith_story_first_card_name', cardName);
     setInternalCtx(prev => ({ ...prev, firstCardName: cardName }));
-    onCardCreate(storyState.eventIndex);
+    onCardCreate(storyState.eventIndex, cardName);
     setStoryState(prev => {
       const nextIdx = prev.eventIndex + 1;
       localStorage.setItem(lsKey, String(nextIdx));

@@ -401,6 +401,16 @@ export const CARDS: Card[] = [
     movement: step(DIR4), attackRange: ranged(5),
     skill: { id: 'jibaku', uses: 1 },
   },
+
+  // ─── 主人公の最初のカード（カード創造イベント専用）──────────────────────────
+  // 名前はゲーム起動時に localStorage から上書きして使う
+  {
+    id: 'player_first', name: '最初のカード',
+    cost: 5, atk: 2, hp: 2,
+    movement: step(FWD_SIDES),    // 前・左・右へ移動
+    attackRange: stepAtk(DIR4),  // 全4方向を攻撃
+    skill: { id: 'strong_blow', uses: 1 },
+  },
 ];
 
 export const CARD_MAP: Record<string, Card> = Object.fromEntries(

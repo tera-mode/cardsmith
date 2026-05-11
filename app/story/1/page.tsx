@@ -55,7 +55,7 @@ function Chapter1Content() {
         localStorage.setItem('cardsmith_story_ch1_step', String(eventIndex));
         router.push(`/play?questId=${questId}&returnTo=${encodeURIComponent('/story/1?battleDone=' + questId)}`);
       }}
-      onCardCreate={(eventIndex) => {
+      onCardCreate={(eventIndex, _cardName) => {
         localStorage.setItem('cardsmith_story_ch1_step', String(eventIndex));
       }}
       onComplete={(_chapterNum, _nextChapter) => {

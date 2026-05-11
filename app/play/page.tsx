@@ -51,9 +51,10 @@ function GameScreen() {
   const bgUrl = isTutorial ? '/images/backgrounds/home.png' : getBattleBgUrl(questArchetype ?? null);
   const questDef = questId ? QUEST_MAP[questId] : undefined;
   const hasPrologue = !!(questDef?.prologue?.length);
-  // カスタムデッキが1つ以上あればデッキ選択を挟む（q0_3のアーキタイプ選択後も含む）
+  // story_0_4 は主人公デッキをGameContext側で自動構築するためデッキ選択不要
+  const isStoryFirstBattle = questId === 'story_0_4';
   const hasSavedDecks = decks.length > 0;
-  const needsDeckSelect = hasSavedDecks && selectedDeck === null;
+  const needsDeckSelect = hasSavedDecks && selectedDeck === null && !isStoryFirstBattle;
 
   const handleSurrender = () => {
     setShowGearMenu(false);

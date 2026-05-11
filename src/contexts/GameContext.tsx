@@ -96,10 +96,28 @@ export const useGame = () => useContext(GameContext);
 // クエスト定義からAI難易度・敵デッキ・敵HP を導出するヘルパー
 const ARCHETYPE_IDS: Archetype[] = ['sei', 'mei', 'shin', 'en', 'sou', 'kou'];
 
+// 主人公の最初のバトル用デッキ（カード創造直後の story_0_4 専用）
+function buildStoryPlayerDeck(): Card[] {
+  const firstName = typeof window !== 'undefined'
+    ? (localStorage.getItem('cardsmith_story_first_card_name') ?? '最初のカード')
+    : '最初のカード';
+  const base = CARD_MAP['player_first'];
+  if (!base) return shuffleDeck(buildStandardDeck());
+  const firstCard: Card = { ...base, name: firstName };
+  const c = (id: string) => CARD_MAP[id]!;
+  return [
+    firstCard, firstCard, firstCard, firstCard, firstCard,
+    c('sei_noa'), c('sei_noa'),
+    c('shin_hina'), c('shin_hina'),
+    c('mei_cal'),
+  ];
+}
+
 function resolveEnemyConfig(questId?: string): {
   profile: BattleAIProfile;
   enemyDeck: Card[];
   enemyBaseHp: number;
+  storyPlayerDeck?: Card[];
 } {
   const defaultProfile = getProfile('normal_balanced');
   const defaults = { profile: defaultProfile, enemyDeck: shuffleDeck(buildStandardDeck()), enemyBaseHp: defaultProfile.defaultBaseHp };
@@ -148,20 +166,33 @@ function resolveEnemyConfig(questId?: string): {
     return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
   }
 
-  // ストーリーバトル専用デッキ
+  // ストーリーバトル専用デッキ（すべて10枚）
   if (quest.enemyDeckId === 'story_bandit_easy') {
-    const deck = [c('sei_noa'), c('sei_noa'), c('sei_noa'), c('shin_hina'), c('shin_hina')];
-    return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
+    const deck = [
+      c('sei_noa'), c('sei_noa'), c('sei_noa'),
+      c('shin_hina'), c('shin_hina'), c('shin_hina'),
+      c('mei_cal'), c('mei_cal'),
+      c('kou_mk01'), c('kou_mk01'),
+    ];
+    // story_0_4 のみ：カード創造直後なので主人公デッキを強制設定
+    const storyPlayerDeck = questId === 'story_0_4' ? buildStoryPlayerDeck() : undefined;
+    return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp, storyPlayerDeck };
   }
   if (quest.enemyDeckId === 'story_thug') {
     const deck = [
       c('sei_eluna'), c('sei_eluna'), c('sei_eluna'),
-      c('shin_lil'), c('shin_lil'), c('shin_hina'),
+      c('shin_lil'), c('shin_lil'), c('shin_lil'),
+      c('shin_hina'), c('shin_hina'),
+      c('mei_cal'), c('mei_cal'),
     ];
     return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
   }
   if (quest.enemyDeckId === 'story_kids') {
-    const deck = [c('sei_noa'), c('sei_noa'), c('sei_noa'), c('shin_hina'), c('shin_hina')];
+    // 子供のデッキ：最弱カードのみ（easy_balanced より弱い tutorial_scripted AI）
+    const deck = [
+      c('sei_noa'), c('sei_noa'), c('sei_noa'), c('sei_noa'), c('sei_noa'),
+      c('shin_hina'), c('shin_hina'), c('shin_hina'), c('shin_hina'), c('shin_hina'),
+    ];
     return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
   }
 
@@ -184,14 +215,16 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   // ─── ゲーム初期化 ───────────────────────────────────────────────────────
 
   const initGame = useCallback((userId: string, questId?: string, playerArchetype?: Archetype, customDeck?: Card[]) => {
-    const { profile: qProfile, enemyDeck, enemyBaseHp } = resolveEnemyConfig(questId);
+    const { profile: qProfile, enemyDeck, enemyBaseHp, storyPlayerDeck } = resolveEnemyConfig(questId);
     setAiProfile(qProfile);
 
     const playerDeck = customDeck
       ? shuffleDeck(customDeck)
-      : playerArchetype
-        ? shuffleDeck(buildStarterDeck(playerArchetype))
-        : shuffleDeck(buildStandardDeck());
+      : storyPlayerDeck
+        ? shuffleDeck(storyPlayerDeck)
+        : playerArchetype
+          ? shuffleDeck(buildStarterDeck(playerArchetype))
+          : shuffleDeck(buildStandardDeck());
 
     // 後攻（AI）は手札+2（先攻後攻補正、baseHpは等値）
     const AI_HAND_SIZE = INITIAL_HAND_SIZE + 1;
