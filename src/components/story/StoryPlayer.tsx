@@ -769,81 +769,63 @@ export default function StoryPlayer({
             pointerEvents: 'none',
           }}
         >
-          {dlg.type === 'narrate' ? (
-            // ナレーション: 上部に表示
-            <div
-              style={{
-                position: 'absolute',
-                top: 'auto',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: 'rgba(8,4,2,0.75)',
-                backdropFilter: 'blur(4px)',
-                borderTop: '1px solid rgba(196,154,90,0.3)',
-                padding: '14px 18px 18px',
-                minHeight: 80,
-                textAlign: 'center',
-              }}
-            >
+          {/* narrate / say / think — 全種類で同じパネルを使う */}
+          <div
+            style={{
+              background: 'linear-gradient(180deg, rgba(16,10,6,0.93) 0%, rgba(8,5,2,0.97) 100%)',
+              backdropFilter: 'blur(6px)',
+              borderTop: '1px solid var(--border-rune-bright)',
+              padding: '12px 16px 16px',
+              minHeight: 140,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              position: 'relative',
+            }}
+          >
+            {/* 話者名（say のみ） */}
+            {dlg.type === 'say' && dlg.speaker && (
               <p style={{
-                fontSize: 14,
-                color: 'var(--text-secondary)',
-                fontFamily: 'var(--font-body)',
-                lineHeight: 1.8,
-                fontStyle: 'italic',
+                fontFamily: 'var(--font-display)',
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'var(--gold)',
+                letterSpacing: '0.08em',
+                marginBottom: 2,
               }}>
-                {interpolate(dlg.text, ctx)}
+                {dlg.speaker}
               </p>
-              <div style={{ position: 'absolute', bottom: 8, right: 14, fontSize: 10, color: 'var(--gold)', opacity: 0.6 }}>
-                次へ ▶
-              </div>
-            </div>
-          ) : (
-            // セリフ / 心内語
-            <div
-              style={{
-                background: 'linear-gradient(180deg, rgba(16,10,6,0.93) 0%, rgba(8,5,2,0.97) 100%)',
-                backdropFilter: 'blur(6px)',
-                borderTop: '1px solid var(--border-rune-bright)',
-                padding: '12px 16px 16px',
-                minHeight: 140,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-                position: 'relative',
-              }}
-            >
-              {dlg.type === 'say' && dlg.speaker && (
-                <p style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'var(--gold)',
-                  letterSpacing: '0.08em',
-                  marginBottom: 2,
-                }}>
-                  {dlg.speaker}
-                </p>
-              )}
+            )}
+            {/* ナレーション・地の文ラベル */}
+            {dlg.type === 'narrate' && (
               <p style={{
-                fontSize: dlg.type === 'think' ? 13 : 15,
-                color: dlg.type === 'think' ? 'var(--text-muted)' : 'var(--text-primary)',
-                fontFamily: 'var(--font-body)',
-                lineHeight: 1.75,
-                fontStyle: dlg.type === 'think' ? 'italic' : 'normal',
-                flex: 1,
+                fontFamily: 'var(--font-display)',
+                fontSize: 10,
+                color: 'rgba(196,154,90,0.6)',
+                letterSpacing: '0.1em',
+                marginBottom: 2,
               }}>
-                {dlg.type === 'think'
-                  ? `（${interpolate(dlg.text, ctx)}）`
-                  : interpolate(dlg.text, ctx)
-                }
+                ── ナレーション ──
               </p>
-              <div style={{ position: 'absolute', bottom: 10, right: 14, fontSize: 11, color: 'var(--gold)', opacity: 0.7 }}>
-                次へ ▶
-              </div>
+            )}
+            <p style={{
+              fontSize: 15,
+              color: dlg.type === 'think' ? '#d8cfee' : 'var(--text-primary)',
+              fontFamily: 'var(--font-body)',
+              lineHeight: 1.75,
+              fontStyle: dlg.type === 'think' ? 'italic' : 'normal',
+              flex: 1,
+              textAlign: dlg.type === 'narrate' ? 'center' : 'left',
+            }}>
+              {dlg.type === 'think'
+                ? `（${interpolate(dlg.text, ctx)}）`
+                : interpolate(dlg.text, ctx)
+              }
+            </p>
+            <div style={{ position: 'absolute', bottom: 10, right: 14, fontSize: 11, color: 'var(--gold)', opacity: 0.7 }}>
+              次へ ▶
             </div>
-          )}
+          </div>
         </div>
       )}
 
