@@ -126,9 +126,13 @@ function buildStoryPlayerDeck(questId: string): Card[] {
     case 'story_0_4':
       return [firstCard];
 
-    // シーン1-2：神様カード1枚で野盗2体に挑む
+    // シーン1-2：シーン1-1でブリギッタからノア・アイロスをもらった後のバトル
     case 'story_1_2':
-      return [firstCard];
+      return [
+        firstCard, firstCard, firstCard,
+        c('sei_noa'), c('sei_noa'),
+        c('story_ailos'), c('story_ailos'),
+      ];
 
     // シーン1-4：神様カード + ノア + アイロス
     case 'story_1_4':
