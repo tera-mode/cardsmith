@@ -19,6 +19,7 @@ import DeckSelectModal from '@/components/game/DeckSelectModal';
 import type { Archetype } from '@/lib/game/decks';
 import { getArchetypeFromQuestId, getBattleBgUrl } from '@/lib/utils/archetype';
 import ForgeBg from '@/components/ui/ForgeBg';
+import HintPanel from '@/components/game/HintPanel';
 import { QUEST_MAP } from '@/lib/data/quests';
 import { useProfile } from '@/contexts/ProfileContext';
 import { EffectQueueProvider } from '@/contexts/EffectQueueContext';
@@ -290,6 +291,9 @@ function GameScreen() {
             <GameLog log={session.log} style={{ maxHeight: 'none', flex: 1, minHeight: 0, overflowY: 'auto' }} />
           </div>
         </div>
+
+        {/* ヒントパネル */}
+        <HintPanel session={session} mode={mode} questId={questId} />
 
         {/* ターン終了バー */}
         <div className="flex-shrink-0 safe-bottom">

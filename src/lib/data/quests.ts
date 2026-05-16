@@ -613,14 +613,14 @@ const KOU: QuestDefinition[] = [
 
 const STORY_BATTLES: QuestDefinition[] = [
   {
-    // シーン0-4：野盗1体（HP1/ATK1）vs 最初のカード1枚
+    // シーン0-4：野盗1体（HP1/ATK1）vs 最初のカード1枚（チュートリアル用に短期決戦）
     questId: 'story_0_4',
     chapter: 0, order: 10,
     title: '野盗との戦闘（第0章シーン4）',
     description: '野盗を撃退せよ。',
     enemyDeckId: 'story_bandit_easy',
     enemyAIProfileId: 'tutorial_scripted',
-    enemyBaseHp: 5,
+    enemyBaseHp: 3,
     reward: { exp: 10, runes: 20 },
     prerequisites: [],
   },

@@ -220,7 +220,10 @@ function resolveEnemyConfig(questId?: string): {
 
     if (quest.enemyDeckId === 'story_bandit_easy') {
       // 野盗：HP1/ATK1/バニラ
-      const deck = Array(10).fill(c('story_bandit'));
+      // story_0_4は「1対1の特殊バトル」なので野盗1枚のみ
+      // story_1_2は「2対1ミニバトル」なので野盗2枚
+      const deckSize = questId === 'story_0_4' ? 1 : 2;
+      const deck = Array(deckSize).fill(c('story_bandit'));
       return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp, storyPlayerDeck };
     }
     if (quest.enemyDeckId === 'story_thug') {

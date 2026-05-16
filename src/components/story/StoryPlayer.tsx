@@ -469,25 +469,40 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
 
         {/* プリセットグリッド */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 14 }}>
-          {IMAGE_OPTIONS.map(opt => (
-            <button
-              key={opt.id}
-              onClick={() => handlePresetClick(opt.id)}
-              title={opt.label}
-              style={{
-                padding: 0, borderRadius: 6, cursor: 'pointer', overflow: 'hidden',
-                aspectRatio: '1 / 1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: selectedImage === opt.id ? '2px solid var(--gold)' : '2px solid rgba(196,154,90,0.2)',
-                background: selectedImage === opt.id ? 'rgba(212,175,55,0.15)' : 'rgba(0,0,0,0.4)',
-                boxShadow: selectedImage === opt.id ? '0 0 8px rgba(212,175,55,0.5)' : 'none',
-                transition: 'border 0.15s, box-shadow 0.15s',
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/images/presets/${opt.id}.png`} alt={opt.label}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </button>
-          ))}
+          {IMAGE_OPTIONS.map(opt => {
+            const isSelected = selectedImage === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => handlePresetClick(opt.id)}
+                title={opt.label}
+                style={{
+                  padding: 0, borderRadius: 6, cursor: 'pointer', overflow: 'hidden',
+                  aspectRatio: '1 / 1', position: 'relative',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: isSelected ? '3px solid #d4af37' : '2px solid rgba(196,154,90,0.2)',
+                  background: 'rgba(0,0,0,0.4)',
+                  boxShadow: isSelected ? '0 0 12px rgba(212,175,55,0.8), inset 0 0 8px rgba(212,175,55,0.2)' : 'none',
+                  transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                  transition: 'border 0.15s, box-shadow 0.15s, transform 0.15s',
+                  zIndex: isSelected ? 1 : 0,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/images/presets/${opt.id}.png`} alt={opt.label}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                {/* 選択済みチェックマーク */}
+                {isSelected && (
+                  <div style={{
+                    position: 'absolute', top: 2, right: 2,
+                    width: 16, height: 16, borderRadius: '50%',
+                    background: '#d4af37', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, color: '#1a1208', fontWeight: 900, lineHeight: 1,
+                  }}>✓</div>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* 区切り */}
