@@ -122,13 +122,13 @@ function buildStoryPlayerDeck(questId: string): Card[] {
   const firstCard = buildFirstCard();
 
   switch (questId) {
-    // シーン0-4：1対1（最初のカードのみ）
+    // シーン0-4：1対1（最初のカード1枚のみ）
     case 'story_0_4':
-      return [firstCard, firstCard, firstCard, firstCard, firstCard];
+      return [firstCard];
 
     // シーン1-2：神様カード1枚で野盗2体に挑む
     case 'story_1_2':
-      return [firstCard, firstCard, firstCard, firstCard, firstCard];
+      return [firstCard];
 
     // シーン1-4：神様カード + ノア + アイロス
     case 'story_1_4':
