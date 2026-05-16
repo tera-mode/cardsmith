@@ -317,19 +317,18 @@ function CharSprite({ slot, position }: SpriteProps) {
 
 // 選択できるカードイラスト一覧
 const IMAGE_OPTIONS = [
-  { id: 'militia',        label: '民兵' },
-  { id: 'light_infantry', label: '軽歩兵' },
-  { id: 'assault_soldier',label: '急襲兵' },
-  { id: 'scout',          label: '偵察兵' },
-  { id: 'spear_soldier',  label: '槍兵' },
-  { id: 'heavy_infantry', label: '重装兵' },
-  { id: 'combat_soldier', label: '戦闘兵' },
-  { id: 'archer',         label: '弓兵' },
-  { id: 'guard',          label: '衛兵' },
-  { id: 'healer',         label: '治癒兵' },
-  { id: 'cavalry',        label: '騎兵' },
-  { id: 'cannon',         label: '大砲' },
-  { id: 'defender',       label: '守護兵' },
+  { id: 'preset_01', label: '戦士（男）' },
+  { id: 'preset_02', label: '戦士（女）' },
+  { id: 'preset_03', label: '魔法使い（男）' },
+  { id: 'preset_04', label: '魔法使い（女）' },
+  { id: 'preset_05', label: '動物系' },
+  { id: 'preset_06', label: '龍・幻獣' },
+  { id: 'preset_07', label: '機械系' },
+  { id: 'preset_08', label: '自然系' },
+  { id: 'preset_09', label: '天使系' },
+  { id: 'preset_10', label: '悪魔系' },
+  { id: 'preset_11', label: 'エルフ系' },
+  { id: 'preset_12', label: '異形系' },
 ] as const;
 
 interface CardCreateProps {
@@ -485,7 +484,7 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/images/cards/${opt.id}.png`} alt={opt.label}
+              <img src={`/images/presets/${opt.id}.png`} alt={opt.label}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </button>
           ))}

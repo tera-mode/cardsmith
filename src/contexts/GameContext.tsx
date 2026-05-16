@@ -96,30 +96,68 @@ export const useGame = () => useContext(GameContext);
 // クエスト定義からAI難易度・敵デッキ・敵HP を導出するヘルパー
 const ARCHETYPE_IDS: Archetype[] = ['sei', 'mei', 'shin', 'en', 'sou', 'kou'];
 
-// 主人公の最初のバトル用デッキ（カード創造直後の story_0_4 専用）
-function buildStoryPlayerDeck(): Card[] {
+// 主人公の最初のカードを生成（localStorage の名前・画像を反映）
+function buildFirstCard(): Card {
   const firstName = typeof window !== 'undefined'
     ? (localStorage.getItem('cardsmith_story_first_card_name') ?? '最初のカード')
     : '最初のカード';
   const firstImageId = typeof window !== 'undefined'
-    ? (localStorage.getItem('cardsmith_story_first_card_image') ?? 'militia')
-    : 'militia';
+    ? (localStorage.getItem('cardsmith_story_first_card_image') ?? 'preset_01')
+    : 'preset_01';
   const customData = typeof window !== 'undefined'
     ? localStorage.getItem('cardsmith_story_first_card_image_data')
     : null;
   const imagePath = firstImageId === 'custom' && customData
     ? customData
-    : `/images/cards/${firstImageId !== 'custom' ? firstImageId : 'militia'}.png`;
-  const base = CARD_MAP['player_first'];
-  if (!base) return shuffleDeck(buildStandardDeck());
-  const firstCard: Card = { ...base, name: firstName, imagePath };
+    : firstImageId.startsWith('preset_')
+      ? `/images/presets/${firstImageId}.png`
+      : `/images/cards/${firstImageId}.png`;
+  const base = CARD_MAP['player_first']!;
+  return { ...base, name: firstName, imagePath };
+}
+
+// ストーリーバトルのプレイヤーデッキをクエスト別に構築
+function buildStoryPlayerDeck(questId: string): Card[] {
   const c = (id: string) => CARD_MAP[id]!;
-  return [
-    firstCard, firstCard, firstCard, firstCard, firstCard,
-    c('sei_noa'), c('sei_noa'),
-    c('shin_hina'), c('shin_hina'),
-    c('mei_cal'),
-  ];
+  const firstCard = buildFirstCard();
+
+  switch (questId) {
+    // シーン0-4：1対1（最初のカードのみ）
+    case 'story_0_4':
+      return [firstCard, firstCard, firstCard, firstCard, firstCard];
+
+    // シーン1-2：神様カード1枚で野盗2体に挑む
+    case 'story_1_2':
+      return [firstCard, firstCard, firstCard, firstCard, firstCard];
+
+    // シーン1-4：神様カード + ノア + アイロス
+    case 'story_1_4':
+      return [
+        firstCard, firstCard, firstCard, firstCard,
+        c('sei_noa'), c('sei_noa'), c('sei_noa'),
+        c('story_ailos'), c('story_ailos'), c('story_ailos'),
+      ];
+
+    // シーン1-5：同上（子供の嫌がらせバトル）
+    case 'story_1_5':
+      return [
+        firstCard, firstCard, firstCard, firstCard,
+        c('sei_noa'), c('sei_noa'), c('sei_noa'),
+        c('story_ailos'), c('story_ailos'), c('story_ailos'),
+      ];
+
+    // シーン1-10：ガロン決闘（神様カード + 回復カード + ノア + アイロス）
+    case 'story_1_10':
+      return [
+        firstCard, firstCard, firstCard,
+        c('story_healing'), c('story_healing'), c('story_healing'),
+        c('sei_noa'), c('sei_noa'),
+        c('story_ailos'), c('story_ailos'),
+      ];
+
+    default:
+      return [firstCard, firstCard, firstCard, firstCard, firstCard];
+  }
 }
 
 function resolveEnemyConfig(questId?: string): {
@@ -175,34 +213,38 @@ function resolveEnemyConfig(questId?: string): {
     return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
   }
 
-  // ストーリーバトル専用デッキ（すべて10枚）
-  if (quest.enemyDeckId === 'story_bandit_easy') {
-    const deck = [
-      c('sei_noa'), c('sei_noa'), c('sei_noa'),
-      c('shin_hina'), c('shin_hina'), c('shin_hina'),
-      c('mei_cal'), c('mei_cal'),
-      c('kou_mk01'), c('kou_mk01'),
-    ];
-    // story_0_4 のみ：カード創造直後なので主人公デッキを強制設定
-    const storyPlayerDeck = questId === 'story_0_4' ? buildStoryPlayerDeck() : undefined;
-    return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp, storyPlayerDeck };
-  }
-  if (quest.enemyDeckId === 'story_thug') {
-    const deck = [
-      c('sei_eluna'), c('sei_eluna'), c('sei_eluna'),
-      c('shin_lil'), c('shin_lil'), c('shin_lil'),
-      c('shin_hina'), c('shin_hina'),
-      c('mei_cal'), c('mei_cal'),
-    ];
-    return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
-  }
-  if (quest.enemyDeckId === 'story_kids') {
-    // 子供のデッキ：最弱カードのみ（easy_balanced より弱い tutorial_scripted AI）
-    const deck = [
-      c('sei_noa'), c('sei_noa'), c('sei_noa'), c('sei_noa'), c('sei_noa'),
-      c('shin_hina'), c('shin_hina'), c('shin_hina'), c('shin_hina'), c('shin_hina'),
-    ];
-    return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp };
+  // ストーリーバトル専用デッキ
+  const STORY_DECK_IDS = ['story_bandit_easy', 'story_thug', 'story_kids', 'story_garon'];
+  if (STORY_DECK_IDS.includes(quest.enemyDeckId)) {
+    const storyPlayerDeck = buildStoryPlayerDeck(questId);
+
+    if (quest.enemyDeckId === 'story_bandit_easy') {
+      // 野盗：HP1/ATK1/バニラ
+      const deck = Array(10).fill(c('story_bandit'));
+      return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp, storyPlayerDeck };
+    }
+    if (quest.enemyDeckId === 'story_thug') {
+      // ゴロツキ：HP2/ATK1/バニラ
+      const deck = Array(10).fill(c('story_thug'));
+      return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp, storyPlayerDeck };
+    }
+    if (quest.enemyDeckId === 'story_kids') {
+      // 子供×7 + 親分×3
+      const deck = [
+        ...Array(7).fill(c('story_kid')),
+        ...Array(3).fill(c('story_kid_boss')),
+      ];
+      return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp, storyPlayerDeck };
+    }
+    if (quest.enemyDeckId === 'story_garon') {
+      // ガロンデッキ：鋼の意志×3 + 鋼の刃×4 + 中堅鍛冶師×3
+      const deck = [
+        ...Array(3).fill(c('garon_will')),
+        ...Array(4).fill(c('garon_blade')),
+        ...Array(3).fill(c('garon_smith')),
+      ];
+      return { profile, enemyDeck: shuffleDeck(deck), enemyBaseHp, storyPlayerDeck };
+    }
   }
 
   return { profile, enemyDeck: shuffleDeck(buildStandardDeck()), enemyBaseHp };

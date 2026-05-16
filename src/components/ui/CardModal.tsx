@@ -75,7 +75,7 @@ export default function CardModal({ card, unit, count, customImage, onClose }: C
 
   // 未所持（count=0）はイラストをグレーアウト
   const isUnowned = count !== undefined && count === 0;
-  const imageSrc = customImage ?? `/images/chars/${card.id}.png`;
+  const imageSrc = customImage ?? card.imagePath ?? `/images/chars/${card.id}.png`;
 
   return (
     <>

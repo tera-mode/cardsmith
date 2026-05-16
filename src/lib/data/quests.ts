@@ -613,6 +613,7 @@ const KOU: QuestDefinition[] = [
 
 const STORY_BATTLES: QuestDefinition[] = [
   {
+    // シーン0-4：野盗1体（HP1/ATK1）vs 最初のカード1枚
     questId: 'story_0_4',
     chapter: 0, order: 10,
     title: '野盗との戦闘（第0章シーン4）',
@@ -624,6 +625,7 @@ const STORY_BATTLES: QuestDefinition[] = [
     prerequisites: [],
   },
   {
+    // シーン1-2：野盗2体 vs 最初のカード1枚（2対1ミニバトル）
     questId: 'story_1_2',
     chapter: 1, order: 10,
     title: '街道の野盗戦（第1章シーン2）',
@@ -635,6 +637,7 @@ const STORY_BATTLES: QuestDefinition[] = [
     prerequisites: [],
   },
   {
+    // シーン1-4：ゴロツキ3体 vs 神様カード+ノア+アイロス（3対3バトル）
     questId: 'story_1_4',
     chapter: 1, order: 11,
     title: 'ゴロツキ撃退（第1章シーン4）',
@@ -646,6 +649,7 @@ const STORY_BATTLES: QuestDefinition[] = [
     prerequisites: [],
   },
   {
+    // シーン1-5：いたずら小僧3体+ガキ大将1体 vs 神様カード+ノア+アイロス（4対3バトル）
     questId: 'story_1_5',
     chapter: 1, order: 12,
     title: '子供たちの挑戦（第1章シーン5）',
@@ -654,6 +658,18 @@ const STORY_BATTLES: QuestDefinition[] = [
     enemyAIProfileId: 'tutorial_scripted',
     enemyBaseHp: 5,
     reward: { exp: 25, runes: 35 },
+    prerequisites: [],
+  },
+  {
+    // シーン1-10：ガロン決闘（鋼の意志×3+鋼の刃×4+中堅鍛冶師×3）
+    questId: 'story_1_10',
+    chapter: 1, order: 13,
+    title: 'ガロンとの決闘（第1章シーン10）',
+    description: '中堅鍛冶師ガロンに実力を示せ。',
+    enemyDeckId: 'story_garon',
+    enemyAIProfileId: 'normal_balanced',
+    enemyBaseHp: 5,
+    reward: { exp: 80, runes: 100 },
     prerequisites: [],
   },
 ];

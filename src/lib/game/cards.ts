@@ -403,13 +403,83 @@ export const CARDS: Card[] = [
   },
 
   // ─── 主人公の最初のカード（カード創造イベント専用）──────────────────────────
-  // 名前はゲーム起動時に localStorage から上書きして使う
+  // 名前・画像はゲーム起動時に localStorage から上書きして使う
+  // 仕様：HP3/ATK3/貫通×1/SR級
   {
     id: 'player_first', name: '最初のカード',
-    cost: 5, atk: 2, hp: 2,
-    movement: step(FWD_SIDES),    // 前・左・右へ移動
-    attackRange: stepAtk(DIR4),  // 全4方向を攻撃
+    cost: 5, atk: 3, hp: 3,
+    movement: step(FWD_SIDES),
+    attackRange: stepAtk(DIR4),
+    skill: { id: 'penetrate', uses: 1 },
+  },
+
+  // ─── ストーリー専用カード ───────────────────────────────────────────────────
+
+  // 敵カード
+  {
+    id: 'story_bandit', name: '野盗',
+    cost: 1, atk: 1, hp: 1,
+    movement: step(FWD1),
+    attackRange: stepAtk(FWD_SIDES),
+  },
+  {
+    id: 'story_thug', name: 'ゴロツキ',
+    cost: 2, atk: 1, hp: 2,
+    movement: step(FWD_SIDES),
+    attackRange: stepAtk(DIR4),
+  },
+  {
+    id: 'story_kid', name: 'いたずら小僧',
+    cost: 1, atk: 1, hp: 1,
+    movement: step(FWD_SIDES),
+    attackRange: stepAtk(FWD_SIDES),
+  },
+  {
+    id: 'story_kid_boss', name: 'ガキ大将',
+    cost: 2, atk: 2, hp: 2,
+    movement: step(FWD_SIDES),
+    attackRange: stepAtk(DIR4),
+  },
+
+  // ガロンのデッキ（第1章シーン1-10）
+  {
+    id: 'garon_will', name: '鋼の意志',
+    cost: 3, atk: 2, hp: 4,
+    movement: step(FWD1),
+    attackRange: stepAtk(DIR4),
+    skill: { id: 'koutetsu_no_ishi', uses: 1 },
+  },
+  {
+    id: 'garon_blade', name: '鋼の刃',
+    cost: 3, atk: 3, hp: 3,
+    movement: step(FWD_SIDES),
+    attackRange: stepAtk(DIR4),
+    skill: { id: 'hangeki', uses: 'infinite' as const },
+  },
+  {
+    id: 'garon_smith', name: '中堅鍛冶師',
+    cost: 3, atk: 3, hp: 3,
+    movement: step(FWD_SIDES),
+    attackRange: stepAtk(DIR4),
+  },
+
+  // プレイヤー入手カード（ブリギッタから支給）
+  {
+    id: 'story_ailos', name: '誓いの剣士アイロス',
+    cost: 3, atk: 2, hp: 3,
+    movement: step(FWD_SIDES),
+    attackRange: stepAtk(DIR4),
     skill: { id: 'strong_blow', uses: 1 },
+  },
+
+  // 想像写石カード（シーン1-7 ニケの母の回復イベント）
+  // HP4/ATK0/回復・1ターン/R級
+  {
+    id: 'story_healing', name: '回復カード',
+    cost: 2, atk: 0, hp: 4,
+    movement: step(FWD_SIDES),
+    attackRange: noAtk,
+    skill: { id: 'heal', uses: 'infinite' as const },
   },
 ];
 

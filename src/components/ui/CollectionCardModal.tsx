@@ -79,7 +79,7 @@ export default function CollectionCardModal({ card, count = 0, onClose }: Props)
           />
           {/* キャラクター画像 */}
           <img
-            src={`/images/chars/${card.id}.png`}
+            src={card.imagePath ?? `/images/chars/${card.id}.png`}
             alt={card.name}
             className="absolute inset-0 w-full h-full object-cover"
             style={{ objectPosition: 'center 12%' }}
