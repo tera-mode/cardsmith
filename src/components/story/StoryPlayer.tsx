@@ -364,12 +364,14 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
   const [name, setName] = useState('');
   const [selectedImage, setSelectedImage] = useState<string>('');    // preset id or 'custom'
   const [customPreview, setCustomPreview] = useState<string>('');    // base64 preview
+  const [previewingPreset, setPreviewingPreset] = useState<string | null>(null); // プレビュー中のpreset id
   const canSubmit = name.trim() && selectedImage;
 
-  const handlePresetClick = (id: string) => {
+  const handlePresetSelect = (id: string) => {
     setSelectedImage(id);
     setCustomPreview('');
     localStorage.removeItem('cardsmith_story_first_card_image_data');
+    setPreviewingPreset(null);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -390,6 +392,10 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
     ? 'マイ画像'
     : IMAGE_OPTIONS.find(o => o.id === selectedImage)?.label;
 
+  const previewingOpt = previewingPreset
+    ? IMAGE_OPTIONS.find(o => o.id === previewingPreset)
+    : null;
+
   return (
     <div
       style={{
@@ -405,6 +411,84 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
         padding: '16px 16px 32px',
       }}
     >
+
+      {/* プリセット画像プレビューモーダル */}
+      {previewingOpt && (
+        <div
+          onClick={() => setPreviewingPreset(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.92)',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '24px 20px',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(180deg, rgba(42,28,16,0.99) 0%, rgba(20,12,6,0.99) 100%)',
+              border: '2px solid var(--gold-deep)',
+              borderRadius: 16,
+              padding: '20px',
+              maxWidth: 340,
+              width: '100%',
+              boxShadow: '0 0 40px rgba(212,175,55,0.35)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+            }}
+          >
+            {/* ラベル */}
+            <p style={{
+              fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700,
+              color: 'var(--gold)', letterSpacing: '0.1em',
+            }}>
+              {previewingOpt.label}
+            </p>
+
+            {/* 大きな画像 */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/images/presets/${previewingOpt.id}.png`}
+              alt={previewingOpt.label}
+              style={{
+                width: '100%', aspectRatio: '1 / 1',
+                objectFit: 'cover', borderRadius: 10,
+                border: selectedImage === previewingOpt.id
+                  ? '3px solid #d4af37'
+                  : '2px solid rgba(196,154,90,0.3)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
+              }}
+            />
+
+            {/* 選択ボタン */}
+            <button
+              onClick={() => handlePresetSelect(previewingOpt.id)}
+              style={{
+                width: '100%', padding: '13px 0', borderRadius: 8,
+                background: 'linear-gradient(180deg, #d4af37, #a87a36)',
+                border: 'none',
+                color: '#1a1208', fontFamily: 'var(--font-display)',
+                fontSize: 14, fontWeight: 700, letterSpacing: '0.08em',
+                cursor: 'pointer',
+              }}
+            >
+              {selectedImage === previewingOpt.id ? '✓ 選択中' : 'この画像を選択'}
+            </button>
+
+            {/* 閉じる */}
+            <button
+              onClick={() => setPreviewingPreset(null)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--text-dim)', fontSize: 12,
+                fontFamily: 'var(--font-display)', letterSpacing: '0.05em',
+              }}
+            >
+              ← 戻る
+            </button>
+          </div>
+        </div>
+      )}
 
       <div
         style={{
@@ -474,7 +558,7 @@ function CardCreateOverlay({ onSubmit }: CardCreateProps) {
             return (
               <button
                 key={opt.id}
-                onClick={() => handlePresetClick(opt.id)}
+                onClick={() => setPreviewingPreset(opt.id)}
                 title={opt.label}
                 style={{
                   padding: 0, borderRadius: 6, cursor: 'pointer', overflow: 'hidden',
