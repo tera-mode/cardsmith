@@ -876,11 +876,11 @@ export default function StoryPlayer({
               background: 'linear-gradient(180deg, rgba(16,10,6,0.93) 0%, rgba(8,5,2,0.97) 100%)',
               backdropFilter: 'blur(6px)',
               borderTop: '1px solid var(--border-rune-bright)',
-              padding: '12px 16px 16px',
-              minHeight: 140,
+              padding: '18px 24px 24px',
+              minHeight: 210,
               display: 'flex',
               flexDirection: 'column',
-              gap: 6,
+              gap: 9,
               position: 'relative',
             }}
           >
@@ -888,35 +888,23 @@ export default function StoryPlayer({
             {dlg.type === 'say' && dlg.speaker && (
               <p style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 12,
+                fontSize: 18,
                 fontWeight: 700,
                 color: 'var(--gold)',
                 letterSpacing: '0.08em',
-                marginBottom: 2,
+                marginBottom: 3,
               }}>
                 {dlg.speaker}
               </p>
             )}
-            {/* ナレーション・地の文ラベル */}
-            {dlg.type === 'narrate' && (
-              <p style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 10,
-                color: 'rgba(196,154,90,0.6)',
-                letterSpacing: '0.1em',
-                marginBottom: 2,
-              }}>
-                ── ナレーション ──
-              </p>
-            )}
             <p style={{
-              fontSize: 15,
+              fontSize: 22,
               color: dlg.type === 'think' ? '#d8cfee' : 'var(--text-primary)',
               fontFamily: 'var(--font-body)',
               lineHeight: 1.75,
               fontStyle: dlg.type === 'think' ? 'italic' : 'normal',
               flex: 1,
-              textAlign: dlg.type === 'narrate' ? 'center' : 'left',
+              textAlign: 'left',
             }}>
               {dlg.type === 'think'
                 ? `（${interpolate(dlg.text, ctx)}）`
