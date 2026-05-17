@@ -15,8 +15,6 @@ function stripUndefined<T>(obj: T): T {
 }
 import { PlayerProfile, OwnedCard, OwnedMaterial, Deck, CardInventoryDoc, MaterialInventoryDoc } from '@/lib/types/meta';
 import { createInitialProfile } from '@/lib/server-logic/profile';
-import { CARDS } from '@/lib/game/cards';
-import { buildStandardDeck } from '@/lib/game/decks';
 
 // ─── プロフィール ─────────────────────────────────────────────────────────────
 
@@ -91,32 +89,16 @@ export async function deleteDeck(userId: string, deckId: string): Promise<void> 
 // ─── 初期化ヘルパー ───────────────────────────────────────────────────────────
 
 async function initializeInventory(userId: string): Promise<void> {
-  const now = Date.now();
-  const ownedCards: OwnedCard[] = CARDS.map(card => ({
-    cardId: card.id,
-    count: 1,
-    isCrafted: false,
-    acquiredAt: now,
-  }));
-  await saveCardInventory(userId, ownedCards);
+  await saveCardInventory(userId, []);
   await saveMaterialInventory(userId, []);
 }
 
 async function initializeDefaultDeck(userId: string): Promise<void> {
   const now = Date.now();
-  const standardCards = buildStandardDeck();
-  const cardCounts: Record<string, number> = {};
-  for (const card of standardCards) {
-    cardCounts[card.id] = (cardCounts[card.id] ?? 0) + 1;
-  }
   const deck: Deck = {
     deckId: 'default',
-    name: '標準デッキ',
-    entries: Object.entries(cardCounts).map(([cardId, count]) => ({
-      cardId,
-      count,
-      isCrafted: false,
-    })),
+    name: 'マイデッキ',
+    entries: [],
     createdAt: now,
     updatedAt: now,
   };
