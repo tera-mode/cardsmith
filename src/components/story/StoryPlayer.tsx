@@ -286,11 +286,12 @@ function CharSprite({ slot, position }: SpriteProps) {
     <div
       style={{
         position: 'absolute',
-        bottom: 140,
+        top: 0,
+        bottom: 0,
         ...posStyles[position],
-        // コンテナに明示サイズを与えて objectFit: contain でアスペクト比を保持
         width: position === 'center' ? 'min(92vw, 480px)' : 'min(82vw, 420px)',
-        height: 'calc(100% - 155px)',
+        display: 'flex',
+        alignItems: 'center',
         transition: 'opacity 0.3s ease',
         opacity: visible ? 1 : 0,
         pointerEvents: 'none',
@@ -303,10 +304,12 @@ function CharSprite({ slot, position }: SpriteProps) {
         alt={slot.id}
         style={{
           width: '100%',
-          height: '100%',
+          height: '82%',
           objectFit: 'contain',
-          objectPosition: 'bottom center',
+          objectPosition: 'center',
           display: 'block',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 58%, transparent 92%)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 58%, transparent 92%)',
         }}
       />
     </div>
