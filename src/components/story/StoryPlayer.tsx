@@ -306,10 +306,10 @@ function CharSprite({ slot, position }: SpriteProps) {
           width: '100%',
           height: '82%',
           objectFit: 'contain',
-          objectPosition: 'bottom',
+          objectPosition: 'center',
           display: 'block',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
-          maskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 56%, transparent 75%)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 56%, transparent 75%)',
         }}
       />
     </div>
