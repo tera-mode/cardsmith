@@ -308,8 +308,8 @@ function CharSprite({ slot, position }: SpriteProps) {
           objectFit: 'contain',
           objectPosition: 'center',
           display: 'block',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 58%, transparent 92%)',
-          maskImage: 'linear-gradient(to bottom, black 0%, black 58%, transparent 92%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
         }}
       />
     </div>
